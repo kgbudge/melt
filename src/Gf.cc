@@ -27,11 +27,6 @@ inline double square(double x){ return x*x; }
 
 using namespace std;
 
-double const P0 = 1.0e-3; // in kbar
-double const T0 = 298.15; // K
-double const R = 0.0083144598;  // kJ/K
-double const V0 = R*T0/P0;
-
 void initialize_Gf(double T /* K */, double P /* kbar */, double Gf[P_END] /* kJ */)
 {
 	// Note that Gf is the apparent free energy of formation, which ignores entropy of the elements.

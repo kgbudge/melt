@@ -1,6 +1,11 @@
 #ifndef phase_hh
 #define phase_hh
 
+double const P0 = 1.0e-3; // in kbar
+double const T0 = 298.15; // K
+double const R = 0.0083144598;  // kJ/K
+double const V0 = R*T0/P0;
+
 enum ELEMENT
 {
   E_H,
@@ -153,6 +158,7 @@ enum PHASE
   P_MARGARITE,
   P_MEIONITE,
   P_MERWINITE,
+  P_METHANE,
   P_MG_PUMPELLYITE,
   P_MG_STAUROLITE,
   P_MICROCLINE,

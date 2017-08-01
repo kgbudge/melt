@@ -1,3 +1,9 @@
+stamp-h1
+libtool
+config.status
+config.log
+config.h
+Makefile
 Makefile.in
 config.h.in
 configure

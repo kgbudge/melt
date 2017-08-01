@@ -566,13 +566,25 @@ void update()
 	double volume[N];
 
 	double Vtot = 0.0;
+
 	for (unsigned i=0; i<N; ++i)
 	{
 		unsigned const pi = p[i];
-		volume[i] = Np[i]*phase[pi].V;
-		Vtot += volume[i];
-	}
+		switch (phase[pi].model)
+		{
+			case SOLID:
+			case MELT:  
+				volume[i] = Np[i]*phase[pi].V;
+				Vtot += volume[i];
+				break;
 
+			case VAPOR:
+				volume[i] = Np[i]*R*T/solve_for_fugacity(phase[pi], T, Gf[pi]);
+				Vtot += volume[i];
+				break;
+		}
+	}
+		
 	rnorm = 100.0/Vtot;
 	for (unsigned i=0; i<N; ++i)
 	{
