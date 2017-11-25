@@ -49,7 +49,7 @@ void initialize_Gf(double T /* K */, double P /* kbar */, double Gf[P_END] /* kJ
 		double const B = phase[i].b*1e-5;  // By convention, reported in units of 1e-5 kJ/K/K
 		double const C = phase[i].c;
 		double const D = phase[i].d;
-		double const a0 = phase[i].a0*1e-5; // By convenction, reported in units of 1e-5/K
+		double const a0 = phase[i].a0*1e-5; // By convention, reported in units of 1e-5/K
 		double const k0 = phase[i].k0;
 		double const k0p = phase[i].k0p;
 		double const k0pp = phase[i].k0pp;
@@ -97,14 +97,14 @@ void initialize_Gf(double T /* K */, double P /* kbar */, double Gf[P_END] /* kJ
 					Gf[i] = 1.0e5; // off range of validity of table
 				}
 			}
-			else
+			else  // model == MELT
 			{
 				double const Vt = V0*(1 + a0*dT - 20*a0*dsT);
 					
 				double const Gfi =
 					Gt + 
-					P*Vt*(1-a+a*(1 - pow(1+b*P, 1-c))/(b*(c-1)*P))
-					-P0*Vt*(1-a+a*(1 - pow(1+b*P, 1-c))/(b*(c-1)*P0));
+					  P*Vt*(1-a+a*(1 - pow(1+b* P, 1-c))/(b*(c-1)* P))
+					-P0*Vt*(1-a+a*(1 - pow(1+b*P0, 1-c))/(b*(c-1)*P0));
 
 
 				Gf[i] = Gfi; 
