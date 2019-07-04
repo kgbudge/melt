@@ -599,18 +599,6 @@ void update()
 		}
 	}
 
-	/*
-	if (nCaO<0.0)
-	{
-		Gtk::MessageDialog dialog(*main_win, "CIPW Norm Fail");
-		dialog.set_secondary_text("P2O5 too high for CaO");
-		dialog.run();
-		
-		good = false;
-	}
-
-						text_iugs->set_text("ALKALI-FELDSPAR SYENITE\ntrachyte");
-*/		
 	tree_view_CIPW->remove_all_columns();
 	tree_view_CIPW->set_model(list_store_CIPW);
 	tree_view_CIPW->append_column("Mineral", m_Columns.m_col_text);

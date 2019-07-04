@@ -1,0 +1,18 @@
+name 
+SiO2 52.4
+TiO2 1.45
+Al2O3 15.2
+Fe2O3 0.83
+FeO 8.33
+MnO 0.14
+MgO 6.74
+CaO 8.03
+Na2O 3.31
+K2O 2.12
+P2O5 0.68
+S 0
+Cr2O3 0
+ZrO2 0
+H2O 0
+CO2 0
+Cl 0
