@@ -278,13 +278,13 @@ void update()
 		{
 			text = entry_pO2->get_text();
 			pO2 = atof(text.c_str());
-			GfO2 = solve_for_gibbs(phase[P_O2], T, pO2);
+			GfO2 = phase[P_O2].model->Gf(phase[P_O2], T, pO2);
 		}
 		else
 		{
 			Check(button_oxygen_FMQ->get_active());
 			GfO2 = 2*Gf[P_MAGNETITE]+3*Gf[P_SiO2_QUARTZ]-3*Gf[P_FAYALITE];
-			pO2 = solve_for_fugacity(phase[P_O2], T, GfO2);
+			pO2 = phase[P_O2].model->P(phase[P_O2], T, GfO2);
 		}
 	}
 
@@ -557,7 +557,7 @@ void update()
 
 	if (true || !oxygen_specified)
 	{
-		pO2 = solve_for_fugacity(phase[P_O2], T, -2*element_activity[E_O]);
+		pO2 = phase[P_O2].model->P(phase[P_O2], T, -2*element_activity[E_O]);
 		entry_pO2->set_text(tostring(pO2));
 	}
 		
@@ -570,6 +570,9 @@ void update()
 	for (unsigned i=0; i<N; ++i)
 	{
 		unsigned const pi = p[i];
+        volume[i] = Np[i]*phase[pi].model->volume(phase[pi], T, P);
+		Vtot += volume[i];
+		/*
 		switch (phase[pi].model)
 		{
 			case SOLID:
@@ -583,6 +586,7 @@ void update()
 				Vtot += volume[i];
 				break;
 		}
+		*/
 	}
 		
 	rnorm = 100.0/Vtot;

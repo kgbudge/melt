@@ -267,14 +267,49 @@ enum PHASE
   P_END
 };
 
+struct Phase;
 
-enum Model
+class Model
 {
-  SOLID = 0,
-  VAPOR,
-  MELT,
-  AQUEOUS
+  // Temperature in K, pressure in kbar, Gibbs free energy in kJ/mol
+	
+  // Note that Gf is the apparent free energy of formation, which ignores the 
+  // entropy of the elements in their standard state.
+
+  public:
+    virtual double Gf(Phase const &phase, double T, double P) const = 0;
+    virtual double volume(Phase const &phase, double T, double P) const = 0;
+    virtual double P(Phase const &phase, double T, double Gf) const;
 };
+
+extern const class Solid : public Model
+{
+  public:
+    virtual double Gf(Phase const &phase, double T, double P) const;
+    virtual double volume(Phase const &phase, double T, double P) const;
+} *const SOLID;
+
+extern const class Vapor: public Model
+{
+  public:
+    virtual double Gf(Phase const &phase, double T, double P) const;
+    virtual double volume(Phase const &phase, double T, double P) const;
+    virtual double P(Phase const &phase, double T, double Gf) const;
+} *const VAPOR;
+
+extern const class Melt : public Model
+{
+  public:
+    virtual double Gf(Phase const &phase, double T, double P) const;
+    virtual double volume(Phase const &phase, double T, double P) const;
+} *const MELT;
+
+extern const class Aqueous : public Model
+{
+  public:
+    virtual double Gf(Phase const &phase, double T, double P) const;
+    virtual double volume(Phase const &phase, double T, double P) const;
+}  *const AQUEOUS;
 
 extern struct Phase
 {
@@ -300,7 +335,7 @@ extern struct Phase
     double k0p;
     double k0pp;
 
-	Model model;
+	Model const *model;
 }
 const phase[P_END];
 
