@@ -4,7 +4,7 @@
 double const P0 = 1.0e-3; // in kbar
 double const T0 = 298.15; // K
 double const R = 0.0083144598;  // kJ/K
-double const V0 = R*T0/P0;
+double const V0 = R*T0/P0;  // kJ/kbar = 10 cm^3
 
 enum ELEMENT
 {
@@ -311,6 +311,50 @@ extern const class Aqueous : public Model
     virtual double volume(Phase const &phase, double T, double P) const;
 }  *const AQUEOUS;
 
+extern const class Water : public Vapor
+{
+  public:
+    virtual double Gf(Phase const &phase, double T, double P) const;
+    virtual double volume(Phase const &phase, double T, double P) const;
+
+  private:
+
+    static double constexpr c13 = 0.24657688e6;
+    static double constexpr c14 = 0.51359951e2;
+    static double constexpr c23 = 0.58638965;
+    static double constexpr c24 = -0.28646939e-2;
+    static double constexpr c25 = 0.31375577e-4;
+    static double constexpr c33 = -0.62783840e1;
+    static double constexpr c34 = 0.14791599e-1;
+    static double constexpr c35 = 0.35779579e-3;
+    static double constexpr c36 = 0.15432925e-7;
+    static double constexpr c44 = -0.42719875;
+    static double constexpr c45 = -0.16325155e-4;
+    static double constexpr c53 = 0.56654978e4;
+    static double constexpr c54 = -0.16580167e2;
+    static double constexpr c55 = 0.76560762e-1;
+    static double constexpr c64 = 0.10917883;
+    static double constexpr c71 = 0.38878656e13;
+    static double constexpr c72 = -0.13494878e9;
+    static double constexpr c73 = 0.30916564e6;
+    static double constexpr c74 = 0.75591105e1;
+    static double constexpr c83 = -0.65537898e5;
+    static double constexpr c84 = 0.18810675e3;
+    static double constexpr c91 = -0.14182435e14;
+    static double constexpr c92 = 0.18165390e9;
+    static double constexpr c93 = -0.19769068e6;
+    static double constexpr c94 = -0.23530318e2;
+    static double constexpr c03 = 0.92093375e5;
+    static double constexpr c04 = 0.12246777e3;
+
+    static double p(double const rho);
+    static double rho(Phase const &phase, double T, double P);
+    static double rho(double P);
+
+// cached
+    static double c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, T;
+}  *const WATER;
+
 extern struct Phase
 {
 	char const *name;
@@ -319,7 +363,7 @@ extern struct Phase
 	double n[MAX_Z];  // quantities of each element in formula. double because these can be fractional for mineraloids or solid solutions.
    
 	double W; // atomic weight
-	double V; // molar volume at STP in kJ/kbar
+	double V; // molar volume at STP in kJ/kbar = 12.342 cm^3
 	double Hf0;  // standard Gibbs free energy of formation at STP in kJ
 	double S0; // entropy at STP in J/K
 	
@@ -343,7 +387,7 @@ extern double S0e[E_END];
 
 void initialize_Gf(double T, double P, double Gf[P_END]);
 
-double solve_for_fugacity(Phase const &, double T, double Gf);
-double solve_for_gibbs(Phase const &, double T, double Pi);
+template<typename Function>
+void solve(double const y, double &x, Function);
 
 #endif // phase_hh

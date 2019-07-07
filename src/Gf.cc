@@ -33,6 +33,12 @@ void initialize_Gf(double T /* K */, double P /* kbar */, double Gf[P_END] /* kJ
 	{
       Gf[i] = phase[i].model->Gf(phase[i], T, P);
 	}
+
+	// Water critical cutoff
+	if (T>674.096)
+	{
+		  Gf[P_H2O_LIQUID] = 1e5;
+	}
 }
 
 //------------------------- Model ----------------------------------------------
@@ -134,7 +140,7 @@ double Vapor::Gf(Phase const &phase, double const T, double const P) const
 	double const Hf0 = phase.Hf0;
 
 	double const Gt = Hf0 - T*S0 + a*(T-T0) + 0.5*b*(T*T-T0*T0) - c*(1/T-1/T0) + 2*d*(sqrt(T)-sqrt(T0))
-		- a*log(T/T0) + b*(T-T0) - 0.5*c*(1/(T*T)-1/(T0*T0)) - 2*d*(1/sqrt(T)-1/sqrt(T0)); 
+		- T*(a*log(T/T0) - b*(T-T0) + 0.5*c*(1/(T*T)-1/(T0*T0)) + 2*d*(1/sqrt(T)-1/sqrt(T0))); 
 
 	double const Gf = Gt + R*T*log(P/P0);
 	return Gf;
@@ -224,3 +230,184 @@ double Aqueous::volume(Phase const &phase, double T, double P) const
 {
 	Insist(false, "not yet implemented");
 }
+
+
+//------------------------- Water ----------------------------------------------
+double Water::c1, Water::c2, Water::c3, Water::c4, Water::c5, Water::c6;
+double Water::c7, Water::c8, Water::c9, Water::c0, Water::T;
+
+double Water::Gf(Phase const &phase, double const T, double const P) const
+{
+	// Calculate temperature-dependent coefficients in the Pfitzer-Stern
+	// nonideal pressure formula.
+	c1 = c13/T + c14;   
+	c2 = c23/T + c24 + c25*T;
+	c3 = c33/T + c34 + T*(c35 + T*c36);
+	c4 = c44 + T*c45;
+	c5 = c53/T + c54 + T*c55;
+	c6 = c64;
+	c7 = (c73 + (c72 + c71/(T*T))/T)/T + c74;
+	c8 = c83/T + c84;
+	c9 = (c93 + (c92 + c91/(T*T))/T)/T + c94;
+	c0 = c03/T + c04;
+	Water::T = T;
+	
+	// Calculate nonideal molar density in mol/cm^3
+    double rho = Water::rho(P);
+
+	// Calculate the ideal Gibbs free energy for this temperature and density.
+
+	double G_ideal = Vapor::Gf(phase, T, P);
+		
+	double const Art_resid = c1*rho + (1/(c2+rho*(c3+rho*(c4+rho*(c5+rho*c6)))) - 1/c2)
+	                   -(c7/c8)*expm1(-c8*rho)-(c9/c0)*expm1(-c0*rho);
+		
+	double const A_resid = R*T*Art_resid;
+	
+    return G_ideal + A_resid;
+}
+
+double Water::volume(Phase const &phase, double const T, double const P) const
+{
+	return  0.1/Water::rho(phase, T, P);   // rho M/ml -> M/dl
+}
+
+double Water::p(double const rho)
+{
+	double const Prt = rho*(1 + rho*(c1 - ((c3+rho*(2*c4 + rho*(3*c5 + rho*4*c6)))/square(c2+rho*(c3+rho*(c4+rho*(c5+rho*c6)))))
+	                               + c7*exp(-c8*rho) + c9*exp(-c0*rho)));
+	
+	return Prt*R*T*10;  // rho -> mol/cc to mol/dl
+}
+
+double Water::rho(Phase const &phase, double T, double P)
+{
+
+	c1 = c13/T + c14;   
+	c2 = c23/T + c24 + c25*T;
+	c3 = c33/T + c34 + T*(c35 + T*c36);
+	c4 = c44 + T*c45;
+	c5 = c53/T + c54 + T*c55;
+	c6 = c64;
+	c7 = (c73 + (c72 + c71/(T*T))/T)/T + c74;
+	c8 = c83/T + c84;
+	c9 = (c93 + (c92 + c91/(T*T))/T)/T + c94;
+	c0 = c03/T + c04;
+	Water::T = T;
+
+	return rho(P);
+}
+
+double Water::rho(double P)
+{
+	double rho = min(1.0/18.0, P/(R*T*10));  // from mol/dl to mol/cc
+    solve(P, rho, Water::p);
+	return rho;
+}
+
+template<class Function>
+void solve(double const y, double &x, Function f)
+{
+	// Bracket root. We know it's a monotonic increasing function.
+	double a = 0.98*x, b = 1.02*x;
+	double fa = f(a)-y, fb = f(b)-y;
+	while (fa*fb>=0.0)
+	{
+		if (fabs(fa)<fabs(fb))
+		{
+			a *= 0.5;
+			fa = f(a)-y;
+			b *= 1.05;
+			fb = f(b)-y;
+		}
+		else
+		{
+			b *= 1.4;
+			fb = f(b)-y;
+			a *= 0.95;
+			fa = f(a)-y;
+		}
+	}
+
+	// Now that root is bracketed, close in on it
+	    
+    if (fabs(fa) < fabs(fb)) 
+	{
+      swap (a,b);
+  	  swap(fa,fb);
+	}
+	double c = a;
+	double fc = fa;
+	bool mflag = true;
+	double s, fs, d;
+	do {
+		if (fa != fc && fb != fc)
+		{
+			s = (a*fb*fc)/((fa-fb)*(fa-fc))+(b*fa*fc)/((fb-fa)*(fb-fc))+(c*fa*fb)/((fc-fa)*(fc-fb));
+		}
+		else
+		{
+			s = b-fb*(b-a)/(fb-fa);
+		}
+		if ((s-(3*a+b)/4)*(s-b)>=0 ||
+		    mflag && fabs(s-b) >= fabs(b-c)/2 ||
+		    !mflag && fabs(s-b) >= fabs(c-d)/2 ||
+		    mflag && fabs(b-c) < 1.0e-7*fabs(a-b) ||
+		    !mflag && fabs(c-d) < 1.0e-7*fabs(a-b))
+		{
+			s = 0.5*(a+b);
+			mflag = true;
+		}
+		else
+		{
+			mflag = false;
+		}
+
+	    fs = f(s) - y;
+		d = c;
+		c = b;
+		fc = fb;
+		if (fa*fs<0)
+		{
+			b = s;
+			fb = fs;
+		}
+		else
+		{
+			a = s;
+			fa = fs;
+		}
+		if (fabs(fa) < fabs(fb))
+		{
+			swap(a,b);
+			swap(fa, fb);
+		}
+	}
+	while (fb != 0 && fs != 0 && fabs(b-a)>1.0e-14*max(b,a));
+	x = fabs(fb)<=fabs(fs)? b : s;	
+
+#if 0
+	double x2 = (y - y0)*(x1-x0)/(y1-y0) + x0;	
+	while (x1>x0 && x2 != x1 && x2 != x0) 
+	{
+		double y2  = f(x2);
+		if ((y2>y)==(y0>y))
+		{
+			y0 = y2;
+			x0 = x2;
+		}
+		else if ((y2>y)==(y1>y))
+		{
+			y1 = y2;
+			x1 = x2;
+		}
+		else
+		{
+			Insist(false, "construction");
+		}
+	    x2 = (y - y0)*(x1-x0)/(y1-y0) + x0;	
+	}
+	x = x2;
+#endif
+}
+

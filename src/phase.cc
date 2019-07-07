@@ -440,7 +440,7 @@ Phase const phase[P_END] =
 	{"CaSiO3 (walstromite)", 3, {E_O, E_SI, E_CA}, {3, 1, 1},     
 	 	 116.164,  3.763,  -1625.88,   83.50,  0.1593,  0.0000,   -967.3,  -1.0754,  2.54,  795.0, 4.10, -0.0052, SOLID},
 	{"H2O (water vapor)", 2, {E_H, E_O}, {2, 1},
-		  18.020,  0.0,     -241.81,  188.80,  0.0401,  0.8656,    487.5,  -0.2512,  0.,      0.,  0.,    0.,      VAPOR},
+		  18.020,  0.0,     -241.81,  188.80,  0.0401,  0.8656,    487.5,  -0.2512,  0.,      0.,  0.,    0.,  WATER},
 	{"CaSiO3 (wollastonite)", 3, {E_O, E_SI, E_CA}, {3, 1, 1},     
 		 116.164,  3.993,  -1633.75,  82.50,  0.1593,  0,       -967.3,  -1.0754, 2.54,  795.0, 4.10, -0.0052, SOLID},
 	{"CaSiO3 (wollastonite liquid)", 3, {E_O, E_SI, E_CA}, {3, 1, 1},     
@@ -476,9 +476,11 @@ Solid mySolid;
 Vapor myVapor;
 Melt myMelt;
 Aqueous myAqueous;
+Water myWater;
 
 const Solid *const SOLID = &mySolid;
 const Vapor *const VAPOR = &myVapor;
 const Melt *const MELT = &myMelt;
 const Aqueous *const AQUEOUS = &myAqueous;
+const Water *const WATER = &myWater;
 
