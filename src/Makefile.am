@@ -31,7 +31,8 @@ melt_SOURCES = \
 	phase.hh \
 	Gf.cc \
 	phase.cc \
-	svdcmp.h
+	svdcmp.h \
+	update.cc
 
 melt_LDFLAGS = 
 
