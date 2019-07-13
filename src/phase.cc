@@ -477,10 +477,11 @@ Vapor myVapor;
 Melt myMelt;
 Aqueous myAqueous;
 Water myWater;
+Magma myMagma;
 
 const Solid *const SOLID = &mySolid;
 const Vapor *const VAPOR = &myVapor;
 const Melt *const MELT = &myMelt;
 const Aqueous *const AQUEOUS = &myAqueous;
 const Water *const WATER = &myWater;
-
+const Magma *const MAGMA = &myMagma;

@@ -27,9 +27,16 @@ inline double square(double x){ return x*x; }
 
 using namespace std;
 
-void initialize_Gf(double T /* K */, double P /* kbar */, double Gf[P_END] /* kJ */)
+void initialize_Gf(double T /* K */, 
+                   double P /* kbar */, 
+                   vector<Phase> const &phase,
+                   vector<double> &Gf /* kJ */)
 {
-	for (unsigned i=0; i<P_END; ++i)
+	Require(phase.size() == Gf.size());
+	Require(phase.size()>=P_END);
+
+	unsigned const N = Gf.size();
+	for (unsigned i=0; i<N; ++i)
 	{
       Gf[i] = phase[i].model->Gf(phase[i], T, P);
 	}
@@ -409,5 +416,15 @@ void solve(double const y, double &x, Function f)
 	}
 	x = x2;
 #endif
+}
+
+double Magma::Gf(Phase const &phase, double T, double P) const
+{
+	return phase.Hf0;
+}
+
+double Magma::volume(Phase const &phase, double T, double P) const
+{
+	return phase.V;
 }
 

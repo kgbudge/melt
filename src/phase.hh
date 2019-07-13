@@ -1,6 +1,8 @@
 #ifndef phase_hh
 #define phase_hh
 
+#include <vector>
+
 double const P0 = 1.0e-3; // in kbar
 double const T0 = 298.15; // K
 double const R = 0.0083144598;  // kJ/K
@@ -355,6 +357,13 @@ extern const class Water : public Vapor
     static double c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, T;
 }  *const WATER;
 
+extern const class Magma : public Model
+{
+  public:
+    virtual double Gf(Phase const &phase, double T, double P) const;
+    virtual double volume(Phase const &phase, double T, double P) const;
+}  *const MAGMA;
+
 extern struct Phase
 {
 	char const *name;
@@ -385,7 +394,7 @@ const phase[P_END];
 
 extern double S0e[E_END];
 
-void initialize_Gf(double T, double P, double Gf[P_END]);
+void initialize_Gf(double T, double P, std::vector<Phase> const &phase, std::vector<double> &Gf);
 
 template<typename Function>
 void solve(double const y, double &x, Function);

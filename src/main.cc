@@ -110,6 +110,7 @@ Gtk::RadioButton *button_byweight;
 Gtk::RadioButton *button_oxygen_by_composition;
 Gtk::RadioButton *button_oxygen_specified;
 Gtk::RadioButton *button_oxygen_FMQ;
+Gtk::RadioButton *button_molar_melt;
 Gtk::Entry *entry_pO2;
 
 Gtk::TreeView *tree_view_CIPW;
@@ -137,7 +138,7 @@ string name;
 
 void update(double const T, 
             double const P, 
-            vector<Phase> phase,
+            vector<Phase> &phase,
             bool const oxygen_specified, 
             bool const oxygen_FMQ,
             double &pO2,
@@ -277,9 +278,7 @@ void update()
 	double Np[E_END];
 	unsigned p[E_END];
 	double volume[E_END];
-
 	double Gf[P_END];
-	initialize_Gf(T, P, Gf);
 
 	bool oxygen_specified = !button_oxygen_by_composition->get_active();
 	bool oxygen_FMQ;
@@ -290,14 +289,11 @@ void update()
 		{
 			text = entry_pO2->get_text();
 			pO2 = atof(text.c_str());
-			GfO2 = phase[P_O2].model->Gf(phase[P_O2], T, pO2);
 			oxygen_FMQ = false;
 		}
 		else
 		{
 			Check(button_oxygen_FMQ->get_active());
-			GfO2 = 2*Gf[P_MAGNETITE]+3*Gf[P_SiO2_QUARTZ]-3*Gf[P_FAYALITE];
-			pO2 = phase[P_O2].model->P(phase[P_O2], T, GfO2);
 			oxygen_FMQ = true;
 		}
 	}
@@ -361,16 +357,34 @@ void update()
 
 	p[E_ZR] = P_ZrO2;
 	Np[E_ZR] = nZrO2;
+
+	vector<Phase> phase(::phase, ::phase+P_END);
 	
     update(T, 
            P, 
-           vector<Phase>(phase, phase+P_END),
+           phase,
            oxygen_specified, 
            oxygen_FMQ,
            pO2,
 	       Np,
 	       p,
            volume);
+
+	if (button_molar_melt->get_active())
+	{
+		unsigned const i = phase.size()-1;
+		double mH2O = phase[i].n[0]*0.5*18.02;
+		double mNa2O = phase[i].n[2]*0.5*61.98;
+		double mAl2O3 = phase[i].n[3]*0.5*101.961;
+		double mSiO2 = phase[i].n[4]*60.085;
+		double tot = mH2O + mNa2O + mAl2O3 + mSiO2;
+		double rtot = 100/tot;
+		
+		text_nH2O->set_text(tostring(mH2O*rtot));
+		text_nNa2O->set_text(tostring(mNa2O*rtot));
+		text_nAl2O3->set_text(tostring(mAl2O3*rtot));
+		text_nSiO2->set_text(tostring(mSiO2*rtot));
+	}
 
 	CIPW_Columns m_Columns;
 	Glib::RefPtr<Gtk::ListStore> list_store_CIPW = Gtk::ListStore::create(m_Columns);
@@ -819,6 +833,8 @@ main (int argc, char *argv[])
 		builder->get_widget("button_oxygen_by_composition", button_oxygen_by_composition);
 		builder->get_widget("button_oxygen_specified", button_oxygen_specified);
 		builder->get_widget("button_oxygen_FMQ", button_oxygen_FMQ);
+
+		builder->get_widget("button_molar_melt", button_molar_melt);
 
 		builder->get_widget("entry_pO2", entry_pO2);
 		entry_pO2->signal_activate().connect(sigc::ptr_fun(update));
