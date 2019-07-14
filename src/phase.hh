@@ -30,7 +30,7 @@ enum ELEMENT
   E_END
 };
 
-unsigned const MAX_Z = 7;
+unsigned const MAX_Z = 9;
 
 enum PHASE
 {

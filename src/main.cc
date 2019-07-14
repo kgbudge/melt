@@ -373,17 +373,31 @@ void update()
 	if (button_molar_melt->get_active())
 	{
 		unsigned const i = phase.size()-1;
-		double mH2O = phase[i].n[0]*0.5*18.02;
-		double mNa2O = phase[i].n[2]*0.5*61.98;
+		double mH2O = phase[i].n[1]*0.5*18.02;
+		double mSiO2 = phase[i].n[2]*60.086;
 		double mAl2O3 = phase[i].n[3]*0.5*101.961;
-		double mSiO2 = phase[i].n[4]*60.085;
-		double tot = mH2O + mNa2O + mAl2O3 + mSiO2;
+		double mMgO = phase[i].n[4]*40.311;
+		double mFeO = phase[i].n[5]*71.85;
+		double mCaO = phase[i].n[6]*56.077;
+		double mK2O = phase[i].n[7]*0.5*94.196;
+		double mNa2O = phase[i].n[8]*0.5*61.979;
+
+		double tot = mH2O + mSiO2 + mAl2O3 + mMgO + mFeO + mCaO + mK2O + mNa2O;
 		double rtot = 100/tot;
-		
+
 		text_nH2O->set_text(tostring(mH2O*rtot));
-		text_nNa2O->set_text(tostring(mNa2O*rtot));
-		text_nAl2O3->set_text(tostring(mAl2O3*rtot));
 		text_nSiO2->set_text(tostring(mSiO2*rtot));
+		text_nAl2O3->set_text(tostring(mAl2O3*rtot));
+		text_nMgO->set_text(tostring(mMgO*rtot));
+		text_nFeO->set_text(tostring(mFeO*rtot));
+		text_nCaO->set_text(tostring(mCaO*rtot));
+		text_nK2O->set_text(tostring(mK2O*rtot));
+		text_nNa2O->set_text(tostring(mNa2O*rtot));
+
+		text_nTiO2->set_text(tostring(0.0));
+		text_nFe2O3->set_text(tostring(0.0));
+		text_nMnO->set_text(tostring(0.0));
+		text_nP2O5->set_text(tostring(0.0));
 	}
 
 	CIPW_Columns m_Columns;
