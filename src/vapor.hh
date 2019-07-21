@@ -1,4 +1,4 @@
-// phase.hh
+// vapor.hh
 //
 // Copyright (C) 2019 - Kent G. Budge
 //
@@ -15,31 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef phase_hh
-#define phase_hh
+#ifndef vapor_hh
+#define vapor_hh
 
-#include "phase_enum.hh"
+#include "model.hh"
 
-class Model;
-
-unsigned const MAX_Z = 9;
-
-extern struct Phase
+class Vapor: public Model
 {
-    unsigned index; // should match enumerator
-	char const *name;
-	unsigned nz; // elements in formula
-	unsigned z[MAX_Z]; // elements of formula
-	double n[MAX_Z];  // quantities of each element in formula. double because these can be fractional for mineraloids or solid solutions.
+  struct Vapor_Phase
+  {
+    double a, b, dm0, c, d; // heat capacity coeffs
+    double a0, k0, k0p, k0pp; // volume coeffs
+  };
 
-	double Hf0;  // standard Gibbs free energy of formation at STP in kJ
-	double S0; // entropy at STP in J/K
-	double V; // molar volume at STP in kJ/kbar = 12.342 cm^3
+  public:
+    virtual double Gf(Phase const &phase, double T, double P) const;
+    virtual double volume(Phase const &phase, double T, double P) const;
+    virtual double P(Phase const &phase, double T, double Gf) const;
+};
 
-	Model const *model;
-
-	double data[60];
-}
-const phase[P_END];
-
-#endif // phase_hh
+#endif // vapor_hh

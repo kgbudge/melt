@@ -40,6 +40,8 @@
 /* #define UI_FILE PACKAGE_DATA_DIR"/ui/norm.ui" */
 #define UI_FILE "src/melt.ui"
 
+#include "element.hh"
+#include "model.hh"
 #include "phase.hh"
 
 //-----------------------------------------------------------------------------//
@@ -373,14 +375,14 @@ void update()
 	if (button_molar_melt->get_active())
 	{
 		unsigned const i = phase.size()-1;
-		double mH2O = phase[i].n[1]*0.5*18.02;
-		double mSiO2 = phase[i].n[2]*60.086;
-		double mAl2O3 = phase[i].n[3]*0.5*101.961;
-		double mMgO = phase[i].n[4]*40.311;
-		double mFeO = phase[i].n[5]*71.85;
-		double mCaO = phase[i].n[6]*56.077;
-		double mK2O = phase[i].n[7]*0.5*94.196;
-		double mNa2O = phase[i].n[8]*0.5*61.979;
+		double mH2O = phase[i].n[1];//*0.5*18.02;
+		double mSiO2 = phase[i].n[2];//*60.086;
+		double mAl2O3 = phase[i].n[3];//*0.5*101.961;
+		double mMgO = phase[i].n[4];//*40.311;
+		double mFeO = phase[i].n[5];//*71.85;
+		double mCaO = phase[i].n[6];//*56.077;
+		double mNa2O = phase[i].n[7];//*0.5*61.979;
+		double mK2O = phase[i].n[8];//*0.5*94.196;
 
 		double tot = mH2O + mSiO2 + mAl2O3 + mMgO + mFeO + mCaO + mK2O + mNa2O;
 		double rtot = 100/tot;

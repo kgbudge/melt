@@ -1,4 +1,4 @@
-// phase.hh
+// element.hh
 //
 // Copyright (C) 2019 - Kent G. Budge
 //
@@ -15,31 +15,29 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef phase_hh
-#define phase_hh
+#ifndef element_hh
+#define element_hh
 
-#include "phase_enum.hh"
-
-class Model;
-
-unsigned const MAX_Z = 9;
-
-extern struct Phase
+enum ELEMENT
 {
-    unsigned index; // should match enumerator
-	char const *name;
-	unsigned nz; // elements in formula
-	unsigned z[MAX_Z]; // elements of formula
-	double n[MAX_Z];  // quantities of each element in formula. double because these can be fractional for mineraloids or solid solutions.
+  E_H,
+  E_C,
+  E_O,
+  E_NA,
+  E_MG,
+  E_AL,
+  E_SI,
+  E_S,
+  E_CL,
+  E_K,
+  E_CA,
+  E_TI,
+  E_CR,
+  E_MN,
+  E_FE,
+  E_ZR,
 
-	double Hf0;  // standard Gibbs free energy of formation at STP in kJ
-	double S0; // entropy at STP in J/K
-	double V; // molar volume at STP in kJ/kbar = 12.342 cm^3
+  E_END
+};
 
-	Model const *model;
-
-	double data[60];
-}
-const phase[P_END];
-
-#endif // phase_hh
+#endif // element_hh

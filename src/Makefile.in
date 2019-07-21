@@ -102,8 +102,10 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(uidir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_melt_OBJECTS = main.$(OBJEXT) Gf.$(OBJEXT) phase.$(OBJEXT) \
-	update.$(OBJEXT)
+am_melt_OBJECTS = main.$(OBJEXT) update.$(OBJEXT) \
+	phase_table.$(OBJEXT) model.$(OBJEXT) melt.$(OBJEXT) \
+	solid.$(OBJEXT) vapor.$(OBJEXT) pfitzer_sterner.$(OBJEXT) \
+	melt_model.$(OBJEXT) magma.$(OBJEXT) bm_melt.$(OBJEXT)
 melt_OBJECTS = $(am_melt_OBJECTS)
 am__DEPENDENCIES_1 =
 melt_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -400,10 +402,28 @@ AM_CFLAGS = \
 melt_SOURCES = \
 	main.cc \
 	phase.hh \
-	Gf.cc \
-	phase.cc \
 	svdcmp.h \
-	update.cc
+	update.cc \
+	phase_table.cc \
+	phase_enum.hh \
+	model.hh \
+	element.hh \
+	constants.hh \
+	model.cc \
+	melt.cc \
+	algorithm.hh \
+	solid.cc \
+	vapor.cc \
+	pfitzer_sterner.cc \
+	melt_model.cc \
+	magma.cc \
+	solid.hh \
+	vapor.hh \
+	pfitzer_sterner.hh \
+	bm_melt.cc \
+	melt_model.hh \
+	bm_melt.hh \
+	melt.hh
 
 melt_LDFLAGS = 
 melt_LDADD = $(MELT_LIBS) \
@@ -506,10 +526,17 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Gf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bm_melt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/magma.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/phase.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/melt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/melt_model.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/model.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pfitzer_sterner.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/phase_table.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/update.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vapor.Po@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

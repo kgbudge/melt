@@ -1,4 +1,4 @@
-// phase.hh
+// bm_melt.hh
 //
 // Copyright (C) 2019 - Kent G. Budge
 //
@@ -15,31 +15,30 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef phase_hh
-#define phase_hh
+#ifndef bm_melt_hh
+#define bm_melt_hh
 
-#include "phase_enum.hh"
+#include "melt_model.hh"
 
-class Model;
-
-unsigned const MAX_Z = 9;
-
-extern struct Phase
+class BM_Melt : public Melt
 {
-    unsigned index; // should match enumerator
-	char const *name;
-	unsigned nz; // elements in formula
-	unsigned z[MAX_Z]; // elements of formula
-	double n[MAX_Z];  // quantities of each element in formula. double because these can be fractional for mineraloids or solid solutions.
+  public:
+    struct Melt_Phase
+    {
+      double c0, dum1, c2, c3, c1; // heat capacity coeffs
+      double Tf, dS_f; // melt coeffs
+      double Cpl; // liquid heat coeffs
+      double dvdt, dvdp, d2vdpdt, Kp; // volume coeffs
+    };
 
-	double Hf0;  // standard Gibbs free energy of formation at STP in kJ
-	double S0; // entropy at STP in J/K
-	double V; // molar volume at STP in kJ/kbar = 12.342 cm^3
+    virtual double Gf(Phase const &phase, double T, double P) const;
+    virtual double volume(Phase const &phase, double T, double P) const;
 
-	Model const *model;
+  private:
+    static double p(Melt_Phase const &sph, double const Vl);
 
-	double data[60];
-}
-const phase[P_END];
+    static BM_Melt const *p_phase;	
+    static double p_T, p_V;
+};
 
-#endif // phase_hh
+#endif // bm_melt_hh

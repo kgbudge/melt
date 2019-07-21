@@ -29,10 +29,28 @@ bin_PROGRAMS = melt
 melt_SOURCES = \
 	main.cc \
 	phase.hh \
-	Gf.cc \
-	phase.cc \
 	svdcmp.h \
-	update.cc
+	update.cc \
+	phase_table.cc \
+	phase_enum.hh \
+	model.hh \
+	element.hh \
+	constants.hh \
+	model.cc \
+	melt.cc \
+	algorithm.hh \
+	solid.cc \
+	vapor.cc \
+	pfitzer_sterner.cc \
+	melt_model.cc \
+	magma.cc \
+	solid.hh \
+	vapor.hh \
+	pfitzer_sterner.hh \
+	bm_melt.cc \
+	melt_model.hh \
+	bm_melt.hh \
+	melt.hh
 
 melt_LDFLAGS = 
 

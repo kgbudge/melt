@@ -1,4 +1,4 @@
-// phase.hh
+// pfitzer_sterner.hh
 //
 // Copyright (C) 2019 - Kent G. Budge
 //
@@ -15,31 +15,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef phase_hh
-#define phase_hh
+#ifndef pfitzer_sterner_hh
+#define pfitzer_sterner_hh
 
-#include "phase_enum.hh"
+#include "vapor.hh"
 
-class Model;
-
-unsigned const MAX_Z = 9;
-
-extern struct Phase
+class Pfitzer_Sterner : public Vapor
 {
-    unsigned index; // should match enumerator
-	char const *name;
-	unsigned nz; // elements in formula
-	unsigned z[MAX_Z]; // elements of formula
-	double n[MAX_Z];  // quantities of each element in formula. double because these can be fractional for mineraloids or solid solutions.
+  public:
 
-	double Hf0;  // standard Gibbs free energy of formation at STP in kJ
-	double S0; // entropy at STP in J/K
-	double V; // molar volume at STP in kJ/kbar = 12.342 cm^3
+    virtual double Gf(Phase const &phase, double T, double P) const;
+    virtual double volume(Phase const &phase, double T, double P) const;
 
-	Model const *model;
+  private:
 
-	double data[60];
-}
-const phase[P_END];
+    static double p(double const rho);
+    double rho(Phase const &phase, double T, double P) const;
+    static double rho(double P);
 
-#endif // phase_hh
+// cached
+    static double C[10], T;
+};
+
+#endif // pfitzer_sterner_hh

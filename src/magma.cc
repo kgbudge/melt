@@ -1,4 +1,4 @@
-// phase.hh
+// magma.cc
 //
 // Copyright (C) 2019 - Kent G. Budge
 //
@@ -15,31 +15,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef phase_hh
-#define phase_hh
+/*#include <cmath>
+#include <algorithm>
+#include <assert.h>
+#include <fstream>
+#include <vector>
 
-#include "phase_enum.hh"
+#include "ds++/Assert.hh"
+*/
 
-class Model;
+#include "magma.hh"
+#include "phase.hh"
 
-unsigned const MAX_Z = 9;
+//inline double square(double x){ return x*x; }
 
-extern struct Phase
+double Magma::Gf(Phase const &phase, double T, double P) const
 {
-    unsigned index; // should match enumerator
-	char const *name;
-	unsigned nz; // elements in formula
-	unsigned z[MAX_Z]; // elements of formula
-	double n[MAX_Z];  // quantities of each element in formula. double because these can be fractional for mineraloids or solid solutions.
-
-	double Hf0;  // standard Gibbs free energy of formation at STP in kJ
-	double S0; // entropy at STP in J/K
-	double V; // molar volume at STP in kJ/kbar = 12.342 cm^3
-
-	Model const *model;
-
-	double data[60];
+	return phase.Hf0;
 }
-const phase[P_END];
 
-#endif // phase_hh
+double Magma::volume(Phase const &phase, double T, double P) const
+{
+	return phase.V;
+}
