@@ -420,6 +420,7 @@ void update()
         volume[i] = Np[i]*phase[pi].model->volume(phase[pi], T, P);
 		Vtot += volume[i];
 	}
+	cout << Vtot/100 << endl;
 		
 	rnorm = 100.0/Vtot;
 	for (unsigned i=0; i<E_END; ++i)

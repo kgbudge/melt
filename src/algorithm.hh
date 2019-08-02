@@ -153,4 +153,71 @@ void solve(double const y, double &x, Function f)
 	x = fabs(fb)<=fabs(fs)? b : s;	
 }
 
+template<class Function>
+void solvebr(double &a, double &b, Function f)
+{
+	// Bracket root. We know it's a monotonic increasing function.
+	double fa = f(a), fb = f(b);
+	if (fa*fb>=0.0)
+	{
+      return; 
+	}
+
+	// Now that root is bracketed, close in on it
+	    
+    if (fabs(fa) < fabs(fb)) 
+	{
+      swap (a,b);
+  	  swap(fa,fb);
+	}
+	double c = a;
+	double fc = fa;
+	bool mflag = true;
+	double s, fs, d;
+	do {
+		if (fa != fc && fb != fc)
+		{
+			s = (a*fb*fc)/((fa-fb)*(fa-fc))+(b*fa*fc)/((fb-fa)*(fb-fc))+(c*fa*fb)/((fc-fa)*(fc-fb));
+		}
+		else
+		{
+			s = b-fb*(b-a)/(fb-fa);
+		}
+		if ((s-(3*a+b)/4)*(s-b)>=0 ||
+		    mflag && fabs(s-b) >= fabs(b-c)/2 ||
+		    !mflag && fabs(s-b) >= fabs(c-d)/2 ||
+		    mflag && fabs(b-c) < 1.0e-7*fabs(a-b) ||
+		    !mflag && fabs(c-d) < 1.0e-7*fabs(a-b))
+		{
+			s = 0.5*(a+b);
+			mflag = true;
+		}
+		else
+		{
+			mflag = false;
+		}
+
+	    fs = f(s);
+		d = c;
+		c = b;
+		fc = fb;
+		if (fa*fs<0)
+		{
+			b = s;
+			fb = fs;
+		}
+		else
+		{
+			a = s;
+			fa = fs;
+		}
+		if (fabs(fa) < fabs(fb))
+		{
+			swap(a,b);
+			swap(fa, fb);
+		}
+	}
+	while (fb != 0 && fs != 0 && fabs(b-a)>1.0e-14*max(b,a));
+}
+
 #endif // algorithm_hh

@@ -35,6 +35,7 @@ class Model
 
 extern Model const *const SOLID;
 extern Model const *const LANDAU_SOLID;
+extern Model const *const BRAGG_WILLIAMS_SOLID;
 extern Model const *const MELT;
 extern Model const *const BM_MELT;
 extern Model const *const VAPOR;

@@ -50,7 +50,11 @@ melt_SOURCES = \
 	bm_melt.cc \
 	melt_model.hh \
 	bm_melt.hh \
-	melt.hh
+	melt.hh \
+	landau_solid.hh \
+	landau_solid.cc \
+	bragg_williams_solid.cc \
+	bragg_williams_solid.hh
 
 melt_LDFLAGS = 
 

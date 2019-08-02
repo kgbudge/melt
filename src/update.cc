@@ -60,7 +60,7 @@ void initialize_Gf(double T /* K */,
 	}
 
 	// Water critical cutoff
-	if (T>674.096)
+	if (T>0.0 /*674.096*/)
 	{
 		  Gf[P_H2O_LIQUID] = 1e5;
 	}

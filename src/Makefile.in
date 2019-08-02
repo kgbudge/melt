@@ -105,7 +105,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_melt_OBJECTS = main.$(OBJEXT) update.$(OBJEXT) \
 	phase_table.$(OBJEXT) model.$(OBJEXT) melt.$(OBJEXT) \
 	solid.$(OBJEXT) vapor.$(OBJEXT) pfitzer_sterner.$(OBJEXT) \
-	melt_model.$(OBJEXT) magma.$(OBJEXT) bm_melt.$(OBJEXT)
+	melt_model.$(OBJEXT) magma.$(OBJEXT) bm_melt.$(OBJEXT) \
+	landau_solid.$(OBJEXT) bragg_williams_solid.$(OBJEXT)
 melt_OBJECTS = $(am_melt_OBJECTS)
 am__DEPENDENCIES_1 =
 melt_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -423,7 +424,11 @@ melt_SOURCES = \
 	bm_melt.cc \
 	melt_model.hh \
 	bm_melt.hh \
-	melt.hh
+	melt.hh \
+	landau_solid.hh \
+	landau_solid.cc \
+	bragg_williams_solid.cc \
+	bragg_williams_solid.hh
 
 melt_LDFLAGS = 
 melt_LDADD = $(MELT_LIBS) \
@@ -527,6 +532,8 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bm_melt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bragg_williams_solid.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/landau_solid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/magma.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/melt.Po@am__quote@
