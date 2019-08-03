@@ -59,11 +59,15 @@ void initialize_Gf(double T /* K */,
 		Gf[i] = phase[i].model->Gf(phase[i], T, P);
 	}
 
-	// Water critical cutoff
-	if (T>0.0 /*674.096*/)
+	// Water model selection
+ 	if (P>0.2224 || T>674.096 || T>649.634*pow(P,0.0811546)*(1+P*(1.39936 + P*(-6.98999+P*14.9787))))
 	{
-		  Gf[P_H2O_LIQUID] = 1e5;
+		  Gf[P_H2O_LIQUID] = 1e5; // turn liquid model off
 	}
+	else
+	{
+		  Gf[P_WATER_VAPOR] = 1e5; // turn vapor model off
+    }
 }
 	
 //-----------------------------------------------------------------------------//

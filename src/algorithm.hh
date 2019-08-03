@@ -149,7 +149,7 @@ void solve(double const y, double &x, Function f)
 			swap(fa, fb);
 		}
 	}
-	while (fb != 0 && fs != 0 && fabs(b-a)>1.0e-14*max(b,a));
+	while (fb != 0 && fs != 0 && fabs(b-a)>1.0e-14*max(fabs(a),fabs(b)));
 	x = fabs(fb)<=fabs(fs)? b : s;	
 }
 

@@ -35,6 +35,8 @@ using namespace std;
 static const Melt myMelt;
 extern Model const *const MELT = &myMelt;
 
+inline double cube(double x){ return x*x*x; }
+
 //------------------------- Melts ---------------------------------------------
 
 double Melt::Gf(Phase const &phase, double const T, double const P) const
@@ -65,28 +67,43 @@ double Melt::Gf(Phase const &phase, double const T, double const P) const
 	double const k0 = sph.k0;
 	double const k0p = sph.k0p;
 	double const k0pp = sph.k0pp;
+	double const k0t = sph.k0t;
 
 	// Temperature terms
-	double const Gt = Hf0 - T*S0 + A*dT + 0.5*B*dT2 - C*drT + 2*D*dsT
-		- T*(A*dlogT + B*dT - 0.5*C*drT2 - 2*D*drsT);
+	double const Gt = Hf0 + A*dT + 0.5*B*dT2 - C*drT + 2*D*dsT
+		- T*(S0 + A*dlogT + B*dT - 0.5*C*drT2 - 2*D*drsT);
+
+	double Vt = V0*(1 + a0*(T-T0));
 
 	// Pressure term
-	double const b = k0p*(2+k0p)/(k0*(1+k0p));
-	double const c = 1.0/(k0p*(2+k0p));
-	double const a = sqrt((1+c)/c);
 
-	double const Vt = V0*(1 + a0*dT - 20*a0*dsT);
-
-	double const Gfi =
-		Gt + 
-		P*Vt*(1-a+a*(1 - pow(1+b* P, 1-c))/(b*(c-1)* P))
-		-P0*Vt*(1-a+a*(1 - pow(1+b*P0, 1-c))/(b*(c-1)*P0));
-
+	double const kt = k0*(1-1.5e-4*(T-T0));
+	
+	double const Gfi = Gt + Vt*kt*(pow(1+k0p*P/kt, 1-1/k0p)-1)/(k0p-1);
 
 	return Gfi; 
 }
 
 double Melt::volume(Phase const &phase, double T, double P) const
 {
-  return phase.V;
+
+	double const Hf0 = phase.Hf0;
+	double const S0 = phase.S0*1e-3; // to bring J to kJ
+	double const V0 = phase.V;
+	
+	Melt_Phase const &sph = reinterpret_cast<Melt_Phase const &>(phase.data);
+
+	double const A = sph.a;
+	double const B = sph.b*1e-5;  // By convention, reported in units of 1e-5 kJ/K/K
+	double const C = sph.c;
+	double const D = sph.d;
+	double const a0 = sph.a0*1e-5; // By convention, reported in units of 1e-5/K
+	double const k0 = sph.k0;
+	double const k0p = sph.k0p;
+	double const k0pp = sph.k0pp;
+	double const k0t = sph.k0t;
+
+	double const kt = k0*(1-1.5e-4*(T-T0));
+
+	return V0*(1 + a0*(T-T0))*pow(1-k0p*P/(kt+k0p*P), 1/k0p);
 }

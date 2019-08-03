@@ -25,7 +25,7 @@ class Melt : public Model
   struct Melt_Phase
   {
     double a, b, dm0, c, d; // heat capacity coeffs
-    double a0, k0, k0p, k0pp; // volume coeffs
+    double a0, k0, k0p, k0pp, k0t; // volume coeffs
   };
 
   public:
