@@ -59,6 +59,12 @@ double Melt::Gf(Phase const &phase, double const T, double const P) const
 	
 	Melt_Phase const &sph = reinterpret_cast<Melt_Phase const &>(phase.data);
 
+	if (sph.Tlow>0.0 && 
+	    (T<sph.Tlow || T>sph.Thigh || P<sph.Plow || P>sph.Phigh))
+	{
+		return 1e5;
+	}
+
 	double const A = sph.a;
 	double const B = sph.b*1e-5;  // By convention, reported in units of 1e-5 kJ/K/K
 	double const C = sph.c;

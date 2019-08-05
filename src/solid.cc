@@ -71,6 +71,12 @@ double Solid::Gf(Phase const &phase, double const T, double const P) const
 	double const k0p = sph.k0p;
 	double const k0pp = sph.k0pp;
 
+	if (sph.Tlow>0.0 && 
+	    (T<sph.Tlow || T>sph.Thigh || P<sph.Plow || P>sph.Phigh))
+	{
+		return 1e5;
+	}
+	
 	// Temperature terms
 	double const Gt = Hf0 + A*dT + 0.5*B*dT2 - C*drT + 2*D*dsT
 		          - T*(S0 + A*dlogT + B*dT - 0.5*C*drT2 - 2*D*drsT);

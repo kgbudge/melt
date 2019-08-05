@@ -26,6 +26,7 @@ class Solid : public Model
   {
     double a, b, dm0, c, d; // heat capacity coeffs
     double a0, k0, k0p, k0pp; // volume coeffs
+    double Tlow, Plow, Thigh, Phigh; // range of validity
   };
 
   public:

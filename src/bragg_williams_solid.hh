@@ -26,6 +26,7 @@ class Bragg_Williams_Solid : public Solid
   {
     double a, b, dm0, c, d; // heat capacity coeffs
     double a0, k0, k0p, k0pp; // volume coeffs
+    double Tlow, Plow, Thigh, Phigh; // range of validity
     double dH, dV, W, Wv, n, Fac; // Bragg_Williams coeffs
   };
 
