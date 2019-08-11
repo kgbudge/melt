@@ -83,7 +83,7 @@ double BM_Melt::Gf(Phase const &phase, double const T, double const P) const
 	solve(P, Vl, [=](double V){
 		return p(sph, V);});
 
-	double const K = V0/(dvdp+d2vdpdt*(T-Tr));
+	double const K = -V0/(dvdp+d2vdpdt*(T-Tr));
 
 	double const rdl = pow(V0/Vl, 2./3.) - 1.;
 	double const dG_lTP = dG_lTPr + P*Vl - Pr*V0 + (9./8.)*K*V0*rdl*rdl*(1+0.5*(Kp-4)*rdl);
@@ -118,7 +118,7 @@ double BM_Melt::p(Melt_Phase const &sph, double Vl)
 	double const Vr = p_phase->p_V;
 
 	double const V0 = Vr + dvdt*(T-Tr);
-  double const K = V0/(dvdp+d2vdpdt*(T-Tr));
+  double const K = -V0/(dvdp+d2vdpdt*(T-Tr));
   return 1.5*K*(pow(V0/Vl, 7./3.)-pow(V0/Vl, 5./3.))*(1 - 0.75*(4-Kp)*(pow(V0/Vl, 2./3.)-1)); 
 }
 

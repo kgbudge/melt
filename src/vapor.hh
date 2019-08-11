@@ -25,7 +25,7 @@ class Vapor: public Model
   struct Vapor_Phase
   {
     double a, b, dm0, c, d; // heat capacity coeffs
-    double a0, k0, k0p, k0pp; // volume coeffs
+    double vdwa, vdwb; // van der Waals coeffs
   };
 
   public:

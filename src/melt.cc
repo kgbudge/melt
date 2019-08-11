@@ -47,10 +47,10 @@ double const Ww_fa = 35634.*Wnorm;
 double const Ww_wo = 20375.*Wnorm;
 double const Ww_sm = -96938.*Wnorm;
 double const Ww_kal = 10374.*Wnorm;
-double const Wq_cor = -11000*Wnorm; //-39120.*Wnorm;
-double const Wq_fo = 7346*Wnorm; //1863+23661.*Wnorm;
-double const Wq_fa = 11550.*Wnorm; //1376+3421.*Wnorm;
-double const Wq_wo = 14834.*Wnorm;//1592-864.*Wnorm;
+double const Wq_cor = -108758*Wnorm;// recalibrated from Q-Cor eutectic at 1346K
+double const Wq_fo = 7346*Wnorm; // calibrated from Q-Fo eutectic at 1815K
+double const Wq_fa = 11550.*Wnorm; // calibrated from eutectic near 1422K
+double const Wq_wo = 14834.*Wnorm;// calibrated from eutectic of 1699K
 double const Wq_sm = -2423.*Wnorm; // -99039.*Wnorm;
 double const Wq_kal = -33922.*Wnorm;
 double const Wcor_fo = -30509.*Wnorm;
@@ -359,7 +359,19 @@ bool melt(double T,
 		{
 			Geu -= x[e]*element_activity[e];
 		}
+		new_phase.name = "melt";
+		new_phase.nz = M_END+1;
+		for (unsigned i=0; i<M_END; ++i)
+		{
+	      new_phase.z[i] = endmember_element[i];
+	      new_phase.n[i] = x[endmember_element[i]];
+		}
+		new_phase.z[M_END] = E_O;
+		new_phase.n[M_END] = x[E_O];
+		new_phase.V = V;
+		new_phase.model = MELT;
+		return true;
 	}
-	return true;
+	return false;
 }
 

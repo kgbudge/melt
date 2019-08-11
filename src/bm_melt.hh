@@ -26,9 +26,9 @@ class BM_Melt : public Melt
     struct Melt_Phase
     {
       double c0, dum1, c2, c3, c1; // heat capacity coeffs
+      double dvdt, dvdp, d2vdpdt, Kp; // volume coeffs
       double Tf, dS_f; // melt coeffs
       double Cpl; // liquid heat coeffs
-      double dvdt, dvdp, d2vdpdt, Kp; // volume coeffs
     };
 
     virtual double Gf(Phase const &phase, double T, double P) const;

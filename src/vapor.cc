@@ -23,6 +23,7 @@
 
 //#include "ds++/Assert.hh"
 
+#include "algorithm.hh"
 #include "constants.hh"
 #include "phase.hh"
 #include "vapor.hh"
@@ -53,11 +54,27 @@ double Vapor::Gf(Phase const &phase, double const T, double const P) const
 	double const c = sph.c;
 	double const d = sph.d;
 
-	double const Gt = Hf0 - T*S0 + a*(T-T0) + 0.5*b*(T*T-T0*T0) - c*(1/T-1/T0) + 2*d*(sqrt(T)-sqrt(T0))
-		- T*(a*log(T/T0) - b*(T-T0) + 0.5*c*(1/(T*T)-1/(T0*T0)) + 2*d*(1/sqrt(T)-1/sqrt(T0))); 
+	double const vdwa = 0.1*sph.vdwa;  // l*l*bar to dl*dl*kbar
+	double const vdwb = 10*sph.vdwb;   // l to dl
 
-	double const Gf = Gt + R*T*log(P/P0);
-	return Gf;
+	double const Gt = Hf0 + a*(T-T0) + 0.5*b*(T*T-T0*T0) - c*(1/T-1/T0) + 2*d*(sqrt(T)-sqrt(T0))
+		- T*(S0 + a*log(T/T0) - b*(T-T0) + 0.5*c*(1/(T*T)-1/(T0*T0)) + 2*d*(1/sqrt(T)-1/sqrt(T0))); 
+
+	if (vdwa == 0.0)
+	{
+		double const Gf = Gt + R*T*log(P/P0);
+		return Gf;
+	}
+	else
+	{
+		double V0 = R*T/P0;
+		solve(R*T, V0, [=](double V){ return (P+vdwa/(V*V))*(V-vdwb); });
+		double V = R*T/P;
+		solve(R*T, V, [=](double V){ return (P+vdwa/(V*V))*(V-vdwb); });
+		double Gp = P*V - P0*V0 - R*T*log((V-vdwb)/(V0-vdwb)) - vdwa/V + vdwa/V0; 
+		double Gf = Gt + Gp;
+		return Gf;
+	}
 }
 
 double Vapor::volume(Phase const &phase, double const T, double const P) const

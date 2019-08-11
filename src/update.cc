@@ -334,13 +334,14 @@ void update(double const T,
 	double element_activity[E_END];
 	do_update(T, P, phase, Gf, oxygen_specified, oxygen_FMQ, pO2, element_activity, Np, p, volume);
 
-	for (unsigned i=0; i<30; ++i)
+	for (unsigned i=0; false && i<30; ++i)
 	{
 		Phase new_phase;
 		double Geu;
 		if (melt(T, P, Gf, element_activity, Np, p, Geu, new_phase))
 		{
 			Gf.push_back(Geu);
+			phase.push_back(new_phase);
 
 			do_update(T, P, phase, Gf, oxygen_specified, oxygen_FMQ, pO2, element_activity, Np, p, volume);
 		}
