@@ -51,12 +51,12 @@ double const Wq_cor = -108758*Wnorm;// recalibrated from Q-Cor eutectic at 1346K
 double const Wq_fo = 7346*Wnorm; // calibrated from Q-Fo eutectic at 1815K
 double const Wq_fa = 11550.*Wnorm; // calibrated from eutectic near 1422K
 double const Wq_wo = 14834.*Wnorm;// calibrated from eutectic of 1699K
-double const Wq_sm = -2423.*Wnorm; // -99039.*Wnorm;
+double const Wq_sm = -6000*Wnorm;// calibrated from eutectic at 1062K
 double const Wq_kal = -33922.*Wnorm;
 double const Wcor_fo = -30509.*Wnorm;
 double const Wcor_fa = -32880.*Wnorm;
 double const Wcor_wo = -57918.*Wnorm;
-double const Wcor_sm = -130785.*Wnorm;
+double const Wcor_sm = 100000.*Wnorm; //-130785.*Wnorm;
 double const Wcor_kal = -25859.*Wnorm;
 double const Wfo_fa = -37257.*Wnorm;
 double const Wfo_wo = -31732.*Wnorm;
@@ -281,6 +281,7 @@ double find_eutectic(double const T,
 //-----------------------------------------------------------------------------//
 bool melt(double T, 
             double P, 
+            vector<Phase> const &phase,
             vector<double> const &Gf,
             double const element_activity[E_END], 
             double const Np[E_END], 
@@ -303,20 +304,29 @@ bool melt(double T,
 	}
 
 	// Now compress out elements not actually present.
-	unsigned NM = 0;
-	unsigned melt_element[M_END];
+	bool is_present[E_END];
+	fill(is_present, is_present+E_END, false);
 	for (unsigned i=0; i<E_END; ++i)
 	{
 		if (Np[i] > 1.e-9)
 		{
-			// i is an element present in the mix that could go into the melt. Look for it in element melt table.
-			for (unsigned j=0; j<M_END; ++j)
+			// i is a phase that is present in quantity.
+			unsigned j = p[i];
+			Phase const &ph = phase[j];
+			for (unsigned k=0; k<ph.nz; k++)
 			{
-				if (endmember_element[j] == i)
-				{
-					melt_element[NM++] = j;
-				}
+				if (ph.n[k]>1.e-9)
+				  is_present[ph.z[k]] =  true;
 			}
+		}
+	}
+	unsigned NM = 0;
+	unsigned melt_element[M_END];
+	for (int i=0; i<M_END; ++i)
+	{
+		if (is_present[endmember_element[i]])
+		{
+			melt_element[NM++] = i;
 		}
 	}
 

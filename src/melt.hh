@@ -73,7 +73,8 @@ double const endmember_mole[M_END] =
 };
 
 bool melt(double T, 
-            double P, 
+          double P, 
+            std::vector<struct Phase> const &phase,
 	        std::vector<double> const &Gf,
             double const element_activity[E_END], 
             double const Np[E_END], 

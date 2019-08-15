@@ -187,7 +187,7 @@ void do_update(double const T,
 				continue;
 
 			double aGfi = gsl_vector_get(aGf, ip); 
-			if (fabs(aGfi)<1.0e-9)
+			if (fabs(aGfi)<1.0e-9 || !isfinite(aGfi))
 			{
 				goto DONE;
 			}
@@ -263,14 +263,16 @@ void do_update(double const T,
 			cout << endl;
 
 			unsigned n;
+			double npm = 0.0;
 			for (unsigned i=0; i<N; ++i)
 			{
 				Np[i] -= r*left[i];
 				if (fabs(Np[i])<1.0e-10)
 				{
-					if (fabs(left[i])>1.0e-10)
+					if (r*left[i]>npm)
 					{
 						n = i;
+						npm = r*left[i];
 					}
 					Np[i] = 0.0;
 				}
@@ -334,11 +336,11 @@ void update(double const T,
 	double element_activity[E_END];
 	do_update(T, P, phase, Gf, oxygen_specified, oxygen_FMQ, pO2, element_activity, Np, p, volume);
 
-	for (unsigned i=0; false && i<30; ++i)
+	for (unsigned i=0; i<30; ++i)
 	{
 		Phase new_phase;
 		double Geu;
-		if (melt(T, P, Gf, element_activity, Np, p, Geu, new_phase))
+		if (melt(T, P, phase, Gf, element_activity, Np, p, Geu, new_phase))
 		{
 			Gf.push_back(Geu);
 			phase.push_back(new_phase);
