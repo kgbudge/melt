@@ -40,4 +40,6 @@ enum ELEMENT
   E_END
 };
 
+extern double const atomic_weight[E_END];
+
 #endif // element_hh

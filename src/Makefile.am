@@ -56,7 +56,9 @@ melt_SOURCES = \
 	bragg_williams_solid.cc \
 	bragg_williams_solid.hh \
 	bm_solid.cc \
-	bm_solid.hh
+	bm_solid.hh \
+	update.hh \
+	element.cc
 
 melt_LDFLAGS = 
 

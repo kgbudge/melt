@@ -43,6 +43,7 @@
 #include "element.hh"
 #include "model.hh"
 #include "phase.hh"
+#include "update.hh"
 
 //-----------------------------------------------------------------------------//
 class CIPW_Columns : public Gtk::TreeModelColumnRecord
@@ -137,16 +138,6 @@ double Cl;
 
 string file;
 string name;
-
-void update(double const T, 
-            double const P, 
-            vector<Phase> &phase,
-            bool const oxygen_specified, 
-            bool const oxygen_FMQ,
-            double &pO2,
-	        double Np[E_END],
-	        unsigned p[E_END],
-            double volume[E_END]);
 
 //-----------------------------------------------------------------------------//
 void update()
@@ -277,9 +268,7 @@ void update()
 	text_nCl->set_text(tostring(nCl));
 
 	// Initial composition
-	double Np[E_END];
-	unsigned p[E_END];
-	double volume[E_END];
+	State state;
 	double Gf[P_END];
 
 	bool oxygen_specified = !button_oxygen_by_composition->get_active();
@@ -300,78 +289,76 @@ void update()
 		}
 	}
 
-	p[E_H] = P_H2O_LIQUID;
-	Np[E_H] = nH2O;
+	state.p[E_H] = P_H2O_LIQUID;
+	state.x[E_H] = nH2O;
 
-	p[E_C] = P_CO2;
-	Np[E_C] = nCO2;
+	state.p[E_C] = P_CO2;
+	state.x[E_C] = nCO2;
 
 	if (!oxygen_specified)
 	{
-	  p[E_O] = P_Fe2O3;
-  	  Np[E_O] = nFe2O3;	
+	  state.p[E_O] = P_Fe2O3;
+  	  state.x[E_O] = nFe2O3;	
 	}
 	else
 	{
-		p[E_O] = P_O2;
-		Np[E_O] = numeric_limits<double>::max();
+		state.p[E_O] = P_O2;
+		state.x[E_O] = numeric_limits<double>::max();
 	}
 
-	p[E_NA] = P_Na2O;
-	Np[E_NA] = nNa2O - 0.5*nCl;
+	state.p[E_NA] = P_Na2O;
+	state.x[E_NA] = nNa2O - 0.5*nCl;
 
-	p[E_MG] = P_MgO;
-	Np[E_MG] = nMgO;
+	state.p[E_MG] = P_MgO;
+	state.x[E_MG] = nMgO;
 
-	p[E_AL] = P_Al2O3;
-	Np[E_AL] = nAl2O3;
+	state.p[E_AL] = P_Al2O3;
+	state.x[E_AL] = nAl2O3;
 
-	p[E_SI] = P_SiO2_QUARTZ;
-	Np[E_SI] = nSiO2;
+	state.p[E_SI] = P_SiO2_QUARTZ;
+	state.x[E_SI] = nSiO2;
 
-	p[E_S] = P_S;
-	Np[E_S] = nS;
+	state.p[E_S] = P_S;
+	state.x[E_S] = nS;
 
-	p[E_CL] = P_HALITE;
-	Np[E_CL] = nCl;
+	state.p[E_CL] = P_HALITE;
+	state.x[E_CL] = nCl;
 
-	p[E_K] = P_K2O;
-	Np[E_K] = nK2O;
+	state.p[E_K] = P_K2O;
+	state.x[E_K] = nK2O;
 
-	p[E_CA] = P_CaO;
-	Np[E_CA] = nCaO;
+	state.p[E_CA] = P_CaO;
+	state.x[E_CA] = nCaO;
 
-	p[E_TI] = P_TiO2;
-	Np[E_TI] = nTiO2;
+	state.p[E_TI] = P_TiO2;
+	state.x[E_TI] = nTiO2;
 
-	p[E_CR] = P_Cr2O3;
-	Np[E_CR] = nCr2O3;
+	state.p[E_CR] = P_Cr2O3;
+	state.x[E_CR] = nCr2O3;
 
-	p[E_MN] = P_MnO;
-	Np[E_MN] = nMnO;
+	state.p[E_MN] = P_MnO;
+	state.x[E_MN] = nMnO;
 
-	p[E_FE] = P_FeO;
-	Np[E_FE] = nFeO;
+	state.p[E_FE] = P_FeO;
+	state.x[E_FE] = nFeO;
 	if (oxygen_specified)
 	{
-		Np[E_FE] += 2*nFe2O3;
+		state.x[E_FE] += 2*nFe2O3;
 	}
 
-	p[E_ZR] = P_ZrO2;
-	Np[E_ZR] = nZrO2;
+	state.p[E_ZR] = P_ZrO2;
+	state.x[E_ZR] = nZrO2;
 
 	vector<Phase> phase(::phase, ::phase+P_END);
-	
-    update(T, 
-           P, 
-           phase,
-           oxygen_specified, 
-           oxygen_FMQ,
-           pO2,
-	       Np,
-	       p,
-           volume);
 
+	update_state(T, 
+	             P, 
+	             phase,
+	             oxygen_specified, 
+	             oxygen_FMQ,
+	             pO2,
+	             state);
+	
 	if (button_molar_melt->get_active())
 	{
 		unsigned const i = phase.size()-1;
@@ -416,23 +403,23 @@ void update()
 	double Vtot = 0.0;
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		unsigned const pi = p[i];
-        volume[i] = Np[i]*phase[pi].model->volume(phase[pi], T, P);
-		Vtot += volume[i];
+		unsigned const pi = state.p[i];
+        state.V[i] = state.x[i]*phase[pi].model->volume(phase[pi], T, P);
+		Vtot += state.V[i];
 	}
-	cout << Vtot/100 << endl;
-		
+//	cout << Vtot/100 << endl;
+	
 	rnorm = 100.0/Vtot;
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		volume[i] *= rnorm;
-		if (volume[i]>0.0)
+		state.V[i] *= rnorm;
+		if (state.V[i]>0.0)
 		{
-			unsigned const pi = p[i];
+			unsigned const pi = state.p[i];
 			iter = list_store_CIPW->append();
 			row = *iter;
 			row[m_Columns.m_col_text] = phase[pi].name;
-			row[m_Columns.m_col_number] = volume[i];
+			row[m_Columns.m_col_number] = state.V[i];
 		}
 	}
 

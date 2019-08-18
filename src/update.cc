@@ -17,10 +17,11 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "update.hh"
+
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <vector>
 #include <fstream>
 
 #include "gsl/gsl_linalg.h"
@@ -28,10 +29,8 @@
 
 #include "ds++/Assert.hh"
 
-#include "element.hh"
 #include "melt.hh"
 #include "model.hh"
-#include "phase.hh"
 
 //-----------------------------------------------------------------------------//
 using namespace std;
@@ -40,15 +39,19 @@ unsigned const N = E_END;
 
 
 //-----------------------------------------------------------------------------//
-void initialize_Gf(double T /* K */, 
-                   double P /* kbar */, 
-                   vector<Phase> const &phase,
-                   vector<double> &Gf /* kJ */)
+void calculate_Gf(double T /* K */, 
+                  double P /* kbar */, 
+                  bool is_element_active[E_END],
+                  vector<Phase> &phase,
+                  vector<double> &Gf /* kJ */,
+                  vector<double> &amu /* g */)
 {
-	Require(phase.size() == Gf.size());
 	Require(phase.size()>=P_END);
 
-	unsigned const N = Gf.size();
+	unsigned const N = phase.size();
+	Gf.resize(N);
+	amu.resize(N);
+	cout << "Potentially active phases:" << endl;
 	for (unsigned i=0; i<N; ++i)
 	{
 		if (i!= phase[i].index)
@@ -57,6 +60,21 @@ void initialize_Gf(double T /* K */,
 			exit(1);
 		}
 		Gf[i] = phase[i].model->Gf(phase[i], T, P);
+		double amui = 0.0;
+		unsigned const nz = phase[i].nz;
+		for (unsigned j=0; j<nz; ++j)
+		{
+			amui += atomic_weight[phase[i].z[j]]*phase[i].n[j];
+			if (!is_element_active[phase[i].z[j]])
+			{
+				phase[i].nz = 0; // turn off this phase
+			}
+		}
+		amu[i] = amui;
+		if (phase[i].nz>0)
+		{
+			cout << phase[i].name << " " << fixed << setprecision(3) << (1000*Gf[i]/amu[i]) << " kj/kg" << endl;
+		}
 	}
 
 	// Water model selection
@@ -317,35 +335,105 @@ void do_update(double const T,
 	}
 }
 
-
 //-----------------------------------------------------------------------------//
-void update(double const T, 
-            double const P, 
-            vector<Phase> &phase,
-            bool const oxygen_specified, 
-            bool const oxygen_FMQ,
-            double &pO2,
-	        double Np[E_END],
-	        unsigned p[E_END],
-            double volume[N])
+void update_state(double const T, 
+                  double const P, 
+                  vector<Phase> &phase,
+                  bool const oxygen_specified, 
+                  bool const oxygen_FMQ,
+                  double &pO2,
+                  State &state)
 {
-	vector<double> Gf(P_END);
-	initialize_Gf(T, P, phase, Gf);
+	// Determine which elements are active 
+
+	bool is_element_active[E_END];
+	fill(is_element_active, is_element_active+E_END, false);
+	for (unsigned e=0; e<E_END; ++e)
+	{
+		if (state.x[e]>0.0)
+		{
+		    Phase const &ph = phase[state.p[e]];
+			for (unsigned i=0; i<ph.nz; ++i)
+			{
+				is_element_active[ph.z[i]] = true;
+			}
+		}
+	}
+	cout << "Active elemental phases:" << endl;
+	for (unsigned e=0; e<E_END; ++e)
+	{
+		if (is_element_active[e])
+		{
+			cout << " " << phase[state.p[e]].name << endl;
+		}
+	}
+	
+	vector<double> Gf, amu;
+	calculate_Gf(T, P, is_element_active, phase, Gf, amu);
+
+	double Gftot = 0.0;
+	double Mtot = 0.0;
+	for (unsigned e=0; e<E_END; ++e)
+	{
+		Gftot += state.x[e]*Gf[state.p[e]];
+		Mtot += state.x[e]*amu[state.p[e]];
+	}
+	cout << "Initial free energy of formation = " << (1000*Gftot/Mtot) << " kJ/kg" << endl;
 
 	// Solve for end point phases.
 	double element_activity[E_END];
-	do_update(T, P, phase, Gf, oxygen_specified, oxygen_FMQ, pO2, element_activity, Np, p, volume);
+
+	cout << endl << "Ladder search" << endl;
+	do_update(T, 
+	          P, 
+	          phase, 
+	          Gf, 
+	          oxygen_specified, 
+	          oxygen_FMQ, 
+	          pO2, 
+	          element_activity, 
+	          state.x, 
+	          state.p, 
+	          state.V);
+	
+	cout << "Active phases:" << endl;
+	for (unsigned e=0; e<E_END; ++e)
+	{
+		if (state.x[e]>0.0)
+		{
+			cout << " " << phase[state.p[e]].name << " = " << state.x[e] << endl;
+		}
+	}
+
+	Gftot = 0.0;
+    Mtot = 0.0;
+	for (unsigned e=0; e<E_END; ++e)
+	{
+		Gftot += state.x[e]*Gf[state.p[e]];
+		Mtot += state.x[e]*amu[state.p[e]];
+	}
+	cout << "Free energy of formation = " << fixed << setprecision(3) << (1000*Gftot/Mtot) << " kJ/kg" << endl;
 
 	for (unsigned i=0; i<30; ++i)
 	{
 		Phase new_phase;
 		double Geu;
-		if (melt(T, P, phase, Gf, element_activity, Np, p, Geu, new_phase))
+		if (melt(T, P, phase, Gf, element_activity, state.x, state.p, Geu, new_phase))
 		{
 			Gf.push_back(Geu);
 			phase.push_back(new_phase);
 
-			do_update(T, P, phase, Gf, oxygen_specified, oxygen_FMQ, pO2, element_activity, Np, p, volume);
+			do_update(T, 
+			          P, 
+			          phase, 
+			          Gf, 
+			          oxygen_specified, 
+			          oxygen_FMQ, 
+			          pO2, 
+			          element_activity,
+			          state.x, 
+			          state.p, 
+			          state.V);
 		}
 		// else we've done all the melting we can
 		else
