@@ -89,17 +89,15 @@ void calculate_Gf(double T /* K */,
 }
 	
 //-----------------------------------------------------------------------------//
-void do_update(double const T, 
-               double const P, 
-               vector<Phase> const &phase,
-               vector<double> Gf,
-               bool const oxygen_specified, 
-               bool const oxygen_FMQ,
-               double &pO2,
-               double element_activity[E_END],
-               double Np[E_END],
-               unsigned p[E_END],
-               double volume[N])
+bool 
+do_ladder_update(double const T, 
+                 double const P, 
+                 vector<Phase> const &phase,
+                 vector<double> Gf,
+                 bool const oxygen_specified, 
+                 bool const oxygen_FMQ,
+                 double &pO2,
+                 State &state)
 {
 	unsigned const P_END = phase.size();
 	double GfO2;
@@ -107,7 +105,7 @@ void do_update(double const T,
 	{
 		if (oxygen_FMQ)
 		{
-			GfO2 = 2*Gf[P_MAGNETITE]+3*Gf[P_SiO2_QUARTZ]-3*Gf[P_FAYALITE];
+			GfO2 = 2*Gf[P_MAGNETITE]+3*Gf[P_QUARTZ]-3*Gf[P_FAYALITE];
 			pO2 = phase[P_O2].model->P(phase[P_O2], T, GfO2);
 		}
 		else
@@ -129,6 +127,8 @@ void do_update(double const T,
 	gsl_permutation *permute = gsl_permutation_alloc(P_END);
 	double Ainv[N][N];
 	double left[N];
+
+	bool success;
 	
 	// now iterate to find composition
 
@@ -146,14 +146,29 @@ void do_update(double const T,
 			Gf[P_O2] = GfO2;
 		}
 
+		cout << "Active phases, state " << state.name <<  ':' << endl;
 		for (unsigned i=0; i<N; ++i)
 		{
-			unsigned const pi = p[i];
+			unsigned const pi = state.p[i];
+			
+			if (state.is_element_active[i]) 
+			{
+				cout << "  " << phase[pi].name << "  " << state.x[i] 
+				    << " mol " << Gf[pi] << " kJ/mol" << endl;
+			}
+			
 			gsl_vector_set(b, i, -Gf[pi]);
 			unsigned const nz = phase[pi].nz;
+			if (nz>0)
+			{
 			for (unsigned j=0; j<nz; j++)
 			{
 				gsl_matrix_set(A, i, phase[pi].z[j], phase[pi].n[j]);
+			}
+			}
+			else
+			{
+				  gsl_matrix_set(A, i, i, 1.0);
 			}
 		}
 
@@ -162,26 +177,53 @@ void do_update(double const T,
 
 		// Compute absolute free energies of phases
 
+		cout << "Element activities for these phases:" << endl;
 		for (unsigned i=0; i<E_END; ++i)
 		{
-			element_activity[i] = gsl_vector_get(x, i);
+			state.element_activity[i] = gsl_vector_get(x, i);
+			if (state.is_element_active[i])
+			{
+				cout << "  " << element_name[i] << " " << state.element_activity[i] << " kJ/mol" << endl;
+			}
 		}
 
+		cout << "New phase candidate activities:" << endl;
+
+		bool found_candidate = false;
 		for (unsigned i=0; i<P_END; ++i)
 		{
-			double aGfi = Gf[i];
-			for (unsigned j=0; j<phase[i].nz; j++)
+			if (phase[i].nz>0)
 			{
-				aGfi += phase[i].n[j]*element_activity[phase[i].z[j]];
+				double aGfi = Gf[i];
+				double mol = 0.0;
+				for (unsigned j=0; j<phase[i].nz; j++)
+				{
+					aGfi += phase[i].n[j]*state.element_activity[phase[i].z[j]];
+					mol += phase[i].n[j];
+				}
+				gsl_vector_set(aGf, i, aGfi/mol);
+				if (aGfi<-1.0e-9)
+				{
+					cout << "  " << phase[i].name << "  " << aGfi << " kJ/mol " << endl;
+					found_candidate = true;
+				}
 			}
-			gsl_vector_set(aGf, i, aGfi);
+			else
+			{
+				gsl_vector_set(aGf, i, 10000.);
+			}
+		}
+		if (!found_candidate)
+		{
+			success = true;
+			goto DONE;
 		}
 	
 		gsl_sort_vector_index(permute, aGf);
 
 		// Find a composition basis for the current composition.
 
-		for (unsigned i=0; i<N; i++)
+		for (unsigned i=0; i<N; i++) 
 		{
 			for (unsigned j=0; j<N; j++)
 			{
@@ -197,17 +239,20 @@ void do_update(double const T,
 				Ainv[i][j] = sum;
 			}
 		}
-		
+
+		bool found = false;
 		for (unsigned ii=0; ii<P_END; ++ii)
 		{
 			unsigned const ip = gsl_permutation_get(permute, ii);
-			if (oxygen_specified && ip == P_O2)
+			if (phase[ip].nz == 0 || oxygen_specified && ip == P_O2)
 				continue;
 
+			bool found = true;
+			cout << "Considering phase " << phase[ip].name << ':' << endl;
 			double aGfi = gsl_vector_get(aGf, ip); 
-			if (fabs(aGfi)<1.0e-9 || !isfinite(aGfi))
+			if (fabs(aGfi)<1.0e-9)
 			{
-				goto DONE;
+				break;
 			}
 
 			// Construct an equation that reduces the Gibbs function further.
@@ -233,14 +278,17 @@ void do_update(double const T,
 			{
 				if (left[i]>1.0e-10)
 				{
-					r = min(r, Np[i]/left[i]);
+					r = min(r, state.x[i]/left[i]);
 				}
-				rGf -= left[i]*Gf[p[i]];
+				rGf -= left[i]*Gf[state.p[i]];
 			}
 
 			if (r<=1.0e-10)
 			{
-				continue;
+				cout << "Reaction cannot proceed." << endl; 
+	            cout << "Ladder FAILED" << endl;
+		        success = false;
+	   	        goto DONE;
 			}
 
 			// Yes, the reaction has somewhere to go
@@ -260,7 +308,7 @@ void do_update(double const T,
 					{
 						cout << setprecision(4) << left[i];
 					}
-					cout << phase[p[i]].name;
+					cout << phase[state.p[i]].name;
 				}
 			}
 			cout << " -> " << phase[ip].name;
@@ -275,30 +323,110 @@ void do_update(double const T,
 					{
 						cout << setprecision(4) << -left[i];
 					}
-					cout << phase[p[i]].name;
+					cout << phase[state.p[i]].name;
 				}
 			}
 			cout << endl;
 
-			unsigned n;
-			double npm = 0.0;
+			// Now carry out the reaction, noting which reagents are exhausted.
+
+			unsigned n = 0;
+ 	        unsigned p[E_END]; 
 			for (unsigned i=0; i<N; ++i)
 			{
-				Np[i] -= r*left[i];
-				if (fabs(Np[i])<1.0e-10)
+				state.x[i] -= r*left[i];
+				if (fabs(state.x[i])<1.0e-10)
 				{
-					if (r*left[i]>npm)
+					if (r*left[i]>1.0e-9)
 					{
-						n = i;
-						npm = r*left[i];
+						cout << "Reaction depletes " << phase[state.p[i]].name << endl;
+						p[n++] = i;
 					}
-					Np[i] = 0.0;
+					state.x[i] = 0.0;
 				}
 			}
-			Np[n] = r;	
-			p[n] = ip;
+			// n should not be zero
+			if (n==1)
+			{
+				state.x[p[0]] = r;	
+				state.p[p[0]] = ip;
+				break;
+			}
+			else
+			{
+				// we've exhausted two or more phases simultaneously. Split the state.
+				vector<State> states(n, state);
+				double Gfn;
+				cout << "Substate ladder:" << endl;
+				bool found_good_ladder = false;
+				for (unsigned i=0; i<n; ++i)
+				{
+					states[i].x[p[i]] = r;	
+					states[i].p[p[i]] = ip;
+					states[i].name += '.' + to_string(i+1);
+					cout << "Substate " << states[i].name << ':' << endl;
+					
+					bool result = do_ladder_update(T, 
+					                             P, 
+					                             phase,
+					                             Gf,
+					                             oxygen_specified, 
+					                             oxygen_FMQ,
+					                             pO2,
+					                             states[i]);
 
-			break;
+					if (result)
+					{
+						if (i==0)
+						{
+							cout << "Accepting branch " << i << endl;
+							state = states[i];
+							Gfn = 0.0;
+							for (unsigned i=0; i<E_END; ++i)
+							{
+								Gfn += state.x[i]*Gf[state.p[i]];
+							}
+							cout << "  Gf = " << Gfn << " kJ" << endl;
+						}
+						else
+						{
+							cout << "Comparing branch " << states[i].name << " against best so far " << endl;
+							double Gfnn = 0.0;
+							for (unsigned j=0; j<E_END; ++j)
+							{
+								Gfnn += states[i].x[j]*Gf[state.p[j]];
+							}
+							cout << "  Gf = " << Gfnn << " kJ" << endl;
+							if (Gfnn<Gfn)
+							{
+								cout << "  State " << i << " is new best." << endl;	
+								Gfn = Gfnn;
+								state = states[i];
+							}
+							else
+							{
+								cout << "Best unchanged." << endl;
+							}
+						}
+						found_good_ladder = true;
+					}
+					else
+					{
+						  cout << "Substate " << states[i].name << " FAILED." << endl;
+					}
+				}
+				if (!found_good_ladder)
+				{
+					cout << "Sub Ladder FAILED" << endl;	
+					success = false;
+					goto DONE;
+				}
+				else
+				{
+					success = true;
+					goto DONE;
+				}
+			}
 		}
 	}
 
@@ -315,7 +443,7 @@ void do_update(double const T,
 
 	if (true || !oxygen_specified)
 	{
-		pO2 = phase[P_O2].model->P(phase[P_O2], T, -2*element_activity[E_O]);
+		pO2 = phase[P_O2].model->P(phase[P_O2], T, -2*state.element_activity[E_O]);
 	}
 		
 	// Convert to volume fraction
@@ -323,16 +451,18 @@ void do_update(double const T,
 	double Vtot = 0.0;
 	for (unsigned i=0; i<N; ++i)
 	{
-		unsigned const pi = p[i];
-        volume[i] = Np[i]*phase[pi].model->volume(phase[pi], T, P);
-		Vtot += volume[i];
+		unsigned const pi = state.p[i];
+        state.V[i] = state.x[i]*phase[pi].model->volume(phase[pi], T, P);
+		Vtot += state.V[i];
 	}
 		
 	double rnorm = 100.0/Vtot;
 	for (unsigned i=0; i<N; ++i)
 	{
-		volume[i] *= rnorm;
+		state.V[i] *= rnorm;
 	}
+
+	return success;
 }
 
 //-----------------------------------------------------------------------------//
@@ -346,30 +476,21 @@ void update_state(double const T,
 {
 	// Determine which elements are active 
 
-	bool is_element_active[E_END];
-	fill(is_element_active, is_element_active+E_END, false);
 	for (unsigned e=0; e<E_END; ++e)
 	{
-		if (state.x[e]>0.0)
-		{
-		    Phase const &ph = phase[state.p[e]];
-			for (unsigned i=0; i<ph.nz; ++i)
-			{
-				is_element_active[ph.z[i]] = true;
-			}
-		}
+		state.is_element_active[e] = (state.x[e]>0.0);
 	}
 	cout << "Active elemental phases:" << endl;
 	for (unsigned e=0; e<E_END; ++e)
 	{
-		if (is_element_active[e])
+		if (state.is_element_active[e])
 		{
 			cout << " " << phase[state.p[e]].name << endl;
 		}
 	}
 	
 	vector<double> Gf, amu;
-	calculate_Gf(T, P, is_element_active, phase, Gf, amu);
+	calculate_Gf(T, P, state.is_element_active, phase, Gf, amu);
 
 	double Gftot = 0.0;
 	double Mtot = 0.0;
@@ -383,63 +504,61 @@ void update_state(double const T,
 	// Solve for end point phases.
 	double element_activity[E_END];
 
-	cout << endl << "Ladder search" << endl;
-	do_update(T, 
-	          P, 
-	          phase, 
-	          Gf, 
-	          oxygen_specified, 
-	          oxygen_FMQ, 
-	          pO2, 
-	          element_activity, 
-	          state.x, 
-	          state.p, 
-	          state.V);
-	
-	cout << "Active phases:" << endl;
-	for (unsigned e=0; e<E_END; ++e)
+	for (;;)
 	{
-		if (state.x[e]>0.0)
-		{
-			cout << " " << phase[state.p[e]].name << " = " << state.x[e] << endl;
-		}
-	}
+		cout << endl << "Ladder search tree" << endl;
+		auto status = do_ladder_update(T, 
+		                               P, 
+		                               phase, 
+		                               Gf, 
+		                               oxygen_specified, 
+		                               oxygen_FMQ, 
+		                               pO2, 
+		                               state);
 
-	Gftot = 0.0;
-    Mtot = 0.0;
-	for (unsigned e=0; e<E_END; ++e)
-	{
-		Gftot += state.x[e]*Gf[state.p[e]];
-		Mtot += state.x[e]*amu[state.p[e]];
-	}
-	cout << "Free energy of formation = " << fixed << setprecision(3) << (1000*Gftot/Mtot) << " kJ/kg" << endl;
-
-	for (unsigned i=0; i<30; ++i)
-	{
-		Phase new_phase;
-		double Geu;
-		if (melt(T, P, phase, Gf, element_activity, state.x, state.p, Geu, new_phase))
+		cout << "Active phases:" << endl;
+		for (unsigned e=0; e<E_END; ++e)
 		{
-			Gf.push_back(Geu);
-			phase.push_back(new_phase);
+			if (state.x[e]>0.0)
+			{
+				cout << " " << phase[state.p[e]].name << " = " << state.x[e] << endl;
+			}
+		}
 
-			do_update(T, 
-			          P, 
-			          phase, 
-			          Gf, 
-			          oxygen_specified, 
-			          oxygen_FMQ, 
-			          pO2, 
-			          element_activity,
-			          state.x, 
-			          state.p, 
-			          state.V);
-		}
-		// else we've done all the melting we can
-		else
+		Gftot = 0.0;
+		Mtot = 0.0;
+		for (unsigned e=0; e<E_END; ++e)
 		{
-			return;
+			Gftot += state.x[e]*Gf[state.p[e]];
+			Mtot += state.x[e]*amu[state.p[e]];
 		}
+		cout << "Free energy of formation = " << fixed << setprecision(3) << (1000*Gftot/Mtot) << " kJ/kg" << endl;
+
+		for (unsigned i=0; i<0*30; ++i)
+		{
+			Phase new_phase;
+			double Geu;
+			if (melt(T, P, phase, Gf, element_activity, state.x, state.p, Geu, new_phase))
+			{
+				Gf.push_back(Geu);
+				phase.push_back(new_phase);
+
+				do_ladder_update(T, 
+				                 P, 
+				                 phase, 
+				                 Gf, 
+				                 oxygen_specified, 
+				                 oxygen_FMQ, 
+				                 pO2, 
+				                 state);
+			}
+			// else we've done all the melting we can
+			else
+			{
+				return;
+			}
+		}
+		return;
 	}
 }
 

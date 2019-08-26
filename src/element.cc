@@ -1,4 +1,4 @@
-// element.hh
+// element.cc
 //
 // Copyright (C) 2019 - Kent G. Budge
 //
@@ -15,33 +15,47 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef element_hh
-#define element_hh
+#include "element.hh"
 
-enum ELEMENT
+extern double const atomic_weight[E_END] =
 {
-  E_H,
-  E_C,
-  E_O,
-  E_NA,
-  E_MG,
-  E_AL,
-  E_SI,
-  E_P,
-  E_S,
-  E_CL,
-  E_K,
-  E_CA,
-  E_TI,
-  E_CR,
-  E_MN,
-  E_FE,
-  E_ZR,
-
-  E_END
+	1.008,
+	12.011,
+	15.999,
+	22.990,
+	24.305,
+	26.982,
+	28.085,
+	30.974,
+	32.06,
+	35.45,
+	39.098,
+	40.078,
+	47.867,
+	51.996,
+	54.938,
+	55.845,
+	91.224 
 };
 
-extern double const atomic_weight[E_END];
-extern char const *const element_name[E_END];
+char const *const element_name[E_END] =
+{
+	"H",
+	"C",
+	"O",
+	"Na",
+	"Mg",
+	"Al",
+	"Si",
+	"P",
+	"S",
+	"Cl",
+	"K",
+	"Ca",
+	"Ti",
+	"Cr",
+	"Mn",
+	"Fe",
+	"Zr"
+};
 
-#endif // element_hh

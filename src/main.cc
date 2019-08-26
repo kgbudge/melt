@@ -289,67 +289,74 @@ void update()
 		}
 	}
 
-	state.p[E_H] = P_H2O_LIQUID;
+	state.p[E_H] = P_H2;
 	state.x[E_H] = nH2O;
+	double nO2 = 0.5*nH2O;
 
-	state.p[E_C] = P_CO2;
+	state.p[E_C] = P_GRAPHITE;
 	state.x[E_C] = nCO2;
+	nO2 += nCO2;
 
-	if (!oxygen_specified)
-	{
-	  state.p[E_O] = P_Fe2O3;
-  	  state.x[E_O] = nFe2O3;	
-	}
-	else
-	{
-		state.p[E_O] = P_O2;
-		state.x[E_O] = numeric_limits<double>::max();
-	}
+	state.p[E_NA] = P_Na;
+	state.x[E_NA] = 2*nNa2O;
+	nO2 += 0.5*nNa2O;
 
-	state.p[E_NA] = P_Na2O;
-	state.x[E_NA] = nNa2O - 0.5*nCl;
-
-	state.p[E_MG] = P_MgO;
+	state.p[E_MG] = P_Mg;
 	state.x[E_MG] = nMgO;
+	nO2 += 0.5*nMgO;
 
-	state.p[E_AL] = P_Al2O3;
-	state.x[E_AL] = nAl2O3;
+	state.p[E_AL] = P_Al;
+	state.x[E_AL] = 2*nAl2O3;
+	nO2 += 1.5*nAl2O3;
 
-	state.p[E_SI] = P_SiO2_QUARTZ;
+	state.p[E_SI] = P_Si;
 	state.x[E_SI] = nSiO2;
+	nO2 += nSiO2;
+
+	state.p[E_P] = P_P4;
+	state.x[E_P] = 0.5*nP2O5;
+	nO2 += 2.5*nP2O5;
 
 	state.p[E_S] = P_S;
 	state.x[E_S] = nS;
 
-	state.p[E_CL] = P_HALITE;
-	state.x[E_CL] = nCl;
+	state.p[E_CL] = P_Cl2;
+	state.x[E_CL] = 0.5*nCl;
 
-	state.p[E_K] = P_K2O;
-	state.x[E_K] = nK2O;
+	state.p[E_K] = P_K;
+	state.x[E_K] = 2*nK2O;
+	nO2 += 0.5*nK2O;
 
-	state.p[E_CA] = P_CaO;
+	state.p[E_CA] = P_Ca;
 	state.x[E_CA] = nCaO;
+	nO2 += 0.5*nCaO;
 
-	state.p[E_TI] = P_TiO2;
+	state.p[E_TI] = P_Ti;
 	state.x[E_TI] = nTiO2;
+	nO2 += nTiO2;
 
-	state.p[E_CR] = P_Cr2O3;
-	state.x[E_CR] = nCr2O3;
+	state.p[E_CR] = P_Cr;
+	state.x[E_CR] = 2*nCr2O3;
+	nO2 += 1.5*nCr2O3;
 
-	state.p[E_MN] = P_MnO;
+	state.p[E_MN] = P_Mn;
 	state.x[E_MN] = nMnO;
+	nO2 += 0.5*nMnO;
 
-	state.p[E_FE] = P_FeO;
-	state.x[E_FE] = nFeO;
-	if (oxygen_specified)
-	{
-		state.x[E_FE] += 2*nFe2O3;
-	}
+	state.p[E_FE] = P_Fe;
+	state.x[E_FE] = nFeO + 2*nFe2O3;
+	nO2 += 0.5*nFeO + 1.5*nFe2O3;
 
-	state.p[E_ZR] = P_ZrO2;
+	state.p[E_ZR] = P_Zr;
 	state.x[E_ZR] = nZrO2;
+	nO2 += nZrO2;
+
+	state.p[E_O] = P_O2;
+	state.x[E_O] = nO2;
 
 	vector<Phase> phase(::phase, ::phase+P_END);
+
+	state.name="1";
 
 	update_state(T, 
 	             P, 

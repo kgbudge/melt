@@ -182,7 +182,7 @@
               <object class="GtkEntry" id="entry_T">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="text" translatable="yes">298.15</property>
+                <property name="text" translatable="yes">500</property>
                 <property name="input_purpose">number</property>
               </object>
               <packing>
