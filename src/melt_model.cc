@@ -83,7 +83,7 @@ double Melt::Gf(Phase const &phase, double const T, double const P) const
 
 	// Pressure term
 
-	double const kt = k0*(1-1.5e-4*(T-T0));
+	double const kt = k0*(1+k0t*(T-T0));
 	
 	double const Gfi = Gt + Vt*kt*(pow(1+k0p*P/kt, 1-1/k0p)-1)/(k0p-1);
 

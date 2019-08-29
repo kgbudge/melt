@@ -279,7 +279,8 @@ double find_eutectic(double const T,
 }
 
 //-----------------------------------------------------------------------------//
-bool melt(double T, 
+bool melt(int,
+          double T, 
             double P, 
             vector<Phase> const &phase,
             vector<double> const &Gf,
@@ -383,5 +384,16 @@ bool melt(double T,
 		return true;
 	}
 	return false;
+}
+
+//-----------------------------------------------------------------------------//
+double melt(double const T, 
+          double const P, 
+          vector<Phase> const &phase,
+          vector<double> const &Gf,
+          State const &state, 
+          struct Phase &new_phase)
+{
+	  Melt_Model(T, P, phase, Gf, 
 }
 

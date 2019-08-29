@@ -156,15 +156,8 @@ void solve(double const y, double &x, Function f)
 template<class Function>
 void solvebr(double &a, double &b, Function f)
 {
-	// Bracket root. We know it's a monotonic increasing function.
+	// Root already bracketed.
 	double fa = f(a), fb = f(b);
-	if (fa*fb>=0.0)
-	{
-      return; 
-	}
-
-	// Now that root is bracketed, close in on it
-	    
     if (fabs(fa) < fabs(fb)) 
 	{
       swap (a,b);

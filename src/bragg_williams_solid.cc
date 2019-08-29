@@ -40,13 +40,9 @@ extern Model const *const BRAGG_WILLIAMS_SOLID = &mySolid;
 
 double Bragg_Williams_Solid::Gf(Phase const &phase, double const T, double const P) const
 {
-	// Note that Gf is the apparent free energy of formation (in kJ/mol),
-	// which ignores entropy of the elements.
-
 	// Temperature is in K and P in kbar.
 
 	double Gfi = Solid::Gf(phase, T, P);
-
 	// Disorder is a perturbation on a regular solid.
 
 	Solid_Phase const &sph = reinterpret_cast<Solid_Phase const &>(phase.data);
@@ -77,11 +73,11 @@ double Bragg_Williams_Solid::Gf(Phase const &phase, double const T, double const
 	double Xa2 = (1-Q)/(n+1);
 	double Xs2 = (n+Q)/(n+1);
 
-	double dS = -R*(Xa1*log(Xa1) + Xa2*log(Xa2) + Xs1*log(Xs1) + Xs2*log(Xs2));
+	double dS = -R*(Xa1*log(Xa1) + n*Xa2*log(Xa2) + Xs1*log(Xs1) + n*Xs2*log(Xs2));
 
-	double Gdis = Q*(W - dH) - Q*Q*W - T*dS;
+	double Gdis = Fac*(dH + Q*(W - dH) - Q*Q*W - T*dS);
 	
-	Gfi += Fac*Gdis;
+	Gfi += Gdis;
 	
 	return Gfi;
 }

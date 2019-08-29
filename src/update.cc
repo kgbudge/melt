@@ -247,13 +247,12 @@ do_ladder_update(double const T,
 			if (phase[ip].nz == 0 || oxygen_specified && ip == P_O2)
 				continue;
 
-			bool found = true;
-			cout << "Considering phase " << phase[ip].name << ':' << endl;
 			double aGfi = gsl_vector_get(aGf, ip); 
 			if (fabs(aGfi)<1.0e-9)
 			{
 				break;
 			}
+			cout << "Considering phase " << phase[ip].name << ':' << endl;
 
 			// Construct an equation that reduces the Gibbs function further.
 
@@ -286,9 +285,11 @@ do_ladder_update(double const T,
 			if (r<=1.0e-10)
 			{
 				cout << "Reaction cannot proceed." << endl; 
-	            cout << "Ladder FAILED" << endl;
-		        success = false;
-	   	        goto DONE;
+				continue;
+			}
+			else
+			{
+				found = true;
 			}
 
 			// Yes, the reaction has somewhere to go
@@ -356,9 +357,13 @@ do_ladder_update(double const T,
 			{
 				// we've exhausted two or more phases simultaneously. Split the state.
 				vector<State> states(n, state);
-				double Gfn;
+				double Gfn = 0.0;
+				for (unsigned i=0; i<E_END; ++i)
+				{
+					Gfn += state.x[i]*Gf[state.p[i]];
+				}
+				cout << "  Starting subladder Gf = " << Gfn << " kJ" << endl;
 				cout << "Substate ladder:" << endl;
-				bool found_good_ladder = false;
 				for (unsigned i=0; i<n; ++i)
 				{
 					states[i].x[p[i]] = r;	
@@ -375,58 +380,31 @@ do_ladder_update(double const T,
 					                             pO2,
 					                             states[i]);
 
-					if (result)
+					cout << "Comparing branch " << states[i].name << " against best so far " << endl;
+					double Gfnn = 0.0;
+					for (unsigned j=0; j<E_END; ++j)
 					{
-						if (i==0)
-						{
-							cout << "Accepting branch " << i << endl;
-							state = states[i];
-							Gfn = 0.0;
-							for (unsigned i=0; i<E_END; ++i)
-							{
-								Gfn += state.x[i]*Gf[state.p[i]];
-							}
-							cout << "  Gf = " << Gfn << " kJ" << endl;
-						}
-						else
-						{
-							cout << "Comparing branch " << states[i].name << " against best so far " << endl;
-							double Gfnn = 0.0;
-							for (unsigned j=0; j<E_END; ++j)
-							{
-								Gfnn += states[i].x[j]*Gf[state.p[j]];
-							}
-							cout << "  Gf = " << Gfnn << " kJ" << endl;
-							if (Gfnn<Gfn)
-							{
-								cout << "  State " << i << " is new best." << endl;	
-								Gfn = Gfnn;
-								state = states[i];
-							}
-							else
-							{
-								cout << "Best unchanged." << endl;
-							}
-						}
-						found_good_ladder = true;
+						Gfnn += states[i].x[j]*Gf[states[i].p[j]];
+					}
+					cout << "  Gf = " << Gfnn << " kJ" << endl;
+					if (Gfnn<Gfn)
+					{
+						cout << "  State " << states[i].name << " is new best." << endl;	
+						Gfn = Gfnn;
+						state = states[i];
 					}
 					else
 					{
-						  cout << "Substate " << states[i].name << " FAILED." << endl;
+						cout << "Best unchanged." << endl;
 					}
 				}
-				if (!found_good_ladder)
-				{
-					cout << "Sub Ladder FAILED" << endl;	
-					success = false;
-					goto DONE;
-				}
-				else
-				{
-					success = true;
-					goto DONE;
-				}
+				goto DONE;
 			}
+		}
+		if (!found)
+		{
+			cout << "No reaction found." << endl;
+			goto DONE;
 		}
 	}
 
@@ -534,7 +512,7 @@ void update_state(double const T,
 		}
 		cout << "Free energy of formation = " << fixed << setprecision(3) << (1000*Gftot/Mtot) << " kJ/kg" << endl;
 
-		for (unsigned i=0; i<0*30; ++i)
+		for (unsigned i=0; i<30; ++i)
 		{
 			Phase new_phase;
 			double Geu;
