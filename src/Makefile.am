@@ -58,7 +58,10 @@ melt_SOURCES = \
 	bm_solid.cc \
 	bm_solid.hh \
 	update.hh \
-	element.cc
+	element.cc \
+	State.hh \
+	D2.hh \
+	D2.cc
 
 melt_LDFLAGS = 
 

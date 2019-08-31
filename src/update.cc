@@ -479,9 +479,6 @@ void update_state(double const T,
 	}
 	cout << "Initial free energy of formation = " << (1000*Gftot/Mtot) << " kJ/kg" << endl;
 
-	// Solve for end point phases.
-	double element_activity[E_END];
-
 	for (;;)
 	{
 		cout << endl << "Ladder search tree" << endl;
@@ -515,8 +512,9 @@ void update_state(double const T,
 		for (unsigned i=0; i<30; ++i)
 		{
 			Phase new_phase;
-			double Geu;
-			if (melt(T, P, phase, Gf, element_activity, state.x, state.p, Geu, new_phase))
+			cout << "  Starting free energy for this melt step: " << Gftot << endl;
+			double Geu  = melt(T, P, phase, Gf, state, new_phase);
+			if (Geu < Gftot - 1e-9)
 			{
 				Gf.push_back(Geu);
 				phase.push_back(new_phase);

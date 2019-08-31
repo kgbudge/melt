@@ -29,10 +29,12 @@
 
 #include "algorithm.hh"
 #include "constants.hh"
+#include "D2.hh"
 #include "element.hh"
 #include "melt.hh"
 #include "model.hh"
 #include "phase.hh"
+#include "State.hh"
 
 //-----------------------------------------------------------------------------//
 using namespace std;
@@ -387,13 +389,571 @@ bool melt(int,
 }
 
 //-----------------------------------------------------------------------------//
-double melt(double const T, 
-          double const P, 
-          vector<Phase> const &phase,
-          vector<double> const &Gf,
-          State const &state, 
-          struct Phase &new_phase)
+class Melt_Model
 {
-	  Melt_Model(T, P, phase, Gf, 
+	public:
+		Melt_Model(double const T, 
+		           double const P, 
+		           vector<Phase> const &phase,
+		           vector<double> const &Gf,
+		           State const &state) noexcept(false);
+
+		unsigned nm() const noexcept { return nm_; }
+		double x(unsigned i) const { Require(i<nm()); return x_[i]; }
+
+		template<typename Real>
+		Real Gfmelt(vector<double> const &x) const;
+
+		double Gfmelt(std::vector<double> const &X, double p[M_END], double e) const;
+		
+		Phase minimize_Gf(vector<double> &x);
+
+	private:
+		double T_;
+		unsigned nm_;
+		double basis_[E_END][M_END];
+		unsigned p_[M_END];
+		double x_[M_END];
+		double Gfs_[E_END];
+		double Gfm_[M_END];
+		double Gf0_; // non-meltable phases total free energy
+};
+
+//-----------------------------------------------------------------------------//
+/*! Create a Melt_Model reflecting possible melting of an existing State.
+ *
+ * \param T Temperature (K)
+ * \param P Pressure (kbar)
+ * \param phase Current phase library
+ * \param Gf Gibbs free energy of each phase at T and P (kJ/mol)
+ * \param state Current state of the mineral ensemble.
+ */ 
+ Melt_Model::Melt_Model(double const T, 
+                       double const P, 
+                       vector<Phase> const &phase,
+                       vector<double> const &Gf,
+                       State const &state)
+{
+	// First calculate degrees of freedom. Each active phase that *can* melt
+	// is a degree of freedom, allowed to vary from 0 (no melting) to the quantity
+	// of that phase. We calculate the amount of each basic melt phase produced
+	// by a mole of each meltable phase. Any non-fusible mineral has its free energy
+	// added to Gf0_ and is compressed out of the fusible phase set.
+
+	T_ = T;  
+	nm_ = 0;     // Number of fusible phases
+	Gf0_ = 0.0;  // Gibbs free energy contribution of nonfusible phases 
+	for (unsigned i=0; i<E_END; ++i)
+	{
+		if (state.x[i]>0.0)  // Is this phase actually present?
+		{
+			fill(basis_[nm_], basis_[nm_]+M_END, 0.);
+			unsigned p = state.p[i];  // Prepare to compute a melt basis for the candidate phase.
+			p_[nm_] = p;              // Save a candidate fusible phase phase index
+			x_[nm_] = state.x[i];     // Save a candidate fusible phase quantity
+			Gfs_[nm_] = Gf[p];        // Save the candidate phase unmelted Gibbs free energy
+			Phase const &ph = phase[p];	
+			unsigned const N = ph.nz; // Number of elements in the phase
+			double xO = 0.0;          // Oxygen balance of the basis of the phase
+			bool really_solid = false; // Initial assumption is that the phase is fusible
+			for (unsigned j=0; j<N && !really_solid; ++j) // Try to build a basis, element by element.
+			{
+				double const xj = ph.n[j];  // Number of moles of element j in the phase.
+				switch(ph.z[j])             // Switch on the element atomic number to build basis
+				{
+					case E_H:
+						xO -= 0.5*xj;
+						basis_[nm_][M_H2O] += 0.5*xj;
+						break; 
+
+				    case E_C:
+						xO -= 2*xj;
+						basis_[nm_][M_CO2] += xj;
+						break;
+						
+					case E_O:
+						xO += xj;
+						break;
+
+					case E_NA:
+						xO -= 0.5*xj;
+						basis_[nm_][M_Na2SiO3] += 0.5*xj;
+						basis_[nm_][M_SiO2] -= 0.5*xj;
+						break;
+
+					case E_MG:
+						xO -= xj;
+						basis_[nm_][M_MgO] += 0.5*xj;
+						break;
+
+					case E_AL:
+						basis_[nm_][M_Al2O3] += 0.5*xj;
+						xO -= 1.5*xj;
+						break;
+
+					case E_SI:
+						basis_[nm_][M_SiO2] += xj;
+						xO -= 2*xj;
+						break;
+
+					case E_S:
+						basis_[nm_][M_S2] += xj;
+						break;
+
+					case E_CL:
+						basis_[nm_][M_NaCl] += xj;
+						basis_[nm_][M_Na2SiO3] -= 0.5*xj;
+						basis_[nm_][M_SiO2] += 0.5*xj;
+						xO += 0.5*xj;
+						break;
+
+					case E_K:
+						basis_[nm_][M_KAlSi2O6] += xj;
+						xO -= 0.5*xj;
+						basis_[nm_][M_Al2O3] -= 0.5*xj;
+						basis_[nm_][M_SiO2] -= 2*xj;
+						break;
+
+					case E_CA:
+						xO -= xj;
+						basis_[nm_][M_CaO] += xj;
+						break;
+
+					case E_FE:
+						xO -= xj;
+						basis_[nm_][M_Fe2SiO4] += 0.5*xj;
+						break;
+
+					default:
+						// non-fusible mineral
+						cout << "phase " << ph.name << " cannot melt." << endl;
+						really_solid = true;
+						break;
+				}
+			}
+			if (really_solid || fabs(xO)>1e-9) // at present, cannot handle ferric or oxidized sulfur melts
+			{
+				Gf0_ += state.x[i]*Gf[p];
+			}
+			else
+			{
+				nm_++;  // Accept this candidate phase; it's fusible.
+			}
+		}
+	}
+	for (unsigned i=0; i<M_END; ++i)
+	{
+		Gfm_[i] = Gf[endmember[i]];    // Save the Gibbs free energy of each melt endmember.
+	}
+}
+
+//-----------------------------------------------------------------------------//
+template<typename Real>
+Real Melt_Model::Gfmelt(std::vector<double> const &X) const
+{
+	unsigned const NM = nm_;
+
+	Real x[M_END];
+	Real zero = to_Real<Real>(0.0, NM);
+
+	Real Gf = to_Real<Real>(Gf0_, NM);
+	fill(x, x+M_END, zero);
+
+	for (unsigned i=0; i<NM; ++i)
+	{
+		Real const xi = to_Real<Real>(min(x_[i], max(0.0, X[i])), i, NM);
+		for (unsigned j=0; j<M_END; ++j)
+		{
+			x[j] += xi*basis_[i][j];
+		}
+		Gf += (x_[i]-xi)*Gfs_[i];
+	}
+
+	// We now have melt composition as mole fraction. Reorganize in analogy to CIPW norm into preferred melt phases.
+
+	// I have no calcite melt
+
+	// Leucite to orthoclase
+    Real Q = x[M_KAlSi2O6];
+	x[M_KAlSi3O8] = Q;
+	x[M_KAlSi2O6] = zero;
+	x[M_SiO2] -= Q;
+
+	// Sodium metasilicate to albite
+	Q = min(x[M_Na2SiO3], x[M_Al2O3]);
+	x[M_NaAlSi3O8] += 2*Q;
+	x[M_Na2SiO3] -= Q;
+	x[M_Al2O3] -= Q;
+	x[M_SiO2] -= 5*Q;
+
+	// Anorthite
+	Q = min(x[M_CaO], x[M_Al2O3]);
+	x[M_CaAl2Si2O8] = Q;
+	x[M_CaO] -= Q;
+	x[M_Al2O3] -= Q;
+	x[M_SiO2] -= 2*Q;
+
+	// Acmite should come next, but I have no melt for it.
+
+	// Oxidized iron (magnetite and hematite) should come next but I have no melts for them.
+
+	// Magnesium diopside. I have no hedenbergite melt.
+
+	Q = min(x[M_CaO], x[M_MgO]);
+	x[M_CaMgSi2O6] = Q;
+	x[M_CaO] -= Q;
+	x[M_MgO] -= Q;
+	x[M_SiO2] -= 2*Q;
+
+	// Wollastonite
+
+	Q = x[M_CaO];
+	x[M_CaSiO3] = Q;
+	x[M_CaO] = zero;
+	x[M_SiO2] -= Q;
+
+	// Magnesium pyroxene (enstatite). I have no ferrosilite melt.
+
+	Q = 2*x[M_MgO];
+	x[M_Mg2Si2O6] = Q;
+	x[M_MgO] = zero;
+	x[M_SiO2] -= 2*Q;
+
+	if (x[M_SiO2]<=0.0)
+	{
+		// Silica undersaturated
+
+		Real D = -x[M_SiO2];
+		x[M_SiO2] = zero;
+
+		// Enstatite to olivine.
+		Q = min(D, x[M_Mg2Si2O6]);
+		x[M_Mg2SiO4] = Q;
+		x[M_Mg2Si2O6] -= Q;
+		D -= Q;
+
+		if (D>0.0)
+		{
+			// Albite to nepheline
+
+			Q = min(0.5*D, x[M_NaAlSi3O8]);
+			x[M_NaAlSiO4] += Q;
+			x[M_NaAlSi3O8] -= Q;
+			D -= 2*Q;
+
+			if (D>0.0)
+			{
+				// Orthoclase to leucite
+
+				Q = min(x[M_KAlSi3O8], D);
+				x[M_KAlSi2O6] += Q;
+				x[M_KAlSi3O8] -= Q;
+				D -= Q;
+
+				if (D>0.0)
+				{
+					// Do not have calcium orthosilicate. Go to lime instead.
+
+					// Diopside to wollastonite and olivine.
+
+					Q = min(x[M_CaMgSi2O6], 2*D);
+					x[M_CaMgSi2O6] -= Q;
+					x[M_CaSiO3] += Q;
+					x[M_Mg2SiO4] += 0.5*Q;
+					D -= 0.5*Q;
+
+					if (D>0.0)
+					{
+						// Enstatite to olivine.
+
+						Q = min(D, x[M_Mg2Si2O6]);
+						x[M_Mg2Si2O6] -= Q;
+						x[M_Mg2SiO4] += Q;
+						D -= Q;
+
+						if (D>0.0)
+						{
+							// Wollastonite to lime
+
+							Q = min(D, x[M_CaSiO3]);
+							x[M_CaO] += Q;
+							x[M_CaSiO3] -= Q;
+							D -= Q;
+
+							if (D>0.0)
+							{
+								// Olivine to periclase
+
+								Q = min(2*D, 2*x[M_Mg2SiO4]);
+								x[M_MgO] += Q;
+								x[M_Mg2SiO4] -= 0.5*Q;
+								D -= 0.5*Q;
+								
+								// That's all I have melts for. If quartz is still deficient, this is not a valid melt.
+								if (D<-1.0e-9)
+								{
+									return to_Real<Real>(1e10, NM); // huge Gf turns off this melt.
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	Real sum = zero;
+	for (unsigned i=0; i<M_END; ++i)
+	{
+		sum += x[i];
+	}
+	Real rsum = 1.0/(sum + std::numeric_limits<double>::min());
+	for (unsigned i=0; i<M_END; ++i)
+	{
+		x[i] *= rsum;
+	}
+
+	// Compute melt free energy.
+
+	Real Gfm = zero;
+	for (unsigned i=0; i<M_END; ++i)
+	{
+		if (x[i]>0.0)
+		{
+			Gfm += Gfm_[i]*x[i] + R*T_*x[i]*log(x[i]);
+			for (unsigned j=0; j<M_END; ++j)
+			{
+				if (x[j]>0.0)
+				{
+					Gfm += 0.5*x[i]*x[j]*W[i][j];
+				}
+			}
+/*			if (ii==M_H2O)
+			{
+				Gfm += R*T_*(x[i]*log(x[i]) + (1-x[i])*log(1-x[i]));
+			}
+*/		}
+	}
+
+	// Now compute total free energy. 
+	return Gf + sum*Gfm;
+}
+
+//-----------------------------------------------------------------------------//
+/*! Find the degree of melting of each solid phase that minimized total Gibbs free energy.
+ * 
+ * \param[in,out] X Contains initial guess of amount of melt of each phase. On return,
+ * contains amount of melt of each phase that minimizes free energy.
+ */
+Phase Melt_Model::minimize_Gf(vector<double> &X)
+{
+	  // Compute the initial gradient and Hessian matrix
+	unsigned const N = nm_;
+
+	double H[N][N];
+	double grad[N];
+
+	gsl_matrix *A = gsl_matrix_alloc(N, N);
+	gsl_matrix *V = gsl_matrix_alloc(N, N);
+	gsl_vector *S = gsl_vector_alloc(N);
+	gsl_vector *work = gsl_vector_alloc(N);
+	gsl_vector *b = gsl_vector_alloc(N);
+	gsl_vector *x = gsl_vector_alloc(N);	
+	gsl_vector *aGf = gsl_vector_alloc(P_END);
+	gsl_permutation *permute = gsl_permutation_alloc(P_END);
+
+	DO:
+
+		// Calculate initial Gf, gradient, and Hessian.
+
+	D2 Gf2 = Gfmelt<D2>(X);
+
+#if 0 //D2 test
+	auto Xp = X;
+	Xp[0] -= 0.01;
+	Xp[1] -= 0.01;
+	D2 Gfmm = Gfmelt<D2>(Xp);
+    Xp = X;
+	// Xp[0] unchanged
+	Xp[1] -= 0.01;
+	D2 Gf0m = Gfmelt<D2>(Xp);
+	Xp = X;
+	Xp[0] += 0.01;
+	Xp[1] -= 0.01;
+	D2 Gfpm = Gfmelt<D2>(Xp);
+
+	Xp = X;
+	Xp[0] -= 0.01;
+	// Xp[1] unchanged
+	D2 Gfm0 = Gfmelt<D2>(Xp);
+    Xp = X;
+	// Xp[0] unchanged
+	// Xp[1] unchanged
+	D2 Gf00 = Gfmelt<D2>(Xp);
+	Xp = X;
+	Xp[0] += 0.01;
+	// Xp[1] unchanged
+	D2 Gfp0 = Gfmelt<D2>(Xp);
+
+	Xp = X;
+	Xp[0] -= 0.01;
+	Xp[1] += 0.01;
+	D2 Gfmp = Gfmelt<D2>(Xp);
+    Xp = X;
+	// Xp[0] unchanged
+	Xp[1] += 0.01;
+	D2 Gf0p = Gfmelt<D2>(Xp);
+	Xp = X;
+	Xp[0] += 0.01;
+	Xp[1] += 0.01;
+	D2 Gfpp = Gfmelt<D2>(Xp);
+
+	double d1 = (Gfp0.y() - Gfm0.y())*50.;
+	double d1a = Gf00.dydx(0);
+	double d2 = (Gf0p.y() - Gf0m.y())*50.;
+	double d2a = Gf00.dydx(1);
+
+	double d11 = (Gfp0.y() - 2*Gf00.y() + Gfm0.y())*10000.;
+	double d11a = Gf00.d2ydx2(0, 0);
+	double d22 = (Gf0p.y() - 2*Gf00.y() + Gf0m.y())*10000.;
+	double d22a = Gf00.d2ydx2(1, 1);
+	double d12 = ((Gfpp.y() - Gfmp.y())*50. - (Gfpm.y() - Gfmm.y())*50.)*50.;
+	double d12a = Gf00.d2ydx2(0, 1);
+#endif
+
+    double Gf = Gf2.y();
+
+	cout << "  Melt parameters:" << endl;
+	for (unsigned i=0; i<N; ++i)
+	{
+		cout << "  X[" << i << "] = " << X[i] << endl;
+		
+		// Gradient
+
+		grad[i] = Gf2.dydx(i);
+
+		// Hessian
+
+		for (unsigned j=0; j<N; ++j)
+		{
+			H[i][j] = Gf2.d2ydx2(i, j);
+		}
+	}
+	cout << "  Gf = " << Gf << endl;
+		
+	// Solve for search direction
+
+	for (unsigned i=0; i<N; ++i)
+	{
+		for (unsigned j=0; j<N; j++)
+		{
+			gsl_matrix_set(A, i, j, H[i][j]);
+		}
+		gsl_vector_set(b, i, -grad[i]);
+	}
+
+	gsl_linalg_SV_decomp (A, V, S, work);		
+	gsl_linalg_SV_solve (A, V, S, b, x);
+
+	double x0 = -numeric_limits<double>::max();
+	double x1 = numeric_limits<double>::max();
+	bool singular = true;
+    double p[M_END];
+	for (unsigned i=0; i<N; ++i)
+	{
+		p[i] = gsl_vector_get(x, i);
+		if (fabs(p[i]) > 1.0e-9) singular = false;
+		double e = -X[i]/p[i];
+		if (p[i]<0) x1 = min(x1, e); else x0 = max(x0, e);
+		e = (x_[i]-X[i])/p[i];
+		if (p[i]>0) x1 = min(x1, e); else x0 = max(x0, e);
+	}
+
+	if (!singular)
+	{
+		double x2 = minimize(x0, x1, [&](double const e)
+			                     {return Gfmelt(X,
+			                                    p,
+			                                    e);});
+
+		if (fabs(x2)>1.0e-7)
+		{
+			double sum = 0.0;
+			for (unsigned i=0; i<N; ++i)
+			{
+				X[i] += x2*p[i];
+				X[i] = min(x_[i], max(0.0, X[i]));
+				sum += x2*p[i];
+			}
+			goto DO;
+		}
+	}
+		
+	gsl_matrix_free(A);
+	gsl_matrix_free(V);
+	gsl_vector_free(S);
+	gsl_vector_free(work);
+	gsl_vector_free(b);
+	gsl_vector_free(x);
+	gsl_vector_free(aGf);
+	gsl_permutation_free(permute);
+
+	{
+	Phase Result;
+	Phase.index = 0;
+	Result.name = "mixed melt";
+		
+	unsigned const NM = nm_;
+
+	double x[M_END];
+	fill(x, x+M_END, 0.0);
+
+	for (unsigned i=0; i<NM; ++i)
+	{
+		double const xi = to_Real<Real>(min(x_[i], max(0.0, X[i])), i, NM);
+		for (unsigned j=0; j<M_END; ++j)
+		{
+			x[j] += xi*basis_[i][j];
+		}
+		Gf += (x_[i]-xi)*Gfs_[i];
+	}
+	}
+}
+
+//-----------------------------------------------------------------------------//
+double Melt_Model::Gfmelt(std::vector<double> const &X, double p[M_END], double e) const
+{
+	unsigned const N = nm_;
+	std::vector<double> x(N);
+	for (unsigned i=0; i<N; ++i)
+	{
+		x[i] = X[i] + e*p[i];
+	}
+	return Gfmelt<double>(x);
+}
+
+//-----------------------------------------------------------------------------//
+double melt(double const T, 
+            double const P, 
+            vector<Phase> const &phase,
+            vector<double> const &Gf,
+            State const &state, 
+            struct Phase &new_phase)
+{
+	Melt_Model model(T, P, phase, Gf, state);
+
+    // Initial guess is that all phases are half melted. We may try a number of initial guesses eventually.
+	unsigned const NM = model.nm();
+	vector<double> X(NM);
+	for (unsigned i=0; i<NM; ++i)
+	{
+		X[i] = 0.5*model.x(i);
+	}
+
+	new_phase = model.minimize_Gf(X);
+
+	double Gff = model.Gfmelt<double>(X);
+
+	return Gff;
 }
 

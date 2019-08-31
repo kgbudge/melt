@@ -25,16 +25,7 @@
 
 #include "element.hh"
 #include "phase.hh"
-
-struct State
-{
-    std::string name;
-	unsigned p[E_END];
-	double x[E_END];
-    bool is_element_active[E_END];
-	double element_activity[E_END];
-	double V[E_END];
-};
+#include "State.hh"
 
 bool 
 do_ladder_update(double const T, 

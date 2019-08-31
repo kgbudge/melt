@@ -262,9 +262,9 @@ enum PHASE
   P_ZIRCON,
   P_ZOISITE,
 
-  P_SiO2_MELT,
-  P_Na2SiO3_MELT,
-  P_KAlSiO4_MELT,
+  P_SiO2_LIQUID,
+  P_Na2SiO3_LIQUID,
+  P_KAlSiO4_LIQUID,
 
   P_Na2SiO3,
 

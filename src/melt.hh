@@ -22,6 +22,7 @@
 
 #include "element.hh"
 #include "phase_enum.hh"
+#include "State.hh"
 
 enum Endmember
 {
@@ -32,7 +33,20 @@ enum Endmember
 		M_Fe2SiO4,
 		M_CaSiO3,
 		M_Na2SiO3,
-		M_KAlSiO4,
+		M_KAlSi2O6,
+
+        M_CO2,
+        M_NaAlSiO4,
+        M_NaAlSi3O8,
+        M_MgO,
+        M_S2,
+	    M_NaCl,
+        M_Mg2Si2O6,
+		M_CaO,
+        M_CaMgSi2O6,
+        M_CaAl2Si2O8,
+	    M_KAlSi3O8,
+
         M_END
 };
 
@@ -51,13 +65,25 @@ unsigned const endmember_element[M_END] =
 unsigned const endmember[M_END] =
 {
 		P_WATER_VAPOR,
-		P_SiO2_MELT,
+		P_SiO2_LIQUID,
 		P_CORUNDUM_LIQUID,
 		P_FORSTERITE_LIQUID,
 		P_FAYALITE_LIQUID,
 		P_WOLLASTONITE_LIQUID,
-		P_Na2SiO3_MELT,
-		P_KAlSiO4_MELT
+		P_Na2SiO3_LIQUID,
+		P_LEUCITE_LIQUID,
+
+        P_CO2,
+        P_NEPHELINE_LIQUID,
+        P_ALBITE_LIQUID,
+        P_PERICLASE_LIQUID,
+        P_DISULFUR,
+	    P_HALITE_LIQUID,
+        P_ENSTATITE_LIQUID,
+		P_LIME_LIQUID,
+        P_DIOPSIDE_LIQUID,
+        P_ANORTHITE_LIQUID,
+	    P_K_FELDSPAR_LIQUID,
 };
 
 double const endmember_mole[M_END] =
@@ -72,14 +98,11 @@ double const endmember_mole[M_END] =
 		1
 };
 
-bool melt(double T, 
+double melt(double T, 
           double P, 
-            std::vector<struct Phase> const &phase,
-	        std::vector<double> const &Gf,
-            double const element_activity[E_END], 
-            double const Np[E_END], 
-            unsigned const p[E_END], 
-	        double &Geu,
-            struct Phase &new_phase);
+          std::vector<struct Phase> const &phase,
+	      std::vector<double> const &Gf,
+          State const &state, 
+          struct Phase &new_phase);
 
 #endif // melt_hh
