@@ -368,34 +368,107 @@ void update()
 	
 	if (button_molar_melt->get_active())
 	{
-		unsigned const i = phase.size()-1;
-		double mH2O = phase[i].n[0];//*0.5*18.02;
-		double mSiO2 = phase[i].n[1];//*60.086;
-		double mAl2O3 = phase[i].n[2];//*0.5*101.961;
-		double mMgO = phase[i].n[3];//*40.311;
-		double mFeO = phase[i].n[4];//*71.85;
-		double mCaO = phase[i].n[5];//*56.077;
-		double mNa2O = phase[i].n[6];//*0.5*61.979;
-		double mK2O = phase[i].n[7];//*0.5*94.196;
+		int pm = -1;
+		double px = 0.0;
+		for (unsigned i=0; i<E_END; ++i)
+		{
+			if (state.x[i]>px && state.p[i]>=P_END)
+			{
+				pm = state.p[i];
+				px = state.x[i];
+			}
+		}
+		if (pm != -1)
+		{
+			Phase const &melt = phase[pm];
 
-		double tot = mH2O + mSiO2 + mAl2O3 + mMgO + mFeO + mCaO + mK2O + mNa2O;
-		double rtot = 100/tot;
+			unsigned const N = melt.nz;
+			double mH2O = 0;
+			double mSiO2 = 0;
+			double mAl2O3 = 0;
+			double mMgO = 0;
+			double mFeO = 0;
+			double mCaO = 0;
+			double mNa2O = 0;
+			double mK2O = 0;
+			for (unsigned i=0; i<N; ++i)
+			{
+				double const ni = melt.n[i];
+				switch (melt.z[i])
+				{
+					case E_H:
+						mH2O += 0.5*ni;
+						break;
 
-		text_nH2O->set_text(tostring(mH2O*rtot));
-		text_nSiO2->set_text(tostring(mSiO2*rtot));
-		text_nAl2O3->set_text(tostring(mAl2O3*rtot));
-		text_nMgO->set_text(tostring(mMgO*rtot));
-		text_nFeO->set_text(tostring(mFeO*rtot));
-		text_nCaO->set_text(tostring(mCaO*rtot));
-		text_nK2O->set_text(tostring(mK2O*rtot));
-		text_nNa2O->set_text(tostring(mNa2O*rtot));
+					case E_NA:
+						mNa2O += 0.5*ni;
+						break;
 
-		text_nTiO2->set_text(tostring(0.0));
-		text_nFe2O3->set_text(tostring(0.0));
-		text_nMnO->set_text(tostring(0.0));
-		text_nP2O5->set_text(tostring(0.0));
+					case E_MG:
+						mMgO += ni;
+						break;
+
+					case E_AL:
+						mAl2O3 += 0.5*ni;
+						break;
+
+					case E_SI:
+						mSiO2 += ni;
+						break;
+
+					case E_K:
+						mK2O += 0.5*ni;
+						break;
+
+					case E_CA:
+						mCaO += ni;
+						break;
+
+					case E_FE:
+						mFeO +=  ni;
+						break;
+
+					default:
+						break;
+				}
+			}
+
+			double tot = mH2O + mSiO2 + mAl2O3 + mMgO + mFeO + mCaO + mK2O + mNa2O;
+			double rtot = 100/tot;
+
+			text_nH2O->set_text(tostring(mH2O*rtot));
+			text_nSiO2->set_text(tostring(mSiO2*rtot));
+			text_nAl2O3->set_text(tostring(mAl2O3*rtot));
+			text_nMgO->set_text(tostring(mMgO*rtot));
+			text_nFeO->set_text(tostring(mFeO*rtot));
+			text_nCaO->set_text(tostring(mCaO*rtot));
+			text_nK2O->set_text(tostring(mK2O*rtot));
+			text_nNa2O->set_text(tostring(mNa2O*rtot));
+
+			text_nTiO2->set_text(tostring(0.0));
+			text_nFe2O3->set_text(tostring(0.0));
+			text_nMnO->set_text(tostring(0.0));
+			text_nP2O5->set_text(tostring(0.0));
+		}
+		else
+		{
+			text_nH2O->set_text("--");
+			text_nSiO2->set_text("--");
+			text_nAl2O3->set_text("--");
+			text_nMgO->set_text("--");
+			text_nFeO->set_text("--");
+			text_nCaO->set_text("--");
+			text_nK2O->set_text("--");
+			text_nNa2O->set_text("--");
+
+			text_nTiO2->set_text("--");
+			text_nFe2O3->set_text("--");
+			text_nMnO->set_text("--");
+			text_nP2O5->set_text("--");
+		}
+
 	}
-
+	
 	CIPW_Columns m_Columns;
 	Glib::RefPtr<Gtk::ListStore> list_store_CIPW = Gtk::ListStore::create(m_Columns);
 	list_store_CIPW->set_sort_column(1, Gtk::SORT_DESCENDING);
@@ -410,11 +483,25 @@ void update()
 	double Vtot = 0.0;
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		unsigned const pi = state.p[i];
-        state.V[i] = state.x[i]*phase[pi].model->volume(phase[pi], T, P);
-		Vtot += state.V[i];
+		if (state.x[i]>0.0)
+		{
+			unsigned const pi = state.p[i];
+			if (pi<P_END)
+			{
+				state.V[i] = state.x[i]*phase[pi].model->volume(phase[pi], T, P);
+			}
+			else
+			{
+				state.V[i] = phase[pi].V;
+			}
+			Vtot += state.V[i];
+		}
+		else
+		{
+			state.V[i] = 0.0;
+		}
 	}
-//	cout << Vtot/100 << endl;
+	//	cout << Vtot/100 << endl;
 	
 	rnorm = 100.0/Vtot;
 	for (unsigned i=0; i<E_END; ++i)

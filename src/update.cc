@@ -514,9 +514,10 @@ void update_state(double const T,
 			Phase new_phase;
 			cout << "  Starting free energy for this melt step: " << Gftot << endl;
 			double Geu  = melt(T, P, phase, Gf, state, new_phase);
+			
 			if (Geu < Gftot - 1e-9)
 			{
-				Gf.push_back(Geu);
+				Gf.push_back(new_phase.Hf0);
 				phase.push_back(new_phase);
 
 				do_ladder_update(T, 
@@ -527,6 +528,13 @@ void update_state(double const T,
 				                 oxygen_FMQ, 
 				                 pO2, 
 				                 state);
+
+				Gftot = 0.0;
+				for (unsigned e=0; e<E_END; ++e)
+				{
+					Gftot += state.x[e]*Gf[state.p[e]];
+				}
+				cout << "    Free energy of formation = " << fixed << setprecision(3) << (1000*Gftot/Mtot) << " kJ/kg" << endl;
 			}
 			// else we've done all the melting we can
 			else
