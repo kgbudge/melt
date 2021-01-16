@@ -458,7 +458,7 @@ void update_state(double const T,
 	{
 		state.is_element_active[e] = (state.x[e]>0.0);
 	}
-	cout << "Active elemental phases:" << endl;
+/*	cout << "Active elemental phases:" << endl;
 	for (unsigned e=0; e<E_END; ++e)
 	{
 		if (state.is_element_active[e])
@@ -466,7 +466,7 @@ void update_state(double const T,
 			cout << " " << phase[state.p[e]].name << endl;
 		}
 	}
-	
+*/	
 	vector<double> Gf, amu;
 	calculate_Gf(T, P, state.is_element_active, phase, Gf, amu);
 
@@ -509,7 +509,7 @@ void update_state(double const T,
 		}
 		cout << "Free energy of formation = " << fixed << setprecision(3) << (1000*Gftot/Mtot) << " kJ/kg" << endl;
 
-		for (unsigned i=0; i<30; ++i)
+		for (unsigned i=0; true && i<30; ++i)
 		{
 			Phase new_phase;
 			cout << "  Starting free energy for this melt step: " << Gftot << endl;

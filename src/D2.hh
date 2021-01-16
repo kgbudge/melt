@@ -4,6 +4,8 @@
 
 #include <vector>
 
+#include "ds++/Assert.hh"
+
 class D2
 {
 public:
@@ -13,14 +15,16 @@ public:
 
 	D2(double d, unsigned i, unsigned N) : f(d), df(N, 0.0), ddf(N, std::vector<double>(N, 0.0)) 
     {
+      Require(i<df.size());
       df[i] = 1.0;
     }
 
+    unsigned size() const noexcept { return df.size(); }
     void swap(D2 &r);
 
     double y() const noexcept { return f; }
-    double dydx(unsigned i) const { return df[i]; }
-	double d2ydx2(unsigned i, unsigned j) const { return ddf[i][j]; } 
+    double dydx(unsigned i) const { Require(i<df.size()); return df[i]; }
+	double d2ydx2(unsigned i, unsigned j) const { Require(i<ddf.size()); Require(j<ddf[i].size()); return ddf[i][j]; } 
 
     friend D2 operator*(D2 const &, D2 const &);
     friend D2 operator*(D2 const &, double);
@@ -29,14 +33,19 @@ public:
     D2 &operator*=(D2 const &);
     D2 &operator*=(double);
 
+    friend D2 operator/(D2 const &, D2 const &);
+    friend D2 operator/(D2 &&, D2 const &);
     friend D2 operator/(double, D2 const &);
     friend D2 operator/(double, D2 &&);
+    D2 &operator/=(double const r){ return operator*=(1.0/r); }
 
     friend D2 operator+(D2 const &, D2 const &);
     friend D2 operator+(D2 const &, double);
     D2 &operator+=(D2 const &);
 
     friend D2 operator-(double, D2 const &);
+    friend D2 operator-(D2 const &, D2 const &);
+    friend D2 operator-(D2 &&, D2 const &);
     D2 &operator-=(D2 const &);
 
 	friend D2 operator-(D2 const &);
@@ -54,6 +63,10 @@ private:
   std::vector<double> df;
   std::vector<std::vector<double>> ddf;
 };
+
+template<typename Real> unsigned size(Real const &);
+template<> inline unsigned size(double const &){ return 1.0; }
+template<> inline unsigned size(D2 const &x){ return x.size(); }
 
 template<typename Real>
 Real to_Real(double d, unsigned n);

@@ -86,16 +86,76 @@ unsigned const endmember[M_END] =
 	    P_K_FELDSPAR_LIQUID,
 };
 
-double const endmember_mole[M_END] =
+double const oxygen_sites[M_END] =
 {
 		1,
+		2,
+		3,
 		4,
+		4,
+		3,
+		3,
+		6,
+
+        2,
+        4,
+        8,
+        1,
+        2,
+	    1,
+        6,
+		1,
+        6,
+        8,
+	    8,
+};
+
+double const tetrahedral_sites[M_END] = 
+{
+		0,
+		1,
 		2,
 		1,
 		1,
+		1,
+		1,
+		3,
+
+        1,
+        2,
+        4,
+        0,
+        0,
+	    0,
+        2,
+		0,
+        2,
+        4,
+	    4,
+};
+
+double const nontetrahedral_sites[M_END] = 
+{
+		0,
 		2,
-		0.5,
-		1
+		0,
+		2,
+		2,
+		2,
+		2,
+		6,
+
+        0,
+        4,
+        8,
+        1,
+        0,
+	    1,
+        4,
+		1,
+        4,
+        8,
+	    8,
 };
 
 double melt(double T, 

@@ -47,7 +47,7 @@ double minimize(double a, double b, F const &f)
 	double d = a + (b-a)/phi;
 	double fd = f(d);
 
-	while (fabs(b-a)>1.0e-13*(fabs(a)+fabs(b)))
+	while (fabs(b-a)>2.0e-12*(fabs(a)+fabs(b)))
 	{
 		if (fc<fd)
 		{

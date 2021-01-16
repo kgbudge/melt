@@ -49,21 +49,22 @@ double const Ww_fa = 35634.*Wnorm;
 double const Ww_wo = 20375.*Wnorm;
 double const Ww_sm = -96938.*Wnorm;
 double const Ww_kal = 10374.*Wnorm;
-double const Wq_cor = 33470*Wnorm; //1862K 32423*Wnorm;//1839K 28409*Wnorm; calibrated from SiO2-Al2O3 eutectic at 1868K
-double const Wq_fo = 7346*Wnorm; // calibrated from Q-Fo eutectic at 1815K
-double const Wq_fa = 11550.*Wnorm; // calibrated from eutectic near 1422K
-double const Wq_wo = 14834.*Wnorm;// calibrated from eutectic of 1699K
-double const Wq_sm = -6000*Wnorm;// calibrated from eutectic at 1062K
+double const Wq_cor = 54821.*Wnorm; // calibrated from SiO2-Al2O3 eutectic at 1868K  Al 0.9m vs. 0.4m
+double const Wq_fo = 0; // do not coexist
+double const Wq_fa = 21575.*Wnorm; // calibrated from Q-Fa eutectic near 1422K
+double const Wq_wo = 643.*Wnorm;// calibrated from eutectic of 1699K
+double const Wq_sm = -7095*Wnorm;// calibrated from eutectic at 1062K
 double const Wq_kal = -33922.*Wnorm;
 double const Wcor_fo = -30509.*Wnorm;
 double const Wcor_fa = -32880.*Wnorm;
 double const Wcor_wo = -57918.*Wnorm;
-double const Wcor_sm = 100000.*Wnorm; //-130785.*Wnorm;
+double const Wcor_sm = 100000.*Wnorm; 
 double const Wcor_kal = -25859.*Wnorm;
 double const Wfo_fa = -37257.*Wnorm;
 double const Wfo_wo = -31732.*Wnorm;
 double const Wfo_sm = -41877.*Wnorm;
 double const Wfo_kal = 22323.*Wnorm;
+double const Wfo_en = 1000000*Wnorm; // calibrated from Q-Fo eutectic at 1815K
 double const Wfa_wo = -12917.*Wnorm;
 double const Wfa_sm = -90534.*Wnorm;
 double const Wfa_kal = 23649.*Wnorm;
@@ -82,6 +83,49 @@ double const W[M_END][M_END] =
     {Ww_sm,   Wq_sm, Wcor_sm,   Wfo_sm,   Wfa_sm,   Wwo_sm,     0.0,  Wsm_kal},
     {Ww_kal, Wq_kal, Wcor_kal, Wfo_kal,  Wfa_kal,  Wwo_kal, Wsm_kal,      0.0},
 };
+
+double const Smix[M_END] = 
+{
+		0, // Water occupies every oxygen site.
+		0, // Silica has 1 tet and 2 nontet sites per mole, and only tet sites are occupied.
+		0, // Corundum has two tet sites per mole, all occupied.
+		0, // Forsterite has one tet and two nontet sites per mole, all occupied.
+		0, // "
+		-2*(2*0.5*log(0.5)), // Wollastonite has one tet and two nontet sites per mole, with half the nontet sites occupied.
+		0, // Sodium metasilicate has one tet and two nontet sites per mole, all occupied.
+		-3*(2*0.5*log(0.5)) + 6*(log(1./6.)/6. + 5*log(5./6.)/6.),
+        // Leucite has three tet and six nontet site per hex, the former split 1:2, the latter 1/6 occupied
+
+        0, // CO2 has one "tet"site per mol, all occupied.
+        -2*(2*0.5*log(0.5)) + 4*(0.25*log(0.25) + 0.75*log(0.75)),
+		// Nepheline has two tet and four nontet sites per mole; the tet are divided betweel Al and Si and the nontet are 1/4 occupied.
+        -4*(0.25*log(0.25)+0.75*log(0.75)) + 8*(0.125*log(0.125) + 0.875*log(0.875)),
+           // Albite has four tet and eight nontet sites per mole; the four are split 1:3 between Al and Si and hte nontent are 1/8 occupied.
+        0, // Periclase has one nontet site per mole, fully occupied.
+        0, // Disulfur occupies every oxygen site (yeah, I know)
+	    0, // Halite occupies every nontet and oxygen site 
+        -4*(2*0.5*log(0.5)), // Enstatite has two tet and four nontet sites per mole, the latter half occupied.
+		0, // Lime has one nontet site per mole, fully occupied.
+        -4*(2*0.25*log(0.25) + 0.5*log(0.5)), 
+	      // Diopside has two tet and four nontet sites per mole, the latter half occupied with 1:1 Ca:Mg
+		-4*(2*0.5*log(0.5)) + 8*(0.125*log(0.125) + 0.875*log(0.875)),
+        // Anorthite has four tet and eight nontet sites per mole, the latter 1/8 occupied and the former split 1:1
+        -4*(0.25*log(0.25)+0.75*log(0.75)) + 8*(0.125*log(0.125) + 0.875*log(0.875))
+           // K-feldspar has four tet and eight nontet sites per mole; the four are split 1:3 between Al and Si and hte nontent are 1/8 occupied.
+};
+
+template<typename Real>
+Real Nlog(Real const &x)
+{
+	if (x>0.0)
+	{
+		return x*log(x);
+	}
+	else
+	{
+		return to_Real<Real>(0.0, size(x));
+	}
+}
 
 //-----------------------------------------------------------------------------//
 class Melt_Model
@@ -116,6 +160,7 @@ class Melt_Model
 		double x_[M_END];
 		double Gfs_[E_END];
 		double Gfm_[M_END];
+		Phase phase_[M_END];
 		double Gf0_; // non-meltable phases total free energy
 };
 
@@ -183,7 +228,7 @@ class Melt_Model
 
 					case E_MG:
 						xO -= xj;
-						basis_[nm_][M_MgO] += 0.5*xj;
+						basis_[nm_][M_MgO] += xj;
 						break;
 
 					case E_AL:
@@ -244,6 +289,8 @@ class Melt_Model
 	for (unsigned i=0; i<M_END; ++i)
 	{
 		Gfm_[i] = Gf[endmember[i]];    // Save the Gibbs free energy of each melt endmember.
+		phase_[i] = phase[endmember[i]];
+		
 	}
 }
 
@@ -307,7 +354,7 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 
 	// Magnesium pyroxene (enstatite). I have no ferrosilite melt.
 
-	Q = 2*x[M_MgO];
+	Q = 0.5*x[M_MgO];
 	x[M_Mg2Si2O6] = Q;
 	x[M_MgO] = zero;
 	x[M_SiO2] -= 2*Q;
@@ -355,38 +402,29 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 					x[M_Mg2SiO4] += 0.5*Q;
 					D -= 0.5*Q;
 
+
 					if (D>0.0)
 					{
-						// Enstatite to olivine.
+						// Wollastonite to lime
 
-						Q = min(D, x[M_Mg2Si2O6]);
-						x[M_Mg2Si2O6] -= Q;
-						x[M_Mg2SiO4] += Q;
+						Q = min(D, x[M_CaSiO3]);
+						x[M_CaO] += Q;
+						x[M_CaSiO3] -= Q;
 						D -= Q;
 
 						if (D>0.0)
 						{
-							// Wollastonite to lime
+							// Olivine to periclase
 
-							Q = min(D, x[M_CaSiO3]);
-							x[M_CaO] += Q;
-							x[M_CaSiO3] -= Q;
+							Q = min(D, x[M_Mg2SiO4]);
+							x[M_MgO] += 2*Q;
+							x[M_Mg2SiO4] -= Q;
 							D -= Q;
 
-							if (D>0.0)
+							// That's all I have melts for. If quartz is still deficient, this is not a valid melt.
+							if (D<-1.0e-9)
 							{
-								// Olivine to periclase
-
-								Q = min(2*D, 2*x[M_Mg2SiO4]);
-								x[M_MgO] += Q;
-								x[M_Mg2SiO4] -= 0.5*Q;
-								D -= 0.5*Q;
-								
-								// That's all I have melts for. If quartz is still deficient, this is not a valid melt.
-								if (D<-1.0e-9)
-								{
-									return to_Real<Real>(1e10, NM); // huge Gf turns off this melt.
-								}
+								return to_Real<Real>(1e10, NM); // huge Gf turns off this melt.
 							}
 						}
 					}
@@ -394,26 +432,21 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 			}
 		}
 	}
-	
-	Real sum = zero;
-	for (unsigned i=0; i<M_END; ++i)
-	{
-		sum += x[i];
-	}
-	Real rsum = 1.0/(sum + std::numeric_limits<double>::min());
-	for (unsigned i=0; i<M_END; ++i)
-	{
-		x[i] *= rsum;
-	}
 
 	// Compute melt free energy.
 
 	Real Gfm = zero;
+	Real Nox = zero, Ntet = zero, Nnontet = zero, Nc[E_END];
+	for (unsigned i=0; i<E_END; ++i)
+	{
+		Nc[i] = zero;
+	}
+	double const T = T_;
 	for (unsigned i=0; i<M_END; ++i)
 	{
 		if (x[i]>0.0)
 		{
-			Gfm += Gfm_[i]*x[i] + R*T_*x[i]*log(x[i]);
+			Gfm += Gfm_[i]*x[i] + R*T*x[i]*Smix[i];  // Subtract off the free energy of mixing of pure endmember
 			for (unsigned j=0; j<M_END; ++j)
 			{
 				if (x[j]>0.0)
@@ -421,15 +454,37 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 					Gfm += 0.5*x[i]*x[j]*W[i][j];
 				}
 			}
-/*			if (ii==M_H2O)
+			
+			// For now, our mix entropy model is one tetrahedral site and two nontetrahedral sites for every aluminum and silicon.
+			// Silicon occupies only tetrahedral sites; aluminum both tetrahedral and nontetrahedral; and everything else, nontetrahedral.
+				
+			Phase const &ph = phase_[i];
+			unsigned const N = ph.nz;
+			Nox += x[i]*oxygen_sites[i];
+			Ntet += x[i]*tetrahedral_sites[i];
+			Nnontet += x[i]*nontetrahedral_sites[i];
+			for (unsigned j=0; j<N; ++j)
 			{
-				Gfm += R*T_*(x[i]*log(x[i]) + (1-x[i])*log(1-x[i]));
+				Nc[ph.z[j]] += x[i]*ph.n[j];
 			}
-*/		}
+        }
 	}
 
+	// Entropy of mixing, which will include pure phase entropy previously subtracted out
+	Real Noxv = Nox - Nc[E_S] - Nc[E_O] - Nc[E_CL];
+	Real Ntetv = Ntet - Nc[E_AL] - Nc[E_SI] -  Nc[E_C];
+	Real Nnontetv = Nnontet - Nc[E_NA] - Nc[E_MG] -  Nc[E_K] - Nc[E_CA] - Nc[E_FE];
+	
+	Real nS = 
+		Nox*(Nlog(Noxv/Nox) + Nlog(Nc[E_S]/Nox) + Nlog(Nc[E_O]/Nox) + Nlog(Nc[E_CL]/Nox)) +
+		Ntet*(Nlog(Ntetv/Ntet) + Nlog(Nc[E_AL]/Ntet) + Nlog(Nc[E_SI]/Ntet) + Nlog(Nc[E_C]/Ntet)) +
+		Nnontetv*(Nlog(Nnontetv/Nnontet) + Nlog(Nc[E_NA]/Nnontet) + Nlog(Nc[E_MG]/Nnontet) + 
+		          Nlog(Nc[E_K]/Nnontet) + Nlog(Nc[E_CA]/Nnontet) + Nlog(Nc[E_FE]/Nnontet));
+
+	Gfm += R*T*nS;
+
 	// Now compute total free energy. 
-	return sum*Gfm;
+	return Gfm;
 }
 
 //-----------------------------------------------------------------------------//
@@ -485,7 +540,8 @@ Phase Melt_Model::minimize_Gf(vector<double> &X)
 
 	D2 Gf2 = Gfmelt<D2>(X);
 
-#if 0 //D2 test
+#if 0
+		//D2 test
 	auto Xp = X;
 	Xp[0] -= 0.01;
 	Xp[1] -= 0.01;
@@ -690,7 +746,7 @@ Phase Melt_Model::minimize_Gf(vector<double> &X)
 				{
 					xe[ph.z[j]] += xi*ph.n[j];
 				}
-			    V += ph.V*xi*endmember_mole[i];
+			    V += ph.V*xi;
 			}
 		}
 
@@ -739,7 +795,7 @@ double melt(double const T,
             State const &state, 
             struct Phase &new_phase)
 {
-	Melt_Model model(T, P, phase, Gf, state);
+/*	Melt_Model model(T, P, phase, Gf, state);
 
     // Initial guess is that all phases are half melted. We may try a number of initial guesses eventually.
 	unsigned const NM = model.nm();
@@ -753,6 +809,6 @@ double melt(double const T,
 
 	double Gff = model.Gfmelt<double>(X);
 
-	return Gff;
+*/	return 1.0e100; // disable melt // Gff;
 }
 

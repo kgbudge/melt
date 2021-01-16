@@ -33,9 +33,13 @@ D2 operator*(D2 const &a, D2 const &b)
 	y.f = a.f*b.f;
 	for (unsigned i=0; i<N; ++i)
 	{
+		Check(i<y.df.size() && i<b.df.size() && i<a.df.size());
 		y.df[i] = a.f*b.df[i] + a.df[i]*b.f;
+
+		Check(i<y.ddf.size() && i<b.ddf.size() && i<a.ddf.size());
 		for (unsigned j=0; j<N; ++j)
 		{
+		    Check(j<y.ddf[i].size() && j<b.ddf[i].size() && j<a.ddf[i].size());
 			y.ddf[i][j] = a.df[j]*b.df[i] + a.f*b.ddf[i][j] + a.ddf[i][j]*b.f + a.df[i]*b.df[j];
 		}
 	}
@@ -60,7 +64,8 @@ D2 operator*(D2 &&a, double const b)
 D2 &D2::operator*=(D2 const &r)
 {
 	// Safest implementation if not most efficient
-	*this = *this * r;
+	D2 y = *this * r;
+	*this = y;
 	return *this;
 }
 
@@ -70,13 +75,34 @@ D2 &D2::operator*=(double r)
 	f *= r;
 	for (unsigned i=0; i<N; ++i)
 	{
+		Check(i<df.size());
 		df[i] *= r;
+
+		Check(i<ddf.size());
 		for (unsigned j=0; j<N; ++j)
 		{
+			Check(j<ddf.size());
 			ddf[i][j] *= r;
 		}
 	}
 	return *this;
+}
+
+D2 operator/(D2 const &a, D2 const &b)
+{
+	unsigned N = b.df.size();
+	D2 y(N);
+	y.f = a.f/b.f;
+	for (unsigned i=0; i<N; ++i)
+	{
+		y.df[i] = a.df[i]/b.f - a.f*b.df[i]/(b.f*b.f);
+		for (unsigned j=0; j<N; ++j)
+		{
+			y.ddf[i][j] = a.ddf[i][j]/b.f - a.df[i]*b.df[j]/(b.f*b.f) - a.df[j]*b.df[i]/(b.f*b.f)
+				- a.f*b.ddf[i][j]/(b.f*b.f) + 2*a.f*b.df[i]*b.df[j]/(b.f*b.f*b.f);
+		}
+	}
+	return y;
 }
 
 D2 operator/(double const a, D2 const &b)
@@ -114,7 +140,6 @@ D2 operator/(double const a, D2 &&b)
 	y.f = a/y.f;
 	return y;
 }
-
 
 D2 operator+(D2 const &a, D2 const &b)
 {
@@ -154,6 +179,29 @@ D2 operator+(D2 const &a, double const b)
 	return Result;
 }
 
+D2 operator-(D2 const &a, D2 const &b)
+{
+	unsigned const N = a.df.size();
+	D2 y(N);
+	y.f = a.f - b.f;
+	for (unsigned i=0; i<N; ++i)
+	{
+		y.df[i] = a.df[i] - b.df[i];
+		for (unsigned j=0; j<N; ++j)
+		{
+			y.ddf[i][j] = a.ddf[i][j] - b.ddf[i][j];
+		}
+	}
+	return y;
+}
+
+D2 operator-(D2 &&a, D2 const &b)
+{
+	D2 y;
+	y.swap(a);
+	y -= b;
+	return y;
+}
 
 D2 operator-(double const a, D2 const &b)
 {
@@ -191,6 +239,7 @@ D2 operator-(D2 const &x)
 {
 	unsigned const N = x.df.size();
 	D2 y(N);
+	y.f = -x.f;
 	for (unsigned i=0; i<N; ++i)
 	{
 		y.df[i] = -x.df[i];
