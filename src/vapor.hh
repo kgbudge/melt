@@ -18,7 +18,7 @@
 #ifndef vapor_hh
 #define vapor_hh
 
-#include "model.hh"
+#include "Model.hh"
 
 class Vapor: public Model
 {

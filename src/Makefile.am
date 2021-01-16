@@ -30,13 +30,10 @@ melt_SOURCES = \
 	main.cc \
 	phase.hh \
 	svdcmp.h \
-	update.cc \
 	phase_table.cc \
 	phase_enum.hh \
-	model.hh \
 	element.hh \
 	constants.hh \
-	model.cc \
 	melt.cc \
 	algorithm.hh \
 	solid.cc \
@@ -61,7 +58,23 @@ melt_SOURCES = \
 	element.cc \
 	State.hh \
 	D2.hh \
-	D2.cc
+	D2.cc \
+	on_new.cc \
+	on_open.cc \
+	on_quit.cc \
+	on_save.cc \
+	on_save_as.cc \
+	on_activate.cc \
+	on_activate_P.cc \
+	on_activate_depth.cc \
+	on_normalize.cc \
+	update.cc \
+	Model.cc \
+	Model.hh \
+	gui.hh \
+	composition.hh \
+	do_save.cc \
+	update_state.cc
 
 melt_LDFLAGS = 
 

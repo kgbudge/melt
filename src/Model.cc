@@ -23,7 +23,7 @@
 
 #include "ds++/Assert.hh"
 
-#include "model.hh"
+#include "Model.hh"
 #include "phase.hh"
 
 //inline double square(double x){ return x*x; }

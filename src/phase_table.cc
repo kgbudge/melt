@@ -16,7 +16,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "element.hh"
-#include "model.hh"
+#include "Model.hh"
 #include "phase.hh"
 #include "phase_enum.hh"
 

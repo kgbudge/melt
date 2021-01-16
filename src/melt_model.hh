@@ -18,7 +18,7 @@
 #ifndef melt_model_hh
 #define melt_model_hh
 
-#include "model.hh"
+#include "Model.hh"
 
 class Melt : public Model
 {

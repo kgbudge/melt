@@ -32,7 +32,7 @@
 #include "D2.hh"
 #include "element.hh"
 #include "melt.hh"
-#include "model.hh"
+#include "Model.hh"
 #include "phase.hh"
 #include "State.hh"
 

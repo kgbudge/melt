@@ -18,7 +18,7 @@
 #ifndef magma_hh
 #define magma_hh
 
-#include "model.hh"
+#include "Model.hh"
 
 class Magma : public Model
 {

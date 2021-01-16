@@ -25,7 +25,7 @@
 
 #include "algorithm.hh"
 #include "constants.hh"
-#include "model.hh"
+#include "Model.hh"
 #include "phase.hh"
 #include "bragg_williams_solid.hh"
 

@@ -24,7 +24,7 @@
 #include "ds++/Assert.hh"*/
 
 #include "constants.hh"
-#include "model.hh"
+#include "Model.hh"
 #include "phase.hh"
 #include "solid.hh"
 

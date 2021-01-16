@@ -18,7 +18,7 @@
 #ifndef solid_hh
 #define solid_hh
 
-#include "model.hh"
+#include "Model.hh"
 
 class Solid : public Model
 {

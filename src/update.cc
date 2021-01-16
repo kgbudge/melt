@@ -3,12 +3,12 @@
  * update.cc
  * Copyright (C) 2015 Kent G. Budge <kgb@kgbudge.com>
  * 
- * norm is free software: you can redistribute it and/or modify it
+ * melt is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * norm is distributed in the hope that it will be useful, but
+ * melt is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -17,532 +17,522 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "update.hh"
-
-#include <iomanip>
+#if 0
+#include <gtkmm.h>
 #include <iostream>
-#include <limits>
 #include <fstream>
+#include <iomanip>
+
+
+#include "config.h"
+
+
+#ifdef ENABLE_NLS
+#  include <libintl.h> 
+#endif
 
 #include "gsl/gsl_linalg.h"
 #include "gsl/gsl_sort_vector.h"
 
-#include "ds++/Assert.hh"
 
-#include "melt.hh"
-#include "model.hh"
+/* For testing propose use the local (not installed) ui file */
+#ifndef NDEBUG
+#define UI_FILE PACKAGE_DATA_DIR"/ui/norm.ui"
+#else
+#define UI_FILE "src/melt.ui"
+#endif
+
+#include "element.hh"
+
+//-----------------------------------------------------------------------------//
+class CIPW_Columns : public Gtk::TreeModelColumnRecord
+{
+public:
+
+  CIPW_Columns()
+    { add(m_col_text); add(m_col_number); }
+
+  Gtk::TreeModelColumn<Glib::ustring> m_col_text;
+  Gtk::TreeModelColumn<double> m_col_number;
+};
 
 //-----------------------------------------------------------------------------//
 using namespace std;
 
-unsigned const N = E_END;
+Gtk::Window* main_win;
 
+Gtk::Entry *entry_name;
+
+Gtk::Entry *entry_SiO2;
+Gtk::Entry *entry_TiO2;
+Gtk::Entry *entry_Al2O3;
+Gtk::Entry *entry_Fe2O3;
+Gtk::Entry *entry_FeO;
+Gtk::Entry *entry_MnO;
+Gtk::Entry *entry_MgO;
+Gtk::Entry *entry_CaO;
+Gtk::Entry *entry_Na2O;
+Gtk::Entry *entry_K2O;
+Gtk::Entry *entry_P2O5;
+Gtk::Entry *entry_S;
+Gtk::Entry *entry_Cr2O3;
+Gtk::Entry *entry_ZrO2;
+Gtk::Entry *entry_H2O;
+Gtk::Entry *entry_CO2;
+Gtk::Entry *entry_Cl;
+Gtk::Entry *entry_T;
+Gtk::Entry *entry_P;
+Gtk::Entry *entry_over_rho;
+Gtk::Entry *entry_depth;
+
+
+Gtk::Label *text_nSiO2;
+Gtk::Label *text_nTiO2;
+Gtk::Label *text_nAl2O3;
+Gtk::Label *text_nFe2O3;
+Gtk::Label *text_nFeO;
+Gtk::Label *text_nMnO;
+Gtk::Label *text_nMgO;
+Gtk::Label *text_nCaO;
+Gtk::Label *text_nNa2O;
+Gtk::Label *text_nK2O;
+Gtk::Label *text_nP2O5;
+Gtk::Label *text_nS;
+Gtk::Label *text_nCr2O3;
+Gtk::Label *text_nZrO2;
+Gtk::Label *text_nH2O;
+Gtk::Label *text_nCO2;
+Gtk::Label *text_nCl;
+
+Gtk::Label *text_total;
+
+Gtk::Label *text_ibc_family;
+Gtk::Label *text_tas;
+Gtk::Label *text_iugs;
+
+Gtk::RadioButton *button_byweight;
+Gtk::RadioButton *button_oxygen_by_composition;
+Gtk::RadioButton *button_oxygen_specified;
+Gtk::RadioButton *button_oxygen_FMQ;
+Gtk::RadioButton *button_molar_melt;
+Gtk::Entry *entry_pO2;
+
+Gtk::TreeView *tree_view_CIPW;
+
+double SiO2;
+double TiO2;
+double Al2O3;
+double Fe2O3;
+double FeO;
+double MnO;
+double MgO;
+double CaO;
+double Na2O;
+double K2O;
+double P2O5;
+double S;
+double Cr2O3;
+double ZrO2;
+double H2O;
+double CO2;
+double Cl;
+
+string file;
+string name;
+#endif
+
+#include "kgb/Assert.h"
+#include "kgb/tostring.h"
+
+#include "Model.hh"
+#include "State.hh"
+#include "composition.hh"
+#include "gui.hh"
+#include "phase.hh"
+#include "update.hh"
 
 //-----------------------------------------------------------------------------//
-void calculate_Gf(double T /* K */, 
-                  double P /* kbar */, 
-                  bool is_element_active[E_END],
-                  vector<Phase> &phase,
-                  vector<double> &Gf /* kJ */,
-                  vector<double> &amu /* g */)
+void update()
 {
-	Require(phase.size()>=P_END);
-
-	unsigned const N = phase.size();
-	Gf.resize(N);
-	amu.resize(N);
-	cout << "Potentially active phases:" << endl;
-	for (unsigned i=0; i<N; ++i)
-	{
-		if (i!= phase[i].index)
-		{
-			cout << "ERROR: phase index out of synch for " << phase[i].name << endl;
-			exit(1);
-		}
-		Gf[i] = phase[i].model->Gf(phase[i], T, P);
-		double amui = 0.0;
-		unsigned const nz = phase[i].nz;
-		for (unsigned j=0; j<nz; ++j)
-		{
-			amui += atomic_weight[phase[i].z[j]]*phase[i].n[j];
-			if (!is_element_active[phase[i].z[j]])
-			{
-				phase[i].nz = 0; // turn off this phase
-			}
-		}
-		amu[i] = amui;
-		if (phase[i].nz>0)
-		{
-			cout << phase[i].name << " " << fixed << setprecision(3) << (1000*Gf[i]/amu[i]) << " kj/kg" << endl;
-		}
-	}
-
-	// Water model selection
- 	if (P>0.2224 || T>674.096 || T>649.634*pow(P,0.0811546)*(1+P*(1.39936 + P*(-6.98999+P*14.9787))))
-	{
-		  Gf[P_H2O_LIQUID] = 1e5; // turn liquid model off
-	}
-	else
-	{
-		  Gf[P_WATER_VAPOR] = 1e5; // turn vapor model off
-    }
-}
+	using namespace std;
 	
-//-----------------------------------------------------------------------------//
-bool 
-do_ladder_update(double const T, 
-                 double const P, 
-                 vector<Phase> const &phase,
-                 vector<double> Gf,
-                 bool const oxygen_specified, 
-                 bool const oxygen_FMQ,
-                 double &pO2,
-                 State &state)
-{
-	unsigned const P_END = phase.size();
-	double GfO2;
+	name = entry_name->get_text();
+
+	string text = entry_SiO2->get_text();
+	SiO2 = atof(text.c_str());
+	text = entry_TiO2->get_text();
+	TiO2 = atof(text.c_str());
+	text = entry_Al2O3->get_text();
+	Al2O3 = atof(text.c_str());
+	text = entry_Fe2O3->get_text();
+	Fe2O3 = atof(text.c_str());
+	text = entry_FeO->get_text();
+	FeO = atof(text.c_str());
+	text = entry_MnO->get_text();
+	MnO = atof(text.c_str());
+	text = entry_MgO->get_text();
+	MgO = atof(text.c_str());
+	text = entry_CaO->get_text();
+	CaO = atof(text.c_str());
+	text = entry_Na2O->get_text();
+	Na2O = atof(text.c_str());
+	text = entry_K2O->get_text();
+	K2O = atof(text.c_str());
+	text = entry_P2O5->get_text();
+	P2O5 = atof(text.c_str());
+	text = entry_S->get_text();
+	S = atof(text.c_str());
+	text = entry_Cr2O3->get_text();
+	Cr2O3 = atof(text.c_str());
+	text = entry_ZrO2->get_text();
+	ZrO2 = atof(text.c_str());
+	text = entry_H2O->get_text();
+	H2O = atof(text.c_str());
+	text = entry_CO2->get_text();
+	CO2 = atof(text.c_str());
+	text = entry_Cl->get_text();
+	Cl = atof(text.c_str());
+	text = entry_T->get_text();
+	double T = atof(text.c_str()) + 273.15;
+	text = entry_P->get_text();
+	double P = atof(text.c_str());
+
+	double total = SiO2 + TiO2 + Al2O3 + Fe2O3 + FeO + MnO + MgO + CaO + Na2O + K2O + P2O5 + S + Cr2O3 + ZrO2 + H2O + CO2 + Cl;
+	text_total->set_text(tostring(total));
+	
+	double nSiO2 = SiO2;
+	double nTiO2 = TiO2;
+	double nAl2O3 = Al2O3;
+	double nFe2O3 = Fe2O3;
+	double nFeO = FeO;
+	double nMnO = MnO;
+	double nMgO = MgO;
+	double nCaO = CaO;
+	double nNa2O = Na2O;
+	double nK2O = K2O;
+	double nP2O5 = P2O5;
+	double nS = S;
+	double nCr2O3 = Cr2O3;
+	double nZrO2 = ZrO2;
+	double nH2O = H2O;
+	double nCO2 = CO2;
+	double nCl = Cl;
+	
+	// Calculate molar composition if selected
+
+	if (button_byweight->get_active())
+	{
+		nSiO2 /= 60.085;
+		nTiO2 /= 79.899;
+		nAl2O3 /= 101.961;
+		nFe2O3 /= 159.692;
+		nFeO /= 71.85;
+		nMnO /= 70.94;
+		nMgO /= 40.311;
+		nCaO /= 56.08;
+		nNa2O /= 61.98;
+		nK2O /= 94.20;
+		nP2O5 /= 109.95;
+		nS /= 32.06;
+		nCr2O3 /= 223.84;
+		nZrO2 /= 123.22;
+		nH2O /= 18.02;
+		nCO2 /= 44.01;
+		nCl /= 35.45;
+	}
+	
+	total = nSiO2 + nTiO2 + nAl2O3 + nFe2O3 + nFeO + nMnO + nMgO + nCaO + nNa2O + nK2O + nP2O5 + nS + nCr2O3 + nZrO2 + nH2O + nCO2 + nCl;
+
+	if (total==0.0) return;
+
+	double rnorm = 100.0/total;
+	nSiO2 *= rnorm;
+	text_nSiO2->set_text(tostring(nSiO2));
+	nTiO2 *= rnorm;
+	text_nTiO2->set_text(tostring(nTiO2));
+	nAl2O3 *= rnorm;
+	text_nAl2O3->set_text(tostring(nAl2O3));
+	nFe2O3 *= rnorm;
+	text_nFe2O3->set_text(tostring(nFe2O3));
+	nFeO *= rnorm;
+	text_nFeO->set_text(tostring(nFeO));
+	nMnO *= rnorm;
+	text_nMnO->set_text(tostring(nMnO));
+	nMgO *= rnorm;
+	text_nMgO->set_text(tostring(nMgO));
+	nCaO *= rnorm;
+	text_nCaO->set_text(tostring(nCaO));
+	nNa2O *= rnorm;
+	text_nNa2O->set_text(tostring(nNa2O));
+	nK2O *= rnorm;
+	text_nK2O->set_text(tostring(nK2O));
+	nP2O5 *= rnorm;
+	text_nP2O5->set_text(tostring(nP2O5));
+	nS *= rnorm;
+	text_nS->set_text(tostring(nS));
+	nCr2O3 *= rnorm;
+	text_nCr2O3->set_text(tostring(nCr2O3));
+	nZrO2 *= rnorm;
+	text_nZrO2->set_text(tostring(nZrO2));
+	nH2O *= rnorm;
+	text_nH2O->set_text(tostring(nH2O));
+	nCO2 *= rnorm;
+	text_nCO2->set_text(tostring(nCO2));
+	nCl *= rnorm;
+	text_nCl->set_text(tostring(nCl));
+
+	// Initial composition
+	State state;
+	double Gf[P_END];
+
+	bool oxygen_specified = !button_oxygen_by_composition->get_active();
+	bool oxygen_FMQ;
+	double pO2, GfO2;
 	if (oxygen_specified)
 	{
-		if (oxygen_FMQ)
+		if (button_oxygen_specified->get_active())
 		{
-			GfO2 = 2*Gf[P_MAGNETITE]+3*Gf[P_QUARTZ]-3*Gf[P_FAYALITE];
-			pO2 = phase[P_O2].model->P(phase[P_O2], T, GfO2);
+			text = entry_pO2->get_text();
+			pO2 = atof(text.c_str());
+			oxygen_FMQ = false;
 		}
 		else
 		{
-			GfO2 = phase[P_O2].model->Gf(phase[P_O2], T, pO2);
+			Check(button_oxygen_FMQ->get_active());
+			oxygen_FMQ = true;
 		}
 	}
+
+	state.p[E_H] = P_H2;
+	state.x[E_H] = nH2O;
+	double nO2 = 0.5*nH2O;
+
+	state.p[E_C] = P_GRAPHITE;
+	state.x[E_C] = nCO2;
+	nO2 += nCO2;
+
+	state.p[E_NA] = P_Na;
+	state.x[E_NA] = 2*nNa2O;
+	nO2 += 0.5*nNa2O;
+
+	state.p[E_MG] = P_Mg;
+	state.x[E_MG] = nMgO;
+	nO2 += 0.5*nMgO;
+
+	state.p[E_AL] = P_Al;
+	state.x[E_AL] = 2*nAl2O3;
+	nO2 += 1.5*nAl2O3;
+
+	state.p[E_SI] = P_Si;
+	state.x[E_SI] = nSiO2;
+	nO2 += nSiO2;
+
+	state.p[E_P] = P_P4;
+	state.x[E_P] = 0.5*nP2O5;
+	nO2 += 2.5*nP2O5;
+
+	state.p[E_S] = P_S;
+	state.x[E_S] = nS;
+
+	state.p[E_CL] = P_Cl2;
+	state.x[E_CL] = 0.5*nCl;
+
+	state.p[E_K] = P_K;
+	state.x[E_K] = 2*nK2O;
+	nO2 += 0.5*nK2O;
+
+	state.p[E_CA] = P_Ca;
+	state.x[E_CA] = nCaO;
+	nO2 += 0.5*nCaO;
+
+	state.p[E_TI] = P_Ti;
+	state.x[E_TI] = nTiO2;
+	nO2 += nTiO2;
+
+	state.p[E_CR] = P_Cr;
+	state.x[E_CR] = 2*nCr2O3;
+	nO2 += 1.5*nCr2O3;
+
+	state.p[E_MN] = P_Mn;
+	state.x[E_MN] = nMnO;
+	nO2 += 0.5*nMnO;
+
+	state.p[E_FE] = P_Fe;
+	state.x[E_FE] = nFeO + 2*nFe2O3;
+	nO2 += 0.5*nFeO + 1.5*nFe2O3;
+
+	state.p[E_ZR] = P_Zr;
+	state.x[E_ZR] = nZrO2;
+	nO2 += nZrO2;
+
+	state.p[E_O] = P_O2;
+	state.x[E_O] = nO2;
+
+	vector<Phase> phase(::phase, ::phase+P_END);
+
+	state.name="1";
+
+	update_state(T, 
+	             P, 
+	             phase,
+	             oxygen_specified, 
+	             oxygen_FMQ,
+	             pO2,
+	             state);
 	
-	// Allocate storage for linear algebra operations
-
-	unsigned const N = E_END;
-	gsl_matrix *A = gsl_matrix_alloc(N, N);
-	gsl_matrix *V = gsl_matrix_alloc(N, N);
-	gsl_vector *S = gsl_vector_alloc(N);
-	gsl_vector *work = gsl_vector_alloc(N);
-	gsl_vector *b = gsl_vector_alloc(N);
-	gsl_vector *x = gsl_vector_alloc(N);	
-	gsl_vector *aGf = gsl_vector_alloc(P_END);
-	gsl_permutation *permute = gsl_permutation_alloc(P_END);
-	double Ainv[N][N];
-	double left[N];
-
-	bool success;
-	
-	// now iterate to find composition
-
-	for(;;)
+	if (button_molar_melt->get_active())
 	{
-		// find absolute free energy of elements
-
-		// Build a linear system and solve for element free energies
-		
-		gsl_matrix_set_zero(A);
-		gsl_vector_set_zero(b);
-
-		if (oxygen_specified)
-		{
-			Gf[P_O2] = GfO2;
-		}
-
-		cout << "Active phases, state " << state.name <<  ':' << endl;
-		for (unsigned i=0; i<N; ++i)
-		{
-			unsigned const pi = state.p[i];
-			
-			if (state.is_element_active[i]) 
-			{
-				cout << "  " << phase[pi].name << "  " << state.x[i] 
-				    << " mol " << Gf[pi] << " kJ/mol" << endl;
-			}
-			
-			gsl_vector_set(b, i, -Gf[pi]);
-			unsigned const nz = phase[pi].nz;
-			if (nz>0)
-			{
-			for (unsigned j=0; j<nz; j++)
-			{
-				gsl_matrix_set(A, i, phase[pi].z[j], phase[pi].n[j]);
-			}
-			}
-			else
-			{
-				  gsl_matrix_set(A, i, i, 1.0);
-			}
-		}
-
-		gsl_linalg_SV_decomp (A, V, S, work);		
-		gsl_linalg_SV_solve (A, V, S, b, x);
-
-		// Compute absolute free energies of phases
-
-		cout << "Element activities for these phases:" << endl;
+		int pm = -1;
+		double px = 0.0;
 		for (unsigned i=0; i<E_END; ++i)
 		{
-			state.element_activity[i] = gsl_vector_get(x, i);
-			if (state.is_element_active[i])
+			if (state.x[i]>px && state.p[i]>=P_END)
 			{
-				cout << "  " << element_name[i] << " " << state.element_activity[i] << " kJ/mol" << endl;
+				pm = state.p[i];
+				px = state.x[i];
 			}
+		}
+		if (pm != -1)
+		{
+			Phase const &melt = phase[pm];
+
+			unsigned const N = melt.nz;
+			double mH2O = 0;
+			double mSiO2 = 0;
+			double mAl2O3 = 0;
+			double mMgO = 0;
+			double mFeO = 0;
+			double mCaO = 0;
+			double mNa2O = 0;
+			double mK2O = 0;
+			for (unsigned i=0; i<N; ++i)
+			{
+				double const ni = melt.n[i];
+				switch (melt.z[i])
+				{
+					case E_H:
+						mH2O += 0.5*ni;
+						break;
+
+					case E_NA:
+						mNa2O += 0.5*ni;
+						break;
+
+					case E_MG:
+						mMgO += ni;
+						break;
+
+					case E_AL:
+						mAl2O3 += 0.5*ni;
+						break;
+
+					case E_SI:
+						mSiO2 += ni;
+						break;
+
+					case E_K:
+						mK2O += 0.5*ni;
+						break;
+
+					case E_CA:
+						mCaO += ni;
+						break;
+
+					case E_FE:
+						mFeO +=  ni;
+						break;
+
+					default:
+						break;
+				}
+			}
+
+			double tot = mH2O + mSiO2 + mAl2O3 + mMgO + mFeO + mCaO + mK2O + mNa2O;
+			double rtot = 100/tot;
+
+			text_nH2O->set_text(tostring(mH2O*rtot));
+			text_nSiO2->set_text(tostring(mSiO2*rtot));
+			text_nAl2O3->set_text(tostring(mAl2O3*rtot));
+			text_nMgO->set_text(tostring(mMgO*rtot));
+			text_nFeO->set_text(tostring(mFeO*rtot));
+			text_nCaO->set_text(tostring(mCaO*rtot));
+			text_nK2O->set_text(tostring(mK2O*rtot));
+			text_nNa2O->set_text(tostring(mNa2O*rtot));
+
+			text_nTiO2->set_text(tostring(0.0));
+			text_nFe2O3->set_text(tostring(0.0));
+			text_nMnO->set_text(tostring(0.0));
+			text_nP2O5->set_text(tostring(0.0));
+		}
+		else
+		{
+			text_nH2O->set_text("--");
+			text_nSiO2->set_text("--");
+			text_nAl2O3->set_text("--");
+			text_nMgO->set_text("--");
+			text_nFeO->set_text("--");
+			text_nCaO->set_text("--");
+			text_nK2O->set_text("--");
+			text_nNa2O->set_text("--");
+
+			text_nTiO2->set_text("--");
+			text_nFe2O3->set_text("--");
+			text_nMnO->set_text("--");
+			text_nP2O5->set_text("--");
 		}
 
-		cout << "New phase candidate activities:" << endl;
-
-		bool found_candidate = false;
-		for (unsigned i=0; i<P_END; ++i)
-		{
-			if (phase[i].nz>0)
-			{
-				double aGfi = Gf[i];
-				double mol = 0.0;
-				for (unsigned j=0; j<phase[i].nz; j++)
-				{
-					aGfi += phase[i].n[j]*state.element_activity[phase[i].z[j]];
-					mol += phase[i].n[j];
-				}
-				gsl_vector_set(aGf, i, aGfi/mol);
-				if (aGfi<-1.0e-9)
-				{
-					cout << "  " << phase[i].name << "  " << aGfi << " kJ/mol " << endl;
-					found_candidate = true;
-				}
-			}
-			else
-			{
-				gsl_vector_set(aGf, i, 10000.);
-			}
-		}
-		if (!found_candidate)
-		{
-			success = true;
-			goto DONE;
-		}
+	}
 	
-		gsl_sort_vector_index(permute, aGf);
+	CIPW_Columns m_Columns;
+	Glib::RefPtr<Gtk::ListStore> list_store_CIPW = Gtk::ListStore::create(m_Columns);
+	list_store_CIPW->set_sort_column(1, Gtk::SORT_DESCENDING);
 
-		// Find a composition basis for the current composition.
+	Gtk::TreeModel::iterator iter;
+	Gtk::TreeModel::Row row;
 
-		for (unsigned i=0; i<N; i++) 
-		{
-			for (unsigned j=0; j<N; j++)
-			{
-				double sum = 0.0;
-				for (unsigned k=0; k<N; ++k)
-				{
-					double sk = gsl_vector_get(S, k);
-					if (fabs(sk)>1.0e-10)
-					{
-						sum += gsl_matrix_get(V, i, k)*gsl_matrix_get(A, j, k)/sk;
-					}
-				}
-				Ainv[i][j] = sum;
-			}
-		}
-
-		bool found = false;
-		for (unsigned ii=0; ii<P_END; ++ii)
-		{
-			unsigned const ip = gsl_permutation_get(permute, ii);
-			if (phase[ip].nz == 0 || oxygen_specified && ip == P_O2)
-				continue;
-
-			double aGfi = gsl_vector_get(aGf, ip); 
-			if (fabs(aGfi)<1.0e-9)
-			{
-				break;
-			}
-			cout << "Considering phase " << phase[ip].name << ':' << endl;
-
-			// Construct an equation that reduces the Gibbs function further.
-
-			// Construct the reaction
-
-			fill(left, left+N, 0.0);
-			for (unsigned i=0; i<phase[ip].nz; ++i)
-			{
-				unsigned z = phase[ip].z[i];
-				double n = phase[ip].n[i];
-				for (unsigned j=0; j<N; ++j)
-				{
-					left[j] += n*Ainv[z][j];
-				}
-			}
-
-			// Can the reaction proceed?
-
-			double r = numeric_limits<double>::max();
-			double rGf = Gf[ip];
-			for (unsigned i=0; i<N; ++i)
-			{
-				if (left[i]>1.0e-10)
-				{
-					r = min(r, state.x[i]/left[i]);
-				}
-				rGf -= left[i]*Gf[state.p[i]];
-			}
-
-			if (r<=1.0e-10)
-			{
-				cout << "Reaction cannot proceed." << endl; 
-				continue;
-			}
-			else
-			{
-				found = true;
-			}
-
-			// Yes, the reaction has somewhere to go
-
-			cout << "Performing reaction ";
-			bool first = true;
-			for (unsigned i=0; i<N; ++i)
-			{
-				if (left[i]>1.0e-10)
-				{
-					if (!first) 
-					{
-						cout << " + ";
-					}
-					first = false;
-					if (fabs(left[i]-1.0)>1.0e-10)
-					{
-						cout << setprecision(4) << left[i];
-					}
-					cout << phase[state.p[i]].name;
-				}
-			}
-			cout << " -> " << phase[ip].name;
-			
-			for (unsigned i=0; i<N; ++i)
-			{
-				if (left[i]<-1.0e-10)
-				{
-					cout << " + ";
-					first = false;
-					if (fabs(left[i]+1.0)>1.0e-10)
-					{
-						cout << setprecision(4) << -left[i];
-					}
-					cout << phase[state.p[i]].name;
-				}
-			}
-			cout << endl;
-
-			// Now carry out the reaction, noting which reagents are exhausted.
-
-			unsigned n = 0;
- 	        unsigned p[E_END]; 
-			for (unsigned i=0; i<N; ++i)
-			{
-				state.x[i] -= r*left[i];
-				if (fabs(state.x[i])<1.0e-10)
-				{
-					if (r*left[i]>1.0e-9)
-					{
-						cout << "Reaction depletes " << phase[state.p[i]].name << endl;
-						p[n++] = i;
-					}
-					state.x[i] = 0.0;
-				}
-			}
-			// n should not be zero
-			if (n==1)
-			{
-				state.x[p[0]] = r;	
-				state.p[p[0]] = ip;
-				break;
-			}
-			else
-			{
-				// we've exhausted two or more phases simultaneously. Split the state.
-				vector<State> states(n, state);
-				double Gfn = 0.0;
-				for (unsigned i=0; i<E_END; ++i)
-				{
-					Gfn += state.x[i]*Gf[state.p[i]];
-				}
-				cout << "  Starting subladder Gf = " << Gfn << " kJ" << endl;
-				cout << "Substate ladder:" << endl;
-				for (unsigned i=0; i<n; ++i)
-				{
-					states[i].x[p[i]] = r;	
-					states[i].p[p[i]] = ip;
-					states[i].name += '.' + to_string(i+1);
-					cout << "Substate " << states[i].name << ':' << endl;
-					
-					bool result = do_ladder_update(T, 
-					                             P, 
-					                             phase,
-					                             Gf,
-					                             oxygen_specified, 
-					                             oxygen_FMQ,
-					                             pO2,
-					                             states[i]);
-
-					cout << "Comparing branch " << states[i].name << " against best so far " << endl;
-					double Gfnn = 0.0;
-					for (unsigned j=0; j<E_END; ++j)
-					{
-						Gfnn += states[i].x[j]*Gf[states[i].p[j]];
-					}
-					cout << "  Gf = " << Gfnn << " kJ" << endl;
-					if (Gfnn<Gfn)
-					{
-						cout << "  State " << states[i].name << " is new best." << endl;	
-						Gfn = Gfnn;
-						state = states[i];
-					}
-					else
-					{
-						cout << "Best unchanged." << endl;
-					}
-				}
-				goto DONE;
-			}
-		}
-		if (!found)
-		{
-			cout << "No reaction found." << endl;
-			goto DONE;
-		}
-	}
-
-
-	DONE:
-	gsl_matrix_free(A);
-	gsl_matrix_free(V);
-	gsl_vector_free(S);
-	gsl_vector_free(work);
-	gsl_vector_free(b);
-	gsl_vector_free(x);
-	gsl_vector_free(aGf);
-	gsl_permutation_free(permute);
-
-	if (true || !oxygen_specified)
-	{
-		pO2 = phase[P_O2].model->P(phase[P_O2], T, -2*state.element_activity[E_O]);
-	}
+	entry_pO2->set_text(tostring(pO2));
 		
 	// Convert to volume fraction
 
 	double Vtot = 0.0;
-	for (unsigned i=0; i<N; ++i)
+	for (unsigned i=0; i<E_END; ++i)
 	{
-		unsigned const pi = state.p[i];
-        state.V[i] = state.x[i]*phase[pi].model->volume(phase[pi], T, P);
-		Vtot += state.V[i];
-	}
-		
-	double rnorm = 100.0/Vtot;
-	for (unsigned i=0; i<N; ++i)
-	{
-		state.V[i] *= rnorm;
-	}
-
-	return success;
-}
-
-//-----------------------------------------------------------------------------//
-void update_state(double const T, 
-                  double const P, 
-                  vector<Phase> &phase,
-                  bool const oxygen_specified, 
-                  bool const oxygen_FMQ,
-                  double &pO2,
-                  State &state)
-{
-	// Determine which elements are active 
-
-	for (unsigned e=0; e<E_END; ++e)
-	{
-		state.is_element_active[e] = (state.x[e]>0.0);
-	}
-/*	cout << "Active elemental phases:" << endl;
-	for (unsigned e=0; e<E_END; ++e)
-	{
-		if (state.is_element_active[e])
+		if (state.x[i]>0.0)
 		{
-			cout << " " << phase[state.p[e]].name << endl;
-		}
-	}
-*/	
-	vector<double> Gf, amu;
-	calculate_Gf(T, P, state.is_element_active, phase, Gf, amu);
-
-	double Gftot = 0.0;
-	double Mtot = 0.0;
-	for (unsigned e=0; e<E_END; ++e)
-	{
-		Gftot += state.x[e]*Gf[state.p[e]];
-		Mtot += state.x[e]*amu[state.p[e]];
-	}
-	cout << "Initial free energy of formation = " << (1000*Gftot/Mtot) << " kJ/kg" << endl;
-
-	for (;;)
-	{
-		cout << endl << "Ladder search tree" << endl;
-		auto status = do_ladder_update(T, 
-		                               P, 
-		                               phase, 
-		                               Gf, 
-		                               oxygen_specified, 
-		                               oxygen_FMQ, 
-		                               pO2, 
-		                               state);
-
-		cout << "Active phases:" << endl;
-		for (unsigned e=0; e<E_END; ++e)
-		{
-			if (state.x[e]>0.0)
+			unsigned const pi = state.p[i];
+			if (pi<P_END)
 			{
-				cout << " " << phase[state.p[e]].name << " = " << state.x[e] << endl;
+				state.V[i] = state.x[i]*phase[pi].model->volume(phase[pi], T, P);
 			}
-		}
-
-		Gftot = 0.0;
-		Mtot = 0.0;
-		for (unsigned e=0; e<E_END; ++e)
-		{
-			Gftot += state.x[e]*Gf[state.p[e]];
-			Mtot += state.x[e]*amu[state.p[e]];
-		}
-		cout << "Free energy of formation = " << fixed << setprecision(3) << (1000*Gftot/Mtot) << " kJ/kg" << endl;
-
-		for (unsigned i=0; true && i<30; ++i)
-		{
-			Phase new_phase;
-			cout << "  Starting free energy for this melt step: " << Gftot << endl;
-			double Geu  = melt(T, P, phase, Gf, state, new_phase);
-			
-			if (Geu < Gftot - 1e-9)
-			{
-				Gf.push_back(new_phase.Hf0);
-				phase.push_back(new_phase);
-
-				do_ladder_update(T, 
-				                 P, 
-				                 phase, 
-				                 Gf, 
-				                 oxygen_specified, 
-				                 oxygen_FMQ, 
-				                 pO2, 
-				                 state);
-
-				Gftot = 0.0;
-				for (unsigned e=0; e<E_END; ++e)
-				{
-					Gftot += state.x[e]*Gf[state.p[e]];
-				}
-				cout << "    Free energy of formation = " << fixed << setprecision(3) << (1000*Gftot/Mtot) << " kJ/kg" << endl;
-			}
-			// else we've done all the melting we can
 			else
 			{
-				return;
+				state.V[i] = phase[pi].V;
 			}
+			Vtot += state.V[i];
 		}
-		return;
+		else
+		{
+			state.V[i] = 0.0;
+		}
 	}
-}
+	//	cout << Vtot/100 << endl;
+	
+	rnorm = 100.0/Vtot;
+	for (unsigned i=0; i<E_END; ++i)
+	{
+		state.V[i] *= rnorm;
+		if (state.V[i]>0.0)
+		{
+			unsigned const pi = state.p[i];
+			iter = list_store_CIPW->append();
+			row = *iter;
+			row[m_Columns.m_col_text] = phase[pi].name;
+			row[m_Columns.m_col_number] = state.V[i];
+		}
+	}
 
+	tree_view_CIPW->remove_all_columns();
+	tree_view_CIPW->set_model(list_store_CIPW);
+	tree_view_CIPW->append_column("Mineral", m_Columns.m_col_text);
+	tree_view_CIPW->append_column("Vol %", m_Columns.m_col_number);
+}
