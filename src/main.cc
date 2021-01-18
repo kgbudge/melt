@@ -27,7 +27,6 @@
 #endif
 
 #define EXTERN
-#include "composition.hh"
 #include "gui.hh"
 
 //-----------------------------------------------------------------------------//
@@ -135,16 +134,12 @@ main (int argc, char *argv[])
 		builder->get_widget("button_recalculate", button);
 		button->signal_clicked().connect(sigc::ptr_fun(on_activate));
 		builder->get_widget("button_bymol", button);
-		button->signal_activate().connect(sigc::ptr_fun(on_activate));
-
 		builder->get_widget("button_byweight", button_byweight);
-		button_byweight->signal_activate().connect(sigc::ptr_fun(on_activate));
+		button_byweight->signal_toggled().connect(sigc::ptr_fun(on_by_toggle));
 
 		builder->get_widget("button_oxygen_by_composition", button_oxygen_by_composition);
 		builder->get_widget("button_oxygen_specified", button_oxygen_specified);
 		builder->get_widget("button_oxygen_FMQ", button_oxygen_FMQ);
-
-		builder->get_widget("button_molar_melt", button_molar_melt);
 
 		builder->get_widget("entry_pO2", entry_pO2);
 		entry_pO2->signal_activate().connect(sigc::ptr_fun(on_activate));

@@ -17,39 +17,6 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if 0
-#include <gtkmm.h>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-
-#include "kgb/tostring.h"
-#include "kgb/Assert.h"
-
-#include "config.h"
-
-
-#ifdef ENABLE_NLS
-#  include <libintl.h> 
-#endif
-
-#include "gsl/gsl_linalg.h"
-#include "gsl/gsl_sort_vector.h"
-
-
-/* For testing propose use the local (not installed) ui file */
-#ifndef NDEBUG
-#define UI_FILE PACKAGE_DATA_DIR"/ui/norm.ui"
-#else
-#define UI_FILE "src/melt.ui"
-#endif
-
-#include "element.hh"
-#include "model.hh"
-#include "phase.hh"
-#include "update.hh"
-#endif
-
 #include "gui.hh"
 
 //-----------------------------------------------------------------------------//

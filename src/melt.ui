@@ -194,7 +194,7 @@
               <object class="GtkLabel" id="label35">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">P (kbar)  </property>
+                <property name="label" translatable="yes">  P (kbar)  </property>
                 <property name="width_chars">6</property>
                 <property name="angle">0.029999999999999999</property>
               </object>
@@ -219,7 +219,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Overburden density   </property>
+                <property name="label" translatable="yes">  Overburden density   </property>
               </object>
               <packing>
                 <property name="left_attach">4</property>
@@ -241,7 +241,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Depth (km)</property>
+                <property name="label" translatable="yes">  Depth (km)</property>
               </object>
               <packing>
                 <property name="left_attach">6</property>
@@ -960,58 +960,12 @@
                   <object class="GtkLabel" id="label15">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Molar %</property>
+                    <property name="label" translatable="yes">Melt molar %</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButtonBox" id="buttonbox3">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="orientation">vertical</property>
-                    <property name="layout_style">start</property>
-                    <child>
-                      <object class="GtkRadioButton" id="button_molar_total">
-                        <property name="label" translatable="yes">Total</property>
-                        <property name="use_action_appearance">True</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">False</property>
-                        <property name="active">True</property>
-                        <property name="draw_indicator">True</property>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkRadioButton" id="button_molar_melt">
-                        <property name="label" translatable="yes">Melt</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">False</property>
-                        <property name="active">True</property>
-                        <property name="draw_indicator">True</property>
-                        <property name="group">button_molar_total</property>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
@@ -1412,7 +1366,7 @@
                     <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="padding">2</property>
-                    <property name="position">2</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
               </object>
@@ -1432,7 +1386,7 @@
                   <object class="GtkLabel" id="text99">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">CIPW Norm (volume %)</property>
+                    <property name="label" translatable="yes">Mode (volume %)</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>

@@ -72,9 +72,14 @@ melt_SOURCES = \
 	Model.cc \
 	Model.hh \
 	gui.hh \
-	composition.hh \
 	do_save.cc \
-	update_state.cc
+	update_state.cc \
+	on_by_toggle.cc \
+	get_molar_composition.cc \
+	get_composition.cc \
+	iugs_classify.cc \
+	classify.hh \
+	classify_components.cc
 
 melt_LDFLAGS = 
 

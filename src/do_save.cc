@@ -19,14 +19,13 @@
 
 #include <fstream>
 
-#include "composition.hh"
 #include "gui.hh"
 
 //-----------------------------------------------------------------------------//
 void do_save()
 {
 	using namespace std;
-	
+
 	ofstream out(file.c_str());
 	if (!out)
 	{
@@ -37,7 +36,52 @@ void do_save()
 	}
 	else
 	{
+		string name;
+		bool is_molar;
+
+		double SiO2;
+		double TiO2;
+		double Al2O3;
+		double Fe2O3;
+		double FeO;
+		double MnO;
+		double MgO;
+		double CaO;
+		double Na2O;
+		double K2O;
+		double P2O5;
+		double S;
+		double Cr2O3;
+		double ZrO2;
+		double H2O;
+		double CO2;
+		double Cl;
+
+		get_composition(name,
+		                is_molar,
+		                SiO2,
+		                TiO2,
+		                Al2O3,
+		                Fe2O3,
+		                FeO,
+		                MnO,
+		                MgO,
+		                CaO,
+		                Na2O,
+		                K2O,
+		                P2O5,
+		                S,
+		                Cr2O3,
+		                ZrO2,
+		                H2O,
+		                CO2,
+		                Cl);
+
 		out << "name " << name << endl;
+		if (is_molar)
+		{
+			out << "molar" << endl;
+		}
 		out << "SiO2 " << SiO2 << endl;
 		out << "TiO2 " << TiO2 << endl;
 		out << "Al2O3 " << Al2O3 << endl;

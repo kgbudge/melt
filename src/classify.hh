@@ -1,7 +1,7 @@
 /* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
- * composition.hh
- * Copyright (C) 2015 Kent G. Budge <kgb@kgbudge.com>
+ * classify.hh
+ * Copyright (C) 2021 Kent G. Budge <kgb@kgbudge.com>
  * 
  * melt is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -17,30 +17,17 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef melt_composition_hh
-#define melt_composition_hh
+#ifndef melt_classify_hh
+#define melt_classify_hh
 
-#ifndef EXTERN
-#define EXTERN extern
-#endif
+#include "State.hh"
 
-EXTERN double SiO2;
-EXTERN double TiO2;
-EXTERN double Al2O3;
-EXTERN double Fe2O3;
-EXTERN double FeO;
-EXTERN double MnO;
-EXTERN double MgO;
-EXTERN double CaO;
-EXTERN double Na2O;
-EXTERN double K2O;
-EXTERN double P2O5;
-EXTERN double S;
-EXTERN double Cr2O3;
-EXTERN double ZrO2;
-EXTERN double H2O;
-EXTERN double CO2;
-EXTERN double Cl;
+//-----------------------------------------------------------------------------//
+void classify_components(State const &state, 
+double &Q, double &an, double &anc, double &lc, double &ne, double &An, 
+double &A, double &P, double &F, 
+double &M, double &Ol, double &Opx, double &Cpx,
+std::string &m1, std::string &m2, std::string &um);
 
 #endif
 

@@ -27,6 +27,8 @@
 #include "phase.hh"
 #include "State.hh"
 
+void IUGS_classify(State const &);
+
 bool 
 do_ladder_update(double const T, 
             	 double const P, 

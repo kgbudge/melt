@@ -29,7 +29,7 @@ void on_activate_depth()
 	text = entry_over_rho->get_text();
 	double rho = atof(text.c_str());
 	double P = 1e5*1e-9*depth*rho*980.665 + 1.0e-3;
-	entry_P->set_text(tostring(P, 2));
+	entry_P->set_text(tostring(P, 3));
 	
 	update();
 }

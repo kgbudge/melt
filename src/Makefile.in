@@ -111,7 +111,10 @@ am_melt_OBJECTS = main.$(OBJEXT) phase_table.$(OBJEXT) melt.$(OBJEXT) \
 	on_save.$(OBJEXT) on_save_as.$(OBJEXT) on_activate.$(OBJEXT) \
 	on_activate_P.$(OBJEXT) on_activate_depth.$(OBJEXT) \
 	on_normalize.$(OBJEXT) update.$(OBJEXT) Model.$(OBJEXT) \
-	do_save.$(OBJEXT) update_state.$(OBJEXT)
+	do_save.$(OBJEXT) update_state.$(OBJEXT) \
+	on_by_toggle.$(OBJEXT) get_molar_composition.$(OBJEXT) \
+	get_composition.$(OBJEXT) iugs_classify.$(OBJEXT) \
+	classify_components.$(OBJEXT)
 melt_OBJECTS = $(am_melt_OBJECTS)
 am__DEPENDENCIES_1 =
 melt_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -139,17 +142,21 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/D2.Po ./$(DEPDIR)/Model.Po \
 	./$(DEPDIR)/bm_melt.Po ./$(DEPDIR)/bm_solid.Po \
-	./$(DEPDIR)/bragg_williams_solid.Po ./$(DEPDIR)/do_save.Po \
-	./$(DEPDIR)/element.Po ./$(DEPDIR)/landau_solid.Po \
+	./$(DEPDIR)/bragg_williams_solid.Po \
+	./$(DEPDIR)/classify_components.Po ./$(DEPDIR)/do_save.Po \
+	./$(DEPDIR)/element.Po ./$(DEPDIR)/get_composition.Po \
+	./$(DEPDIR)/get_molar_composition.Po \
+	./$(DEPDIR)/iugs_classify.Po ./$(DEPDIR)/landau_solid.Po \
 	./$(DEPDIR)/magma.Po ./$(DEPDIR)/main.Po ./$(DEPDIR)/melt.Po \
 	./$(DEPDIR)/melt_model.Po ./$(DEPDIR)/on_activate.Po \
 	./$(DEPDIR)/on_activate_P.Po ./$(DEPDIR)/on_activate_depth.Po \
-	./$(DEPDIR)/on_new.Po ./$(DEPDIR)/on_normalize.Po \
-	./$(DEPDIR)/on_open.Po ./$(DEPDIR)/on_quit.Po \
-	./$(DEPDIR)/on_save.Po ./$(DEPDIR)/on_save_as.Po \
-	./$(DEPDIR)/pfitzer_sterner.Po ./$(DEPDIR)/phase_table.Po \
-	./$(DEPDIR)/solid.Po ./$(DEPDIR)/update.Po \
-	./$(DEPDIR)/update_state.Po ./$(DEPDIR)/vapor.Po
+	./$(DEPDIR)/on_by_toggle.Po ./$(DEPDIR)/on_new.Po \
+	./$(DEPDIR)/on_normalize.Po ./$(DEPDIR)/on_open.Po \
+	./$(DEPDIR)/on_quit.Po ./$(DEPDIR)/on_save.Po \
+	./$(DEPDIR)/on_save_as.Po ./$(DEPDIR)/pfitzer_sterner.Po \
+	./$(DEPDIR)/phase_table.Po ./$(DEPDIR)/solid.Po \
+	./$(DEPDIR)/update.Po ./$(DEPDIR)/update_state.Po \
+	./$(DEPDIR)/vapor.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -464,9 +471,14 @@ melt_SOURCES = \
 	Model.cc \
 	Model.hh \
 	gui.hh \
-	composition.hh \
 	do_save.cc \
-	update_state.cc
+	update_state.cc \
+	on_by_toggle.cc \
+	get_molar_composition.cc \
+	get_composition.cc \
+	iugs_classify.cc \
+	classify.hh \
+	classify_components.cc
 
 melt_LDFLAGS = 
 melt_LDADD = $(MELT_LIBS) \
@@ -574,8 +586,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bm_melt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bm_solid.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bragg_williams_solid.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/classify_components.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/do_save.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/element.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_composition.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_molar_composition.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iugs_classify.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/landau_solid.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/magma.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
@@ -584,6 +600,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/on_activate.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/on_activate_P.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/on_activate_depth.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/on_by_toggle.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/on_new.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/on_normalize.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/on_open.Po@am__quote@ # am--include-marker
@@ -783,8 +800,12 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/bm_melt.Po
 	-rm -f ./$(DEPDIR)/bm_solid.Po
 	-rm -f ./$(DEPDIR)/bragg_williams_solid.Po
+	-rm -f ./$(DEPDIR)/classify_components.Po
 	-rm -f ./$(DEPDIR)/do_save.Po
 	-rm -f ./$(DEPDIR)/element.Po
+	-rm -f ./$(DEPDIR)/get_composition.Po
+	-rm -f ./$(DEPDIR)/get_molar_composition.Po
+	-rm -f ./$(DEPDIR)/iugs_classify.Po
 	-rm -f ./$(DEPDIR)/landau_solid.Po
 	-rm -f ./$(DEPDIR)/magma.Po
 	-rm -f ./$(DEPDIR)/main.Po
@@ -793,6 +814,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/on_activate.Po
 	-rm -f ./$(DEPDIR)/on_activate_P.Po
 	-rm -f ./$(DEPDIR)/on_activate_depth.Po
+	-rm -f ./$(DEPDIR)/on_by_toggle.Po
 	-rm -f ./$(DEPDIR)/on_new.Po
 	-rm -f ./$(DEPDIR)/on_normalize.Po
 	-rm -f ./$(DEPDIR)/on_open.Po
@@ -855,8 +877,12 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/bm_melt.Po
 	-rm -f ./$(DEPDIR)/bm_solid.Po
 	-rm -f ./$(DEPDIR)/bragg_williams_solid.Po
+	-rm -f ./$(DEPDIR)/classify_components.Po
 	-rm -f ./$(DEPDIR)/do_save.Po
 	-rm -f ./$(DEPDIR)/element.Po
+	-rm -f ./$(DEPDIR)/get_composition.Po
+	-rm -f ./$(DEPDIR)/get_molar_composition.Po
+	-rm -f ./$(DEPDIR)/iugs_classify.Po
 	-rm -f ./$(DEPDIR)/landau_solid.Po
 	-rm -f ./$(DEPDIR)/magma.Po
 	-rm -f ./$(DEPDIR)/main.Po
@@ -865,6 +891,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/on_activate.Po
 	-rm -f ./$(DEPDIR)/on_activate_P.Po
 	-rm -f ./$(DEPDIR)/on_activate_depth.Po
+	-rm -f ./$(DEPDIR)/on_by_toggle.Po
 	-rm -f ./$(DEPDIR)/on_new.Po
 	-rm -f ./$(DEPDIR)/on_normalize.Po
 	-rm -f ./$(DEPDIR)/on_open.Po

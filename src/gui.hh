@@ -93,19 +93,18 @@ EXTERN Gtk::RadioButton *button_byweight;
 EXTERN Gtk::RadioButton *button_oxygen_by_composition;
 EXTERN Gtk::RadioButton *button_oxygen_specified;
 EXTERN Gtk::RadioButton *button_oxygen_FMQ;
-EXTERN Gtk::RadioButton *button_molar_melt;
 EXTERN Gtk::Entry *entry_pO2;
 
 EXTERN Gtk::TreeView *tree_view_CIPW;
 
 EXTERN std::string file;
-EXTERN std::string name;
 
 //-----------------------------------------------------------------------------//
 
 void on_activate();
 void on_activate_depth();
 void on_activate_P();
+void on_by_toggle();
 void on_new();
 void on_normalize();
 void on_open();
@@ -115,5 +114,46 @@ void on_save_as();
 
 void do_save();
 void update();
+
+double 
+get_composition(std::string &name,
+	bool &is_molar,
+	double &SiO2,
+	double &TiO2,
+	double &Al2O3,
+	double &Fe2O3,
+	double &FeO,
+	double &MnO,
+	double &MgO,
+	double &CaO,
+	double &Na2O,
+	double &K2O,
+	double &P2O5,
+	double &S,
+	double &Cr2O3,
+	double &ZrO2,
+	double &H2O,
+	double &CO2,
+	double &Cl);
+
+double 
+get_molar_composition(std::string &name,
+	double &nSiO2,
+	double &nTiO2,
+	double &nAl2O3,
+	double &nFe2O3,
+	double &nFeO,
+	double &nMnO,
+	double &nMgO,
+	double &nCaO,
+	double &nNa2O,
+	double &nK2O,
+	double &nP2O5,
+	double &nS,
+	double &nCr2O3,
+	double &nZrO2,
+	double &nH2O,
+	double &nCO2,
+	double &nCl);
 
 #endif

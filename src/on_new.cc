@@ -23,7 +23,6 @@
 void on_new()
 {
 	file = "";
-	name = "";
 	
 	entry_name->set_text("");
 	entry_SiO2->set_text("0.00");

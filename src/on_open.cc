@@ -61,11 +61,12 @@ void on_open()
 		on_new();
 		string token;
 		in >> token;
+		bool is_molar = false;
 		while (in)
 		{
 			if (token=="name")
 			{
-				name.clear();
+				string name;
 				char c = in.get();
 				while (in && isspace(c) && c != '\n')
 				{
@@ -163,6 +164,10 @@ void on_open()
 				in >> token;
 				entry_Cl->set_text(token);
 			}
+			else if (token=="molar")
+			{
+				is_molar = true;
+			}
 			else
 			{
 				cerr << token << '?' << endl;
@@ -175,7 +180,7 @@ void on_open()
 			in >> token;
 		}
 
-		button_byweight->set_active(true);
+		button_byweight->set_active(!is_molar);
 		button_oxygen_by_composition->set_active(true);
 		update();
 	}
