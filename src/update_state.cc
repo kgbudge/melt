@@ -51,7 +51,7 @@ void calculate_Gf(double T /* K */,
 	unsigned const N = phase.size();
 	Gf.resize(N);
 	amu.resize(N);
-	cout << "Potentially active phases:" << endl;
+//	cout << "Potentially active phases:" << endl;
 	for (unsigned i=0; i<N; ++i)
 	{
 		if (i!= phase[i].index)
@@ -73,7 +73,7 @@ void calculate_Gf(double T /* K */,
 		amu[i] = amui;
 		if (phase[i].nz>0)
 		{
-			cout << phase[i].name << " " << fixed << setprecision(3) << (1000*Gf[i]/amu[i]) << " kj/kg" << endl;
+//			cout << phase[i].name << " " << fixed << setprecision(3) << (1000*Gf[i]/amu[i]) << " kj/kg" << endl;
 		}
 	}
 
@@ -134,7 +134,17 @@ do_ladder_update(double const T,
 
 	for(;;)
 	{
-		// find absolute free energy of elements
+		// Find absolute free energy of elements corresponding to current
+		// composition. This is the set of free energy values for the elements
+		// that makes the free energy of every active phase zero.
+
+		// There are always as many active phases as active elements. How does this
+		// work if there is a degenerate composition, in which a phase completely
+		// consumes two elements? This is the reason for the ladder. If a reaction
+		// simultaneously depletes more than one existing phase to create the
+		// new lower energy phase, we fork our calculation, with a different
+		// depleted phase replace by the new phase in each fork. We pick the
+		// fork that minimizes total free energy.
 
 		// Build a linear system and solve for element free energies
 		
@@ -175,7 +185,15 @@ do_ladder_update(double const T,
 		gsl_linalg_SV_decomp (A, V, S, work);		
 		gsl_linalg_SV_solve (A, V, S, b, x);
 
-		// Compute absolute free energies of phases
+		// The previous calculation should never be singular. We should get a
+		// back activity for each element. This is the set of element activities
+		// that would make the activity of every active phase zero -- a backwards
+		// version of the usual free energy calculation where the element activities
+		// are zero and this gives us a nonzero (and presumably negative!) free 
+		// energy for each active phase. When we then use these nonzero element
+		// activities to calculate new free energies for the library of phases,
+		// any phase with a negative free energy is one that can be produced
+		// by some reaction between existing phases to lower the energy further.
 
 		cout << "Element activities for these phases:" << endl;
 		for (unsigned i=0; i<E_END; ++i)
@@ -187,6 +205,11 @@ do_ladder_update(double const T,
 			}
 		}
 
+		// Look for candidate phases with negative backwards free energies. These
+		// are phases that could be produced by reactions between existing phases
+		// such that free energy is further lowered. However, we may find that
+		// the reaction has nowhere to go -- the incoming phases are depleted.
+		// This amounts to a ladder failure.
 		cout << "New phase candidate activities:" << endl;
 
 		bool found_candidate = false;
@@ -218,10 +241,14 @@ do_ladder_update(double const T,
 			success = true;
 			goto DONE;
 		}
-	
+
+		// Sort the free energy per mole atoms to find the best candidates for a new
+		// phase. 
 		gsl_sort_vector_index(permute, aGf);
 
-		// Find a composition basis for the current composition.
+		// Find a composition basis for the current composition. This is used
+		// to construct the unique reaction between existing phases that
+		// produces a candidate phase.
 
 		for (unsigned i=0; i<N; i++) 
 		{
@@ -240,6 +267,7 @@ do_ladder_update(double const T,
 			}
 		}
 
+		// Look through candidates for a new phase that lowers free energy.
 		bool found = false;
 		for (unsigned ii=0; ii<P_END; ++ii)
 		{
@@ -254,9 +282,7 @@ do_ladder_update(double const T,
 			}
 			cout << "Considering phase " << phase[ip].name << ':' << endl;
 
-			// Construct an equation that reduces the Gibbs function further.
-
-			// Construct the reaction
+			// Construct the reaction that produces the phase.
 
 			fill(left, left+N, 0.0);
 			for (unsigned i=0; i<phase[ip].nz; ++i)
@@ -269,7 +295,8 @@ do_ladder_update(double const T,
 				}
 			}
 
-			// Can the reaction proceed?
+			// Calculate the reaction parameter, r, indicating how much of the 
+			// reaction can take place.
 
 			double r = numeric_limits<double>::max();
 			double rGf = Gf[ip];
@@ -282,19 +309,13 @@ do_ladder_update(double const T,
 				rGf -= left[i]*Gf[state.p[i]];
 			}
 
-			if (r<=1.0e-10)
-			{
-				cout << "Reaction cannot proceed." << endl; 
-				continue;
-			}
-			else
-			{
-				found = true;
-			}
-
-			// Yes, the reaction has somewhere to go
-
+			// We carry out the reaction even if the reaction parameter is zero.
+			// Conceptually, we're replacing an infinitesimal amount of an old
+			// phase with a new lower energy phase -- though both show zero
+			// moles in the sample. This allows us to work our way down to
+			// a real reaction that minimizes energy.
 			cout << "Performing reaction ";
+			found = true;
 			bool first = true;
 			for (unsigned i=0; i<N; ++i)
 			{
@@ -338,7 +359,7 @@ do_ladder_update(double const T,
 				state.x[i] -= r*left[i];
 				if (fabs(state.x[i])<1.0e-10)
 				{
-					if (r*left[i]>1.0e-9)
+					if (left[i]>1.0e-9)
 					{
 						cout << "Reaction depletes " << phase[state.p[i]].name << endl;
 						p[n++] = i;
@@ -458,7 +479,7 @@ void update_state(double const T,
 	{
 		state.is_element_active[e] = (state.x[e]>0.0);
 	}
-/*	cout << "Active elemental phases:" << endl;
+	cout << "Active elemental phases:" << endl;
 	for (unsigned e=0; e<E_END; ++e)
 	{
 		if (state.is_element_active[e])
@@ -466,10 +487,12 @@ void update_state(double const T,
 			cout << " " << phase[state.p[e]].name << endl;
 		}
 	}
-*/	
+	
 	vector<double> Gf, amu;
+	// Calculate the free energy of formation per mole and molecular weight for all possible phases
 	calculate_Gf(T, P, state.is_element_active, phase, Gf, amu);
 
+	// Calculate the free energy of the sample
 	double Gftot = 0.0;
 	double Mtot = 0.0;
 	for (unsigned e=0; e<E_END; ++e)
@@ -477,11 +500,11 @@ void update_state(double const T,
 		Gftot += state.x[e]*Gf[state.p[e]];
 		Mtot += state.x[e]*amu[state.p[e]];
 	}
-	cout << "Initial free energy of formation = " << (1000*Gftot/Mtot) << " kJ/kg" << endl;
+	cout << "Initial free energy of formation = " << (1000*Gftot/Mtot) << " kJ" << endl;
 
 	for (;;)
 	{
-		cout << endl << "Ladder search tree" << endl;
+		cout << endl << "Ladder search for minimum free energy:" << endl;
 		auto status = do_ladder_update(T, 
 		                               P, 
 		                               phase, 
@@ -507,12 +530,12 @@ void update_state(double const T,
 			Gftot += state.x[e]*Gf[state.p[e]];
 			Mtot += state.x[e]*amu[state.p[e]];
 		}
-		cout << "Free energy of formation = " << fixed << setprecision(3) << (1000*Gftot/Mtot) << " kJ/kg" << endl;
+		cout << "Free energy of formation of sample = " << fixed << setprecision(3) << Gftot << " kJ" << endl;
 
 		for (unsigned i=0; true && i<30; ++i)
 		{
 			Phase new_phase;
-			cout << "  Starting free energy for this melt step: " << Gftot << endl;
+			cout << "  Starting free energy for this melt step: " << Gftot << " kJ" << endl;
 			double Geu  = melt(T, P, phase, Gf, state, new_phase);
 			
 			if (Geu < Gftot - 1e-9)

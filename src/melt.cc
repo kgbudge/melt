@@ -108,7 +108,7 @@ double const Smix[M_END] =
 		0, // Lime has one nontet site per mole, fully occupied.
         -4*(2*0.25*log(0.25) + 0.5*log(0.5)), 
 	      // Diopside has two tet and four nontet sites per mole, the latter half occupied with 1:1 Ca:Mg
-		-4*(2*0.5*log(0.5)) + 8*(0.125*log(0.125) + 0.875*log(0.875)),
+		-4*(2*0.5*log(0.5)) - 8*(0.125*log(0.125) + 0.875*log(0.875)),
         // Anorthite has four tet and eight nontet sites per mole, the latter 1/8 occupied and the former split 1:1
         -4*(0.25*log(0.25)+0.75*log(0.75)) + 8*(0.125*log(0.125) + 0.875*log(0.875))
            // K-feldspar has four tet and eight nontet sites per mole; the four are split 1:3 between Al and Si and hte nontent are 1/8 occupied.
@@ -188,16 +188,18 @@ class Melt_Model
 	T_ = T;  
 	nm_ = 0;     // Number of fusible phases
 	Gf0_ = 0.0;  // Gibbs free energy contribution of nonfusible phases 
+	 cout << "Fusible phases and basis:" << endl;
 	for (unsigned i=0; i<E_END; ++i)
 	{
 		if (state.x[i]>0.0)  // Is this phase actually present?
 		{
-			fill(basis_[nm_], basis_[nm_]+M_END, 0.);
 			unsigned p = state.p[i];  // Prepare to compute a melt basis for the candidate phase.
+			Phase const &ph = phase[p];	
+			cout << ph.name << endl;
+			fill(basis_[nm_], basis_[nm_]+M_END, 0.);
 			p_[nm_] = p;              // Save a candidate fusible phase phase index
 			x_[nm_] = state.x[i];     // Save a candidate fusible phase quantity
-			Gfs_[nm_] = Gf[p];        // Save the candidate phase unmelted Gibbs free energy
-			Phase const &ph = phase[p];	
+			Gfs_[nm_] = Gf[p];        // Save the candidate phase unmelted Gibbs free energy per mole
 			unsigned const N = ph.nz; // Number of elements in the phase
 			double xO = 0.0;          // Oxygen balance of the basis of the phase
 			bool really_solid = false; // Initial assumption is that the phase is fusible
@@ -278,10 +280,17 @@ class Melt_Model
 			}
 			if (really_solid || fabs(xO)>1e-9) // at present, cannot handle ferric or oxidized sulfur melts
 			{
+				cout << "  Not fusible" << endl;
 				Gf0_ += state.x[i]*Gf[p];
 			}
 			else
 			{
+				cout << defaultfloat;
+				for (unsigned m=0; m<M_END; ++m)
+				{
+					if (basis_[nm_][m]>0.0)
+						cout << "  " << basis_[nm_][m] << ' ' << phase[endmember[m]].name << endl;
+				}
 				nm_++;  // Accept this candidate phase; it's fusible.
 			}
 		}
@@ -430,6 +439,15 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 					}
 				}
 			}
+		}
+	}
+
+	cout << "Melt CIPW:" << endl;
+	for (unsigned m=0; m<M_END; ++m)
+	{
+		if (x[m]>0.0)
+		{
+			cout << phase[endmember[m]].name << ": " << (double)x[m] << endl;
 		}
 	}
 
@@ -795,7 +813,7 @@ double melt(double const T,
             State const &state, 
             struct Phase &new_phase)
 {
-/*	Melt_Model model(T, P, phase, Gf, state);
+	Melt_Model model(T, P, phase, Gf, state);
 
     // Initial guess is that all phases are half melted. We may try a number of initial guesses eventually.
 	unsigned const NM = model.nm();
@@ -809,6 +827,6 @@ double melt(double const T,
 
 	double Gff = model.Gfmelt<double>(X);
 
-*/	return 1.0e100; // disable melt // Gff;
+	return Gff;
 }
 

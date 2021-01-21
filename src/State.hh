@@ -32,6 +32,13 @@ struct State
     bool is_element_active[E_END];
 	double element_activity[E_END];
 	double V[E_END];
+
+	State(std::string const &name,        
+          double nH2O, double nCO2, double nNa2O, double nMgO, double nAl2O3,
+          double nSiO2, double nP2O5, double nS, double nCl, double nK2O, 
+          double nCaO, double nTiO2, double nCr2O3, double nMnO, double nFeO, 
+          double nFe2O3,  double nZrO2);
+
 };
 
 #endif // State_HH

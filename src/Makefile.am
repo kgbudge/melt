@@ -79,7 +79,8 @@ melt_SOURCES = \
 	get_composition.cc \
 	iugs_classify.cc \
 	classify.hh \
-	classify_components.cc
+	classify_components.cc \
+	State.cc
 
 melt_LDFLAGS = 
 

@@ -75,7 +75,7 @@ void classify_components(State const &state,
 	for (unsigned i=0; i<E_END; ++i)
 	{
 		double const x = state.V[i];
-		if (x>0.0)
+		if (x>0.0 && state.p[i]<P_END)
 		{
 			switch (state.p[i])
 			{				
@@ -133,6 +133,7 @@ void classify_components(State const &state,
 				case P_Fe:
 				case P_FE_STAUROLITE:
 				case P_FERROCARPHOLITE:
+				case P_GEHLENITE:
 				case P_HEMATITE:
 				case P_HEULANDITE:
 				case P_HYDROXYAPATITE:
@@ -142,6 +143,7 @@ void classify_components(State const &state,
 				case P_MAGNESIOFERRITE:
 				case P_MAGNETITE:
 				case P_P4:
+				case P_PSEUDOWOLLASTONITE:
 				case P_PYRRHOTITE:
 				case P_PYROPHANITE:
 				case P_PYROXMANGITE:
@@ -181,6 +183,7 @@ void classify_components(State const &state,
 					break;
 
 				case P_ENSTATITE:
+				case P_PROTOENSTATITE:
 					hy += x;
 					M += x;
 					Opx += x;
@@ -220,13 +223,17 @@ void classify_components(State const &state,
 					F += x;
 					break;
 
+				case P_ANORTHITE_LIQUID:
+				case P_DIOPSIDE_LIQUID:
 				case P_O2:
 				case P_H2O_LIQUID:
 				case P_WATER_VAPOR:
 				case P_Na2SiO3:
+				case P_WOLLASTONITE_LIQUID:	
 					break;
 
 				case P_QUARTZ:
+				case P_TRIDYMITE:
 					Q += x;
 					break;
 

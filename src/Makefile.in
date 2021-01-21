@@ -114,7 +114,7 @@ am_melt_OBJECTS = main.$(OBJEXT) phase_table.$(OBJEXT) melt.$(OBJEXT) \
 	do_save.$(OBJEXT) update_state.$(OBJEXT) \
 	on_by_toggle.$(OBJEXT) get_molar_composition.$(OBJEXT) \
 	get_composition.$(OBJEXT) iugs_classify.$(OBJEXT) \
-	classify_components.$(OBJEXT)
+	classify_components.$(OBJEXT) State.$(OBJEXT)
 melt_OBJECTS = $(am_melt_OBJECTS)
 am__DEPENDENCIES_1 =
 melt_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -141,8 +141,8 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/D2.Po ./$(DEPDIR)/Model.Po \
-	./$(DEPDIR)/bm_melt.Po ./$(DEPDIR)/bm_solid.Po \
-	./$(DEPDIR)/bragg_williams_solid.Po \
+	./$(DEPDIR)/State.Po ./$(DEPDIR)/bm_melt.Po \
+	./$(DEPDIR)/bm_solid.Po ./$(DEPDIR)/bragg_williams_solid.Po \
 	./$(DEPDIR)/classify_components.Po ./$(DEPDIR)/do_save.Po \
 	./$(DEPDIR)/element.Po ./$(DEPDIR)/get_composition.Po \
 	./$(DEPDIR)/get_molar_composition.Po \
@@ -478,7 +478,8 @@ melt_SOURCES = \
 	get_composition.cc \
 	iugs_classify.cc \
 	classify.hh \
-	classify_components.cc
+	classify_components.cc \
+	State.cc
 
 melt_LDFLAGS = 
 melt_LDADD = $(MELT_LIBS) \
@@ -583,6 +584,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/D2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Model.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/State.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bm_melt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bm_solid.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bragg_williams_solid.Po@am__quote@ # am--include-marker
@@ -797,6 +799,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/D2.Po
 	-rm -f ./$(DEPDIR)/Model.Po
+	-rm -f ./$(DEPDIR)/State.Po
 	-rm -f ./$(DEPDIR)/bm_melt.Po
 	-rm -f ./$(DEPDIR)/bm_solid.Po
 	-rm -f ./$(DEPDIR)/bragg_williams_solid.Po
@@ -874,6 +877,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/D2.Po
 	-rm -f ./$(DEPDIR)/Model.Po
+	-rm -f ./$(DEPDIR)/State.Po
 	-rm -f ./$(DEPDIR)/bm_melt.Po
 	-rm -f ./$(DEPDIR)/bm_solid.Po
 	-rm -f ./$(DEPDIR)/bragg_williams_solid.Po

@@ -22,6 +22,8 @@ public:
     unsigned size() const noexcept { return df.size(); }
     void swap(D2 &r);
 
+   explicit operator double() const { return f; }
+
     double y() const noexcept { return f; }
     double dydx(unsigned i) const { Require(i<df.size()); return df[i]; }
 	double d2ydx2(unsigned i, unsigned j) const { Require(i<ddf.size()); Require(j<ddf[i].size()); return ddf[i][j]; } 
