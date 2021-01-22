@@ -24,6 +24,9 @@
 
 #include "element.hh"
 
+// Deliberately keep this simple, so copy is relatively inexpensive in ladder
+// The full description of the calculation requires an additional phase table
+// and the T and P for which this calculation is done.
 struct State
 {
     std::string name;

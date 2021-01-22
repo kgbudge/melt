@@ -84,36 +84,6 @@ double const W[M_END][M_END] =
     {Ww_kal, Wq_kal, Wcor_kal, Wfo_kal,  Wfa_kal,  Wwo_kal, Wsm_kal,      0.0},
 };
 
-double const Smix[M_END] = 
-{
-		0, // Water occupies every oxygen site.
-		0, // Silica has 1 tet and 2 nontet sites per mole, and only tet sites are occupied.
-		0, // Corundum has two tet sites per mole, all occupied.
-		0, // Forsterite has one tet and two nontet sites per mole, all occupied.
-		0, // "
-		-2*(2*0.5*log(0.5)), // Wollastonite has one tet and two nontet sites per mole, with half the nontet sites occupied.
-		0, // Sodium metasilicate has one tet and two nontet sites per mole, all occupied.
-		-3*(2*0.5*log(0.5)) + 6*(log(1./6.)/6. + 5*log(5./6.)/6.),
-        // Leucite has three tet and six nontet site per hex, the former split 1:2, the latter 1/6 occupied
-
-        0, // CO2 has one "tet"site per mol, all occupied.
-        -2*(2*0.5*log(0.5)) + 4*(0.25*log(0.25) + 0.75*log(0.75)),
-		// Nepheline has two tet and four nontet sites per mole; the tet are divided betweel Al and Si and the nontet are 1/4 occupied.
-        -4*(0.25*log(0.25)+0.75*log(0.75)) + 8*(0.125*log(0.125) + 0.875*log(0.875)),
-           // Albite has four tet and eight nontet sites per mole; the four are split 1:3 between Al and Si and hte nontent are 1/8 occupied.
-        0, // Periclase has one nontet site per mole, fully occupied.
-        0, // Disulfur occupies every oxygen site (yeah, I know)
-	    0, // Halite occupies every nontet and oxygen site 
-        -4*(2*0.5*log(0.5)), // Enstatite has two tet and four nontet sites per mole, the latter half occupied.
-		0, // Lime has one nontet site per mole, fully occupied.
-        -4*(2*0.25*log(0.25) + 0.5*log(0.5)), 
-	      // Diopside has two tet and four nontet sites per mole, the latter half occupied with 1:1 Ca:Mg
-		-4*(2*0.5*log(0.5)) - 8*(0.125*log(0.125) + 0.875*log(0.875)),
-        // Anorthite has four tet and eight nontet sites per mole, the latter 1/8 occupied and the former split 1:1
-        -4*(0.25*log(0.25)+0.75*log(0.75)) + 8*(0.125*log(0.125) + 0.875*log(0.875))
-           // K-feldspar has four tet and eight nontet sites per mole; the four are split 1:3 between Al and Si and hte nontent are 1/8 occupied.
-};
-
 template<typename Real>
 Real Nlog(Real const &x)
 {
@@ -188,7 +158,7 @@ class Melt_Model
 	T_ = T;  
 	nm_ = 0;     // Number of fusible phases
 	Gf0_ = 0.0;  // Gibbs free energy contribution of nonfusible phases 
-	 cout << "Fusible phases and basis:" << endl;
+	cout << "Fusible phases and basis:" << endl;
 	for (unsigned i=0; i<E_END; ++i)
 	{
 		if (state.x[i]>0.0)  // Is this phase actually present?
@@ -454,50 +424,34 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 	// Compute melt free energy.
 
 	Real Gfm = zero;
-	Real Nox = zero, Ntet = zero, Nnontet = zero, Nc[E_END];
-	for (unsigned i=0; i<E_END; ++i)
-	{
-		Nc[i] = zero;
-	}
-	double const T = T_;
+	Real Ntot = zero;
 	for (unsigned i=0; i<M_END; ++i)
 	{
 		if (x[i]>0.0)
 		{
-			Gfm += Gfm_[i]*x[i] + R*T*x[i]*Smix[i];  // Subtract off the free energy of mixing of pure endmember
-			for (unsigned j=0; j<M_END; ++j)
-			{
-				if (x[j]>0.0)
-				{
-					Gfm += 0.5*x[i]*x[j]*W[i][j];
-				}
-			}
-			
-			// For now, our mix entropy model is one tetrahedral site and two nontetrahedral sites for every aluminum and silicon.
-			// Silicon occupies only tetrahedral sites; aluminum both tetrahedral and nontetrahedral; and everything else, nontetrahedral.
-				
-			Phase const &ph = phase_[i];
-			unsigned const N = ph.nz;
-			Nox += x[i]*oxygen_sites[i];
-			Ntet += x[i]*tetrahedral_sites[i];
-			Nnontet += x[i]*nontetrahedral_sites[i];
-			for (unsigned j=0; j<N; ++j)
-			{
-				Nc[ph.z[j]] += x[i]*ph.n[j];
-			}
+			Ntot += mixN[i]*x[i];
         }
 	}
-
-	// Entropy of mixing, which will include pure phase entropy previously subtracted out
-	Real Noxv = Nox - Nc[E_S] - Nc[E_O] - Nc[E_CL];
-	Real Ntetv = Ntet - Nc[E_AL] - Nc[E_SI] -  Nc[E_C];
-	Real Nnontetv = Nnontet - Nc[E_NA] - Nc[E_MG] -  Nc[E_K] - Nc[E_CA] - Nc[E_FE];
+	double const T = T_;
+	for (unsigned i=0; i<M_END; ++i)
+	{
+		Gfm += Gfm_[i]*x[i];
+		for (unsigned j=0; j<M_END; ++j)
+		{
+			Gfm += 0.5*x[i]*x[j]*W[i][j]/Ntot;
+		}
+	}
 	
-	Real nS = 
-		Nox*(Nlog(Noxv/Nox) + Nlog(Nc[E_S]/Nox) + Nlog(Nc[E_O]/Nox) + Nlog(Nc[E_CL]/Nox)) +
-		Ntet*(Nlog(Ntetv/Ntet) + Nlog(Nc[E_AL]/Ntet) + Nlog(Nc[E_SI]/Ntet) + Nlog(Nc[E_C]/Ntet)) +
-		Nnontetv*(Nlog(Nnontetv/Nnontet) + Nlog(Nc[E_NA]/Nnontet) + Nlog(Nc[E_MG]/Nnontet) + 
-		          Nlog(Nc[E_K]/Nnontet) + Nlog(Nc[E_CA]/Nnontet) + Nlog(Nc[E_FE]/Nnontet));
+	// Entropy of mixing
+	Real nS = zero;
+	for (unsigned i=0; i<M_END; ++i)
+	{
+		if (x[i]>0.0)
+		{
+			Real const Nf = mixN[i]*x[i]/Ntot;
+			nS += x[i]*Nlog(Nf);
+        }
+	}
 
 	Gfm += R*T*nS;
 
@@ -558,60 +512,6 @@ Phase Melt_Model::minimize_Gf(vector<double> &X)
 
 	D2 Gf2 = Gfmelt<D2>(X);
 
-#if 0
-		//D2 test
-	auto Xp = X;
-	Xp[0] -= 0.01;
-	Xp[1] -= 0.01;
-	D2 Gfmm = Gfmelt<D2>(Xp);
-    Xp = X;
-	// Xp[0] unchanged
-	Xp[1] -= 0.01;
-	D2 Gf0m = Gfmelt<D2>(Xp);
-	Xp = X;
-	Xp[0] += 0.01;
-	Xp[1] -= 0.01;
-	D2 Gfpm = Gfmelt<D2>(Xp);
-
-	Xp = X;
-	Xp[0] -= 0.01;
-	// Xp[1] unchanged
-	D2 Gfm0 = Gfmelt<D2>(Xp);
-    Xp = X;
-	// Xp[0] unchanged
-	// Xp[1] unchanged
-	D2 Gf00 = Gfmelt<D2>(Xp);
-	Xp = X;
-	Xp[0] += 0.01;
-	// Xp[1] unchanged
-	D2 Gfp0 = Gfmelt<D2>(Xp);
-
-	Xp = X;
-	Xp[0] -= 0.01;
-	Xp[1] += 0.01;
-	D2 Gfmp = Gfmelt<D2>(Xp);
-    Xp = X;
-	// Xp[0] unchanged
-	Xp[1] += 0.01;
-	D2 Gf0p = Gfmelt<D2>(Xp);
-	Xp = X;
-	Xp[0] += 0.01;
-	Xp[1] += 0.01;
-	D2 Gfpp = Gfmelt<D2>(Xp);
-
-	double d1 = (Gfp0.y() - Gfm0.y())*50.;
-	double d1a = Gf00.dydx(0);
-	double d2 = (Gf0p.y() - Gf0m.y())*50.;
-	double d2a = Gf00.dydx(1);
-
-	double d11 = (Gfp0.y() - 2*Gf00.y() + Gfm0.y())*10000.;
-	double d11a = Gf00.d2ydx2(0, 0);
-	double d22 = (Gf0p.y() - 2*Gf00.y() + Gf0m.y())*10000.;
-	double d22a = Gf00.d2ydx2(1, 1);
-	double d12 = ((Gfpp.y() - Gfmp.y())*50. - (Gfpm.y() - Gfmm.y())*50.)*50.;
-	double d12a = Gf00.d2ydx2(0, 1);
-#endif
-
     double Gf = Gf2.y();
 
 	cout << "  Melt parameters:" << endl;
@@ -632,6 +532,16 @@ Phase Melt_Model::minimize_Gf(vector<double> &X)
 	}
 	cout << "  Gf = " << Gf << endl;
 		
+	for (unsigned i=0; i<N; ++i)
+	{
+		cout << i << " = " << grad[i] << endl;
+		for (unsigned j=0; j<N; ++j)
+		{
+			cout << H[i][j] << ' ';
+		}
+		cout << endl;
+	}
+
 	// Solve for search direction
 
 	for (unsigned i=0; i<N; ++i)
@@ -668,9 +578,10 @@ Phase Melt_Model::minimize_Gf(vector<double> &X)
     double p[M_END];
 	double norm = 0.0;
 	double cnorm = 0.0;
+		singular = false;
 	for (unsigned i=0; i<N; ++i)
 	{
-		p[i] = gsl_vector_get(x, i);
+		p[i] = -grad[i]; // gsl_vector_get(x, i);
 		// Prune value up against a compositional constraint
 		if (p[i]>0.0 && fabs(X[i]-x_[i])<1.0e-9)
 		{
@@ -815,12 +726,13 @@ double melt(double const T,
 {
 	Melt_Model model(T, P, phase, Gf, state);
 
-    // Initial guess is that all phases are half melted. We may try a number of initial guesses eventually.
+    // Initial guess is that all fusible phases are fully melted. 
+	// We will then see what should crystallize out.
 	unsigned const NM = model.nm();
 	vector<double> X(NM);
 	for (unsigned i=0; i<NM; ++i)
 	{
-		X[i] = 0.5*model.x(i);
+		X[i] = model.x(i);
 	}
 
 	new_phase = model.minimize_Gf(X);

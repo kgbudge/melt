@@ -241,7 +241,7 @@ void update()
 			}
 			else
 			{
-				state.V[i] = phase[pi].V;
+				state.V[i] = state.x[i]*phase[pi].V;
 			}
 			Vtot += state.V[i];
 		}

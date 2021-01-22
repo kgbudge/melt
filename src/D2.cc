@@ -105,6 +105,34 @@ D2 operator/(D2 const &a, D2 const &b)
 	return y;
 }
 
+D2 &D2::operator/=(D2 const &b)
+{
+	unsigned N = b.df.size();
+	for (unsigned i=0; i<N; ++i)
+	{
+		for (unsigned j=0; j<N; ++j)
+		{
+			ddf[i][j] = ddf[i][j]/b.f - df[i]*b.df[j]/(b.f*b.f) - df[j]*b.df[i]/(b.f*b.f)
+				- f*b.ddf[i][j]/(b.f*b.f) + 2*f*b.df[i]*b.df[j]/(b.f*b.f*b.f);
+		}
+	}
+	for (unsigned i=0; i<N; ++i)
+	{
+		df[i] = df[i]/b.f - f*b.df[i]/(b.f*b.f);
+	}
+	f /= b.f;
+	
+	return *this;
+}
+
+D2 operator/(D2 &&a, D2 const &b)
+{
+	D2 y;
+	y.swap(a);
+    y /= b;
+	return y;
+}
+
 D2 operator/(double const a, D2 const &b)
 {
 	unsigned N = b.df.size();

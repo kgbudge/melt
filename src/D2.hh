@@ -39,6 +39,7 @@ public:
     friend D2 operator/(D2 &&, D2 const &);
     friend D2 operator/(double, D2 const &);
     friend D2 operator/(double, D2 &&);
+    D2 &operator/=(D2 const &);
     D2 &operator/=(double const r){ return operator*=(1.0/r); }
 
     friend D2 operator+(D2 const &, D2 const &);
@@ -87,5 +88,14 @@ inline double to_Real<double>(double d, unsigned, unsigned){ return d; }
 
 template<>
 inline D2 to_Real<D2>(double d, unsigned i, unsigned n){ return D2(d, i, n); }
+
+template<typename Real>
+double dydx(Real const &, int);
+
+template<>
+inline double dydx(D2 const &x, int i){ return x.dydx(i);}
+
+template<>
+inline double dydx(double const &x, int ) { return 0.0; }
 
 #endif // D2_HH

@@ -86,76 +86,28 @@ unsigned const endmember[M_END] =
 	    P_K_FELDSPAR_LIQUID,
 };
 
-double const oxygen_sites[M_END] =
+double const mixN[M_END] = 
 {
-		1,
-		2,
-		3,
-		4,
-		4,
-		3,
-		3,
-		6,
+		1, // M_H2O: We expect water to really reduce the entropy
+		0.25, // M_SiO2,
+		0.5, // M_Al2O3,
+		1, // M_Mg2SiO4,
+		1, // M_Fe2SiO4,
+		0.5, // M_CaSiO3,
+		2, // M_Na2SiO3,
+		1, // M_KAlSi2O6,
 
-        2,
-        4,
-        8,
-        1,
-        2,
-	    1,
-        6,
-		1,
-        6,
-        8,
-	    8,
-};
-
-double const tetrahedral_sites[M_END] = 
-{
-		0,
-		1,
-		2,
-		1,
-		1,
-		1,
-		1,
-		3,
-
-        1,
-        2,
-        4,
-        0,
-        0,
-	    0,
-        2,
-		0,
-        2,
-        4,
-	    4,
-};
-
-double const nontetrahedral_sites[M_END] = 
-{
-		0,
-		2,
-		0,
-		2,
-		2,
-		2,
-		2,
-		6,
-
-        0,
-        4,
-        8,
-        1,
-        0,
-	    1,
-        4,
-		1,
-        4,
-        8,
-	    8,
+        1, // M_CO2,
+        1, // M_NaAlSiO4,
+        1, // M_NaAlSi3O8,
+        1, // M_MgO,
+        1, // M_S2,
+	    1, // M_NaCl,
+        1, // M_Mg2Si2O6,
+		1, // M_CaO,
+        1, // M_CaMgSi2O6,
+        1, // M_CaAl2Si2O8,
+	    1, // M_KAlSi3O8,
 };
 
 double melt(double T, 
