@@ -35,16 +35,16 @@ enum Endmember
 		M_Na2SiO3,
 		M_KAlSi2O6,
 
-        M_CO2,
+        M_CO2,  // 8
         M_NaAlSiO4,
         M_NaAlSi3O8,
         M_MgO,
         M_S2,
 	    M_NaCl,
-        M_Mg2Si2O6,
+        M_Mg2Si2O6, //14
 		M_CaO,
         M_CaMgSi2O6,
-        M_CaAl2Si2O8,
+        M_CaAl2Si2O8, // 17
 	    M_KAlSi3O8,
 
         M_END

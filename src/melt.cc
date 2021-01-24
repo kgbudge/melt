@@ -29,7 +29,7 @@
 
 #include "algorithm.hh"
 #include "constants.hh"
-#include "D2.hh"
+#include "D1.hh"
 #include "element.hh"
 #include "melt.hh"
 #include "Model.hh"
@@ -49,39 +49,191 @@ double const Ww_fa = 35634.*Wnorm;
 double const Ww_wo = 20375.*Wnorm;
 double const Ww_sm = -96938.*Wnorm;
 double const Ww_kal = 10374.*Wnorm;
+double const Ww_co2 = 0*Wnorm;
+double const Ww_ne = 0*Wnorm;
+double const Ww_ab = 0*Wnorm;
+double const Ww_pc = 0*Wnorm;
+double const Ww_s = 0*Wnorm;
+double const Ww_ha = 0*Wnorm;
+double const Ww_en = 0*Wnorm;
+double const Ww_li = 0*Wnorm;
+double const Ww_mdi = 0*Wnorm;
+double const Ww_an = 0*Wnorm;
+double const Ww_or = 0*Wnorm;
 double const Wq_cor = 54821.*Wnorm; // calibrated from SiO2-Al2O3 eutectic at 1868K  Al 0.9m vs. 0.4m
 double const Wq_fo = 0; // do not coexist
 double const Wq_fa = 21575.*Wnorm; // calibrated from Q-Fa eutectic near 1422K
 double const Wq_wo = 643.*Wnorm;// calibrated from eutectic of 1699K
 double const Wq_sm = -7095*Wnorm;// calibrated from eutectic at 1062K
 double const Wq_kal = -33922.*Wnorm;
-double const Wcor_fo = -30509.*Wnorm;
-double const Wcor_fa = -32880.*Wnorm;
-double const Wcor_wo = -57918.*Wnorm;
-double const Wcor_sm = 100000.*Wnorm; 
-double const Wcor_kal = -25859.*Wnorm;
+double const Wq_co2 = 0*Wnorm;
+double const Wq_ne = 0*Wnorm;
+double const Wq_ab = 0*Wnorm;
+double const Wq_pc = 0*Wnorm;
+double const Wq_s = 0*Wnorm;
+double const Wq_ha = 0*Wnorm;
+double const Wq_en = 0*Wnorm;
+double const Wq_li = 0*Wnorm;
+double const Wq_mdi = 0*Wnorm;
+double const Wq_an = 0*Wnorm;
+double const Wq_or = 0*Wnorm;
+double const Wcor_fo = 0*Wnorm;
+double const Wcor_fa = 0*Wnorm;
+double const Wcor_wo = 0*Wnorm;
+double const Wcor_sm = 0*Wnorm;
+double const Wcor_kal = 0*Wnorm;
+double const Wcor_co2 = 0*Wnorm;
+double const Wcor_ne = 0*Wnorm;
+double const Wcor_ab = 0*Wnorm;
+double const Wcor_pc = 0*Wnorm;
+double const Wcor_s = 0*Wnorm;
+double const Wcor_ha = 0*Wnorm;
+double const Wcor_en = 0*Wnorm;
+double const Wcor_li = 0*Wnorm;
+double const Wcor_mdi = 0*Wnorm;
+double const Wcor_an = 0*Wnorm;
+double const Wcor_or = 0*Wnorm;
 double const Wfo_fa = -37257.*Wnorm;
 double const Wfo_wo = -31732.*Wnorm;
 double const Wfo_sm = -41877.*Wnorm;
 double const Wfo_kal = 22323.*Wnorm;
+double const Wfo_co2 = 0*Wnorm;
+double const Wfo_ne = 0*Wnorm;
+double const Wfo_ab = -28300*Wnorm; // calibrated from eutectic at 1103K
+double const Wfo_pc = 0*Wnorm;
+double const Wfo_s = 0*Wnorm;
+double const Wfo_ha = 0*Wnorm;
 double const Wfo_en = 1000000*Wnorm; // calibrated from Q-Fo eutectic at 1815K
+double const Wfo_li = 0*Wnorm;
+double const Wfo_mdi = -9500*Wnorm; // calibrated from eutectic at 1384K
+double const Wfo_an = 0*Wnorm;
+double const Wfo_or = 0*Wnorm;
 double const Wfa_wo = -12917.*Wnorm;
 double const Wfa_sm = -90534.*Wnorm;
 double const Wfa_kal = 23649.*Wnorm;
+double const Wfa_co2 = 0*Wnorm;
+double const Wfa_ne = 0*Wnorm;
+double const Wfa_ab = 0*Wnorm;
+double const Wfa_pc = 0*Wnorm;
+double const Wfa_s = 0*Wnorm;
+double const Wfa_ha = 0*Wnorm;
+double const Wfa_en = 0*Wnorm;
+double const Wfa_li = 0*Wnorm;
+double const Wfa_mdi = 0*Wnorm;
+double const Wfa_an = 0*Wnorm;
+double const Wfa_or = 0*Wnorm;
 double const Wwo_sm = -13247.*Wnorm;
 double const Wwo_kal = 17111.*Wnorm;
+double const Wwo_co2 = 0*Wnorm;
+double const Wwo_ne = 0*Wnorm;
+double const Wwo_ab = 0*Wnorm;
+double const Wwo_pc = 0*Wnorm;
+double const Wwo_s = 0*Wnorm;
+double const Wwo_ha = 0*Wnorm;
+double const Wwo_en = 0*Wnorm;
+double const Wwo_li = 0*Wnorm;
+double const Wwo_mdi = 0*Wnorm;
+double const Wwo_an = 0*Wnorm;
+double const Wwo_or = 0*Wnorm;
 double const Wsm_kal = 6523.*Wnorm;
+double const Wsm_co2 = 0*Wnorm;
+double const Wsm_ne = 0*Wnorm;
+double const Wsm_ab = 0*Wnorm;
+double const Wsm_pc = 0*Wnorm;
+double const Wsm_s = 0*Wnorm;
+double const Wsm_ha = 0*Wnorm;
+double const Wsm_en = 0*Wnorm;
+double const Wsm_li = 0*Wnorm;
+double const Wsm_mdi = 0*Wnorm;
+double const Wsm_an = 0*Wnorm;
+double const Wsm_or = 0*Wnorm;
+double const Wkal_co2 = 0*Wnorm;
+double const Wkal_ne = 0*Wnorm;
+double const Wkal_ab = 0*Wnorm;
+double const Wkal_pc = 0*Wnorm;
+double const Wkal_s = 0*Wnorm;
+double const Wkal_ha = 0*Wnorm;
+double const Wkal_en = 0*Wnorm;
+double const Wkal_li = 0*Wnorm;
+double const Wkal_mdi = 0*Wnorm;
+double const Wkal_an = 0*Wnorm;
+double const Wkal_or = 0*Wnorm;
+double const Wco2_ne = 0*Wnorm;
+double const Wco2_ab = 0*Wnorm;
+double const Wco2_pc = 0*Wnorm;
+double const Wco2_s = 0*Wnorm;
+double const Wco2_ha = 0*Wnorm;
+double const Wco2_en = 0*Wnorm;
+double const Wco2_li = 0*Wnorm;
+double const Wco2_mdi = 0*Wnorm;
+double const Wco2_an = 0*Wnorm;
+double const Wco2_or = 0*Wnorm;
+double const Wne_ab = 0*Wnorm;
+double const Wne_pc = 0*Wnorm;
+double const Wne_s = 0*Wnorm;
+double const Wne_ha = 0*Wnorm;
+double const Wne_en = 0*Wnorm;
+double const Wne_li = 0*Wnorm;
+double const Wne_mdi = 0*Wnorm;
+double const Wne_an = 0*Wnorm;
+double const Wne_or = 0*Wnorm;
+double const Wab_pc = 0*Wnorm;
+double const Wab_s = 0*Wnorm;
+double const Wab_ha = 0*Wnorm;
+double const Wab_en = 0*Wnorm;
+double const Wab_li = 0*Wnorm;
+double const Wab_mdi = 0*Wnorm;
+double const Wab_an = 0*Wnorm;
+double const Wab_or = 0*Wnorm;
+double const Wpc_s = 0*Wnorm;
+double const Wpc_ha = 0*Wnorm;
+double const Wpc_en = 0*Wnorm;
+double const Wpc_li = 0*Wnorm;
+double const Wpc_mdi = 0*Wnorm;
+double const Wpc_an = 0*Wnorm;
+double const Wpc_or = 0*Wnorm;
+double const Ws_ha = 0*Wnorm;
+double const Ws_en = 0*Wnorm;
+double const Ws_li = 0*Wnorm;
+double const Ws_mdi = 0*Wnorm;
+double const Ws_an = 0*Wnorm;
+double const Ws_or = 0*Wnorm;
+double const Wha_en = 0*Wnorm;
+double const Wha_li = 0*Wnorm;
+double const Wha_mdi = 0*Wnorm;
+double const Wha_an = 0*Wnorm;
+double const Wha_or = 0*Wnorm;
+double const Wen_li = 0*Wnorm;
+double const Wen_mdi = 0*Wnorm;
+double const Wen_an = 0*Wnorm; 
+double const Wen_or = 0*Wnorm;
+double const Wli_mdi = 0*Wnorm;
+double const Wli_an = 0*Wnorm;
+double const Wli_or = 0*Wnorm;
+double const Wmdi_an = -30900*Wnorm; // Calibrated from eutectic at 1274K
+double const Wmdi_or = 0*Wnorm;
 
 double const W[M_END][M_END] =
 {
-	{0.0,      Ww_q,  Ww_cor,    Ww_fo,    Ww_fa,    Ww_wo,   Ww_sm,   Ww_kal},
-	{Ww_q,      0.0,  Wq_cor,    Wq_fo,    Wq_fa,    Wq_wo,   Wq_sm,   Wq_kal},
-	{Ww_cor, Wq_cor,     0.0,  Wcor_fo,  Wcor_fa,  Wcor_wo, Wcor_sm, Wcor_kal},
-    {Ww_fo,   Wq_fo, Wcor_fo,      0.0,   Wfo_fa,   Wfo_wo,  Wfo_sm,  Wfo_kal},
-    {Ww_fa,   Wq_fa, Wcor_fa,   Wfo_fa,      0.0,   Wfa_wo,  Wfa_sm,  Wfa_kal},
-    {Ww_wo,   Wq_wo, Wcor_wo,   Wfo_wo,   Wfa_wo,      0.0,  Wwo_sm,  Wwo_kal},
-    {Ww_sm,   Wq_sm, Wcor_sm,   Wfo_sm,   Wfa_sm,   Wwo_sm,     0.0,  Wsm_kal},
-    {Ww_kal, Wq_kal, Wcor_kal, Wfo_kal,  Wfa_kal,  Wwo_kal, Wsm_kal,      0.0},
+	{0.0,      Ww_q,  Ww_cor,    Ww_fo,    Ww_fa,    Ww_wo,   Ww_sm,   Ww_kal,   Ww_co2,   Ww_ne,     Ww_ab,   Ww_pc,   Ww_s,   Ww_ha,   Ww_en,   Ww_li,   Ww_mdi,   Ww_an, Ww_or},
+	{Ww_q,      0.0,  Wq_cor,    Wq_fo,    Wq_fa,    Wq_wo,   Wq_sm,   Wq_kal,   Wq_co2,   Wq_ne,     Wq_ab,   Wq_pc,   Wq_s,   Wq_ha,   Wq_en,   Wq_li,   Wq_mdi,   Wq_an, Wq_or},
+	{Ww_cor, Wq_cor,     0.0,  Wcor_fo,  Wcor_fa,  Wcor_wo, Wcor_sm, Wcor_kal, Wcor_co2, Wcor_ne,   Wcor_ab, Wcor_pc, Wcor_s, Wcor_ha, Wcor_en, Wcor_li, Wcor_mdi, Wcor_an, Wcor_or},
+    {Ww_fo,   Wq_fo, Wcor_fo,      0.0,   Wfo_fa,   Wfo_wo,  Wfo_sm,  Wfo_kal,  Wfo_co2,  Wfo_ne,    Wfo_ab,  Wfo_pc,  Wfo_s,  Wfo_ha,  Wfo_en,  Wfo_li,  Wfo_mdi,  Wfo_an, Wfo_or},
+    {Ww_fa,   Wq_fa, Wcor_fa,   Wfo_fa,      0.0,   Wfa_wo,  Wfa_sm,  Wfa_kal,  Wfa_co2,  Wfa_ne,    Wfa_ab,  Wfa_pc,  Wfa_s,  Wfa_ha,  Wfa_en,  Wfa_li,  Wfa_mdi,  Wfa_an, Wfa_or},
+    {Ww_wo,   Wq_wo, Wcor_wo,   Wfo_wo,   Wfa_wo,      0.0,  Wwo_sm,  Wwo_kal,  Wwo_co2,  Wwo_ne,    Wwo_ab,  Wwo_pc,  Wwo_s,  Wwo_ha,  Wwo_en,  Wwo_li,  Wwo_mdi,  Wwo_an, Wwo_or},
+    {Ww_sm,   Wq_sm, Wcor_sm,   Wfo_sm,   Wfa_sm,   Wwo_sm,     0.0,  Wsm_kal,  Wsm_co2,  Wsm_ne,    Wsm_ab,  Wsm_pc,  Wsm_s,  Wsm_ha,  Wsm_en,  Wsm_li,  Wsm_mdi,  Wsm_an, Wsm_or},
+    {Ww_kal, Wq_kal, Wcor_kal, Wfo_kal,  Wfa_kal,  Wwo_kal, Wsm_kal,      0.0, Wkal_co2, Wkal_ne,   Wkal_ab, Wkal_pc, Wkal_s, Wkal_ha, Wkal_en, Wkal_li, Wkal_mdi, Wkal_an, Wkal_or},
+    {Ww_co2, Wq_co2, Wcor_co2, Wfo_co2,  Wfa_co2,  Wwo_co2, Wsm_co2, Wkal_co2,      0.0, Wco2_ne,   Wco2_ab, Wco2_pc, Wco2_s, Wco2_ha, Wco2_en, Wco2_li, Wco2_mdi, Wco2_an, Wco2_or},
+    {Ww_ne,   Wq_ne, Wcor_ne,   Wfo_ne,   Wfa_ne,   Wwo_ne,  Wsm_ne,  Wkal_ne,  Wco2_ne,     0.0,    Wne_ab,  Wne_pc,  Wne_s,  Wne_ha,  Wne_en,  Wne_li,  Wne_mdi,  Wne_an, Wne_or},
+    {Ww_ab,   Wq_ab, Wcor_ab,   Wfo_ab,   Wfa_ab,   Wwo_ab,  Wsm_ab,  Wkal_ab,  Wco2_ab,  Wne_ab,       0.0,  Wab_pc,  Wab_s,  Wab_ha,  Wab_en,  Wab_li,  Wab_mdi,  Wab_an, Wab_or},
+    {Ww_pc,   Wq_pc, Wcor_pc,   Wfo_pc,   Wfa_pc,   Wwo_pc,  Wsm_pc,  Wkal_pc,  Wco2_pc,  Wne_pc,   Wab_pc,      0.0,  Wpc_s,  Wpc_ha,  Wpc_en,  Wpc_li,  Wpc_mdi,  Wpc_an, Wpc_or},
+    {Ww_s,     Wq_s,  Wcor_s,    Wfo_s,    Wfa_s,    Wwo_s,   Wsm_s,   Wkal_s,   Wco2_s,   Wne_s,    Wab_s,    Wpc_s,    0.0,   Ws_ha,   Ws_en,   Ws_li,   Ws_mdi,   Ws_an, Ws_or},
+    {Ww_ha,   Wq_ha, Wcor_ha,   Wfo_ha,   Wfa_ha,   Wwo_ha,  Wsm_ha,  Wkal_ha,  Wco2_ha,  Wne_ha,   Wab_ha,   Wpc_ha,  Ws_ha,     0.0,  Wha_en,  Wha_li,  Wha_mdi,  Wha_an, Wha_or},
+    {Ww_en,   Wq_en, Wcor_en,   Wfo_en,   Wfa_en,   Wwo_en,  Wsm_en,  Wkal_en,  Wco2_en,  Wne_en,   Wab_en,   Wpc_en,  Ws_en,  Wha_en,     0.0,  Wen_li,  Wen_mdi,  Wen_an, Wen_or},
+    {Ww_li,   Wq_li, Wcor_li,   Wfo_li,   Wfa_li,   Wwo_li,  Wsm_li,  Wkal_li,  Wco2_li,  Wne_li,   Wab_li,   Wpc_li,  Ws_li,  Wha_li,  Wen_li,     0.0,  Wli_mdi,  Wli_an, Wli_or},
+    {Ww_mdi,  Wq_mdi, Wcor_mdi, Wfo_mdi, Wfa_mdi,  Wwo_mdi, Wsm_mdi, Wkal_mdi, Wco2_mdi, Wne_mdi,  Wab_mdi,  Wpc_mdi, Ws_mdi, Wha_mdi, Wen_mdi, Wli_mdi,      0.0, Wmdi_an, Wmdi_or},
+    {Ww_an,   Wq_an,  Wcor_an,   Wfo_an,  Wfa_an,   Wwo_an,  Wsm_an,  Wkal_an,  Wco2_an,  Wne_an,   Wab_an,   Wpc_an,  Ws_an,  Wha_an,  Wen_an,  Wli_an,  Wmdi_an,     0.0, Wmdi_or},
+    {Ww_or,   Wq_or,  Wcor_or,  Wfo_or,   Wfa_or,   Wwo_or,  Wsm_or,  Wkal_or,  Wco2_or,  Wne_or,   Wab_or,   Wpc_or,  Ws_or,  Wha_or,  Wen_or,  Wli_or,  Wmdi_or,  Wmdi_or,    0.0}
 };
 
 template<typename Real>
@@ -318,7 +470,7 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 
 	// Magnesium diopside. I have no hedenbergite melt.
 
-	Q = min(x[M_CaO], x[M_MgO]);
+	Q = min(x[M_MgO], x[M_CaO]);
 	x[M_CaMgSi2O6] = Q;
 	x[M_CaO] -= Q;
 	x[M_MgO] -= Q;
@@ -338,7 +490,7 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 	x[M_MgO] = zero;
 	x[M_SiO2] -= 2*Q;
 
-	if (x[M_SiO2]<=0.0)
+	if (x[M_SiO2]<0.0)
 	{
 		// Silica undersaturated
 
@@ -418,6 +570,10 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 		if (x[m]>0.0)
 		{
 			cout << phase[endmember[m]].name << ": " << (double)x[m] << endl;
+			for (unsigned i=0; i<NM; ++i)
+			{
+				cout << "dx[" << i << "] = " << dydx(x[m], i) << endl;
+			}
 		}
 	}
 
@@ -427,10 +583,7 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 	Real Ntot = zero;
 	for (unsigned i=0; i<M_END; ++i)
 	{
-		if (x[i]>0.0)
-		{
-			Ntot += mixN[i]*x[i];
-        }
+		Ntot += mixN[i]*x[i];
 	}
 	double const T = T_;
 	for (unsigned i=0; i<M_END; ++i)
@@ -442,6 +595,12 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 		}
 	}
 	
+	cout << "Gfm (before entropy): " << value(Gfm) << endl;
+	for (unsigned i=0; i<NM; ++i)
+	{
+		cout << "dGfm[" << i << "] = " << dydx(Gfm, i) << endl;
+	}
+
 	// Entropy of mixing
 	Real nS = zero;
 	for (unsigned i=0; i<M_END; ++i)
@@ -454,6 +613,12 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 	}
 
 	Gfm += R*T*nS;
+	
+	cout << "Gfm (after entropy): " << value(Gfm) << endl;
+	for (unsigned i=0; i<NM; ++i)
+	{
+		cout << "dGfm[" << i << "] = " << dydx(Gfm, i) << endl;
+	}
 
 	// Now compute total free energy. 
 	return Gfm;
@@ -479,6 +644,12 @@ Real Melt_Model::Gfmelt(std::vector<double> const &X) const
 		Gf += (x_[i]-xi)*Gfs_[i];
 	}
 
+	cout << "Gfs: " << value(Gf) << endl;
+	for (unsigned i=0; i<NM; ++i)
+	{
+		cout << "dGfs[" << i << "] = " << dydx(Gf, i) << endl;
+	}
+
 	// Now compute total free energy. 
 	return Gf + Gfm(x);
 }
@@ -494,94 +665,30 @@ Phase Melt_Model::minimize_Gf(vector<double> &X)
 	  // Compute the initial gradient and Hessian matrix
 	unsigned const N = nm_;
 
-	double H[N][N];
-	double grad[N];
+	double g[N], xi[N], h[N], p[N];
 
-	gsl_matrix *A = gsl_matrix_alloc(N, N);
-	gsl_matrix *V = gsl_matrix_alloc(N, N);
-	gsl_vector *S = gsl_vector_alloc(N);
-	gsl_vector *work = gsl_vector_alloc(N);
-	gsl_vector *b = gsl_vector_alloc(N);
-	gsl_vector *x = gsl_vector_alloc(N);	
-	gsl_vector *aGf = gsl_vector_alloc(P_END);
-	gsl_permutation *permute = gsl_permutation_alloc(P_END);
+		// Calculate initial Gf and gradient.
 
-	DO:
-
-		// Calculate initial Gf, gradient, and Hessian.
-
-	D2 Gf2 = Gfmelt<D2>(X);
+	D1 Gf2 = Gfmelt<D1>(X);
 
     double Gf = Gf2.y();
 
-	cout << "  Melt parameters:" << endl;
+	cout << "Melt parameters:" << endl;
+	cout << "  Gf = " << Gf << endl;
 	for (unsigned i=0; i<N; ++i)
 	{
 		cout << "  X[" << i << "] = " << X[i] << endl;
-		
-		// Gradient
-
-		grad[i] = Gf2.dydx(i);
-
-		// Hessian
-
-		for (unsigned j=0; j<N; ++j)
-		{
-			H[i][j] = Gf2.d2ydx2(i, j);
-		}
-	}
-	cout << "  Gf = " << Gf << endl;
-		
-	for (unsigned i=0; i<N; ++i)
-	{
-		cout << i << " = " << grad[i] << endl;
-		for (unsigned j=0; j<N; ++j)
-		{
-			cout << H[i][j] << ' ';
-		}
-		cout << endl;
+		p[i] = xi[i] = h[i] = g[i] = -Gf2.dydx(i);
+		cout << "dDf[" << i << "] = " << -xi[i] << endl;
 	}
 
-	// Solve for search direction
-
-	for (unsigned i=0; i<N; ++i)
-	{
-		for (unsigned j=0; j<N; j++)
-		{
-			gsl_matrix_set(A, i, j, H[i][j]);
-		}
-		gsl_vector_set(b, i, -grad[i]);
-	}
-
-	gsl_linalg_SV_decomp (A, V, S, work);		
-
-		// Prune singular values
-
-	bool singular = true;
-    for (unsigned i=0; i<N; ++i)
-	{
-		double w = gsl_vector_get(S, i);
-		if (fabs(w)<1.0e-9)
-		{
-			gsl_vector_set(S, i, 0.0);
-		}
-		else
-		{
-			singular = false;
-		}
-	}
-		
-	gsl_linalg_SV_solve (A, V, S, b, x);
-
+	DO:
 	double x0 = -numeric_limits<double>::max();
 	double x1 = numeric_limits<double>::max();
-    double p[M_END];
 	double norm = 0.0;
 	double cnorm = 0.0;
-		singular = false;
 	for (unsigned i=0; i<N; ++i)
 	{
-		p[i] = -grad[i]; // gsl_vector_get(x, i);
 		// Prune value up against a compositional constraint
 		if (p[i]>0.0 && fabs(X[i]-x_[i])<1.0e-9)
 		{
@@ -593,17 +700,20 @@ Phase Melt_Model::minimize_Gf(vector<double> &X)
 			X[i] = 0.0;
 			p[i] = 0.0;
 		}
-		double e = -X[i]/p[i];
-		if (p[i]<0) x1 = min(x1, e); else x0 = max(x0, e);
-		e = (x_[i]-X[i])/p[i];
-		if (p[i]>0) x1 = min(x1, e); else x0 = max(x0, e);
+		if (p[i]!=0.0)
+		{
+			double e = -X[i]/p[i];
+			if (p[i]<0) x1 = min(x1, e); else x0 = max(x0, e);
+			e = (x_[i]-X[i])/p[i];
+			if (p[i]>0) x1 = min(x1, e); else x0 = max(x0, e);
+		}
 		norm += p[i]*p[i];
 		cnorm += x_[i]*x_[i];
 	}
 	norm = sqrt(norm);
 	cnorm = sqrt(cnorm);
 
-	if (!singular && norm > 1.0e-7*cnorm)
+	if (norm > 2.0e-7*cnorm)
 	{
 		double x2 = minimize(x0, x1, [&](double const e)
 			                     {return Gfmelt(X,
@@ -617,21 +727,37 @@ Phase Melt_Model::minimize_Gf(vector<double> &X)
 			{
 				X[i] += x2*p[i];
 				X[i] = min(x_[i], max(0.0, X[i]));
-				sum += x2*p[i];
 			}
+
+			Gf2 = Gfmelt<D1>(X);
+
+			cout << "Melt parameters:" << endl;
+			cout << "  Gf = " << Gf << endl;
+			double dgg = 0., gg = 0.;
+			for (unsigned i=0; i<N; ++i)
+			{
+				cout << "  X[" << i << "] = " << X[i] << endl;
+				xi[i] = Gf2.dydx(i);
+				cout << "dDf[" << i << "] = " << xi[i] << endl;
+				gg += g[i]*g[i];
+				dgg += (xi[i]+g[i])*xi[i];
+			}
+
+			if (gg == 0.0)
+				goto DONE;
+
+			double  gam = dgg/gg;
+			for (unsigned i=0; i<N; i++)
+			{
+				g[i] = -xi[i];
+				p[i] = xi[i] = h[i] = g[i] + gam*h[i];
+			}
+			
 			goto DO;
 		}
 	}
-		
-	gsl_matrix_free(A);
-	gsl_matrix_free(V);
-	gsl_vector_free(S);
-	gsl_vector_free(work);
-	gsl_vector_free(b);
-	gsl_vector_free(x);
-	gsl_vector_free(aGf);
-	gsl_permutation_free(permute);
 
+	DONE:
 	{
 		unsigned const NM = nm_;
 

@@ -80,7 +80,9 @@ melt_SOURCES = \
 	iugs_classify.cc \
 	classify.hh \
 	classify_components.cc \
-	State.cc
+	State.cc \
+	D1.cc \
+	D1.hh
 
 melt_LDFLAGS = 
 

@@ -223,6 +223,7 @@ void classify_components(State const &state,
 					F += x;
 					break;
 
+					case P_ALBITE_LIQUID:
 				case P_ANORTHITE_LIQUID:
 				case P_DIOPSIDE_LIQUID:
 				case P_O2:
