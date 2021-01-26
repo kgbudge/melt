@@ -223,16 +223,18 @@ void classify_components(State const &state,
 					F += x;
 					break;
 
-					case P_ALBITE_LIQUID:
+				case P_ALBITE_LIQUID:
 				case P_ANORTHITE_LIQUID:
 				case P_DIOPSIDE_LIQUID:
 				case P_O2:
+				case P_SiO2_LIQUID:
 				case P_H2O_LIQUID:
 				case P_WATER_VAPOR:
 				case P_Na2SiO3:
 				case P_WOLLASTONITE_LIQUID:	
 					break;
 
+				case P_CRISTOBALITE:
 				case P_QUARTZ:
 				case P_TRIDYMITE:
 					Q += x;

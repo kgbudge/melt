@@ -60,11 +60,11 @@ double const Ww_li = 0*Wnorm;
 double const Ww_mdi = 0*Wnorm;
 double const Ww_an = 0*Wnorm;
 double const Ww_or = 0*Wnorm;
-double const Wq_cor = 54821.*Wnorm; // calibrated from SiO2-Al2O3 eutectic at 1868K  Al 0.9m vs. 0.4m
+double const Wq_cor = -1230*Wnorm; // calibrated from SiO2-Al2O3 eutectic at 1868K=1595C  Al 0.9m vs. 0.4m
 double const Wq_fo = 0; // do not coexist
-double const Wq_fa = 21575.*Wnorm; // calibrated from Q-Fa eutectic near 1422K
-double const Wq_wo = 643.*Wnorm;// calibrated from eutectic of 1699K
-double const Wq_sm = -7095*Wnorm;// calibrated from eutectic at 1062K
+double const Wq_fa = 2400.*Wnorm; // calibrated from Q-Fa eutectic near 1422K=1149C
+double const Wq_wo = 1850.*Wnorm;// calibrated from eutectic of 1699K=1426C
+double const Wq_sm = -3050*Wnorm;// calibrated from eutectic at 1062K=789C
 double const Wq_kal = -33922.*Wnorm;
 double const Wq_co2 = 0*Wnorm;
 double const Wq_ne = 0*Wnorm;
@@ -99,13 +99,13 @@ double const Wfo_sm = -41877.*Wnorm;
 double const Wfo_kal = 22323.*Wnorm;
 double const Wfo_co2 = 0*Wnorm;
 double const Wfo_ne = 0*Wnorm;
-double const Wfo_ab = -28300*Wnorm; // calibrated from eutectic at 1103K
+double const Wfo_ab = -6000*Wnorm; // calibrated from eutectic at 1376K=1103C
 double const Wfo_pc = 0*Wnorm;
 double const Wfo_s = 0*Wnorm;
 double const Wfo_ha = 0*Wnorm;
-double const Wfo_en = 1000000*Wnorm; // calibrated from Q-Fo eutectic at 1815K
+double const Wfo_en = 9000*Wnorm; // calibrated from Q-Fo eutectic at 1815K=1542C
 double const Wfo_li = 0*Wnorm;
-double const Wfo_mdi = -9500*Wnorm; // calibrated from eutectic at 1384K
+double const Wfo_mdi = 30000*Wnorm; // calibrated from eutectic at 1384C
 double const Wfo_an = 0*Wnorm;
 double const Wfo_or = 0*Wnorm;
 double const Wfa_wo = -12917.*Wnorm;
@@ -210,7 +210,7 @@ double const Wen_or = 0*Wnorm;
 double const Wli_mdi = 0*Wnorm;
 double const Wli_an = 0*Wnorm;
 double const Wli_or = 0*Wnorm;
-double const Wmdi_an = -30900*Wnorm; // Calibrated from eutectic at 1274K
+double const Wmdi_an = -13000*Wnorm; // Calibrated from eutectic at 1274C
 double const Wmdi_or = 0*Wnorm;
 
 double const W[M_END][M_END] =
@@ -608,7 +608,7 @@ Real Melt_Model::Gfm(std::vector<Real> const &X) const
 		if (x[i]>0.0)
 		{
 			Real const Nf = mixN[i]*x[i]/Ntot;
-			nS += x[i]*Nlog(Nf);
+			nS += Ntot*Nlog(Nf);
         }
 	}
 
@@ -713,14 +713,14 @@ Phase Melt_Model::minimize_Gf(vector<double> &X)
 	norm = sqrt(norm);
 	cnorm = sqrt(cnorm);
 
-	if (norm > 2.0e-7*cnorm)
+	if (norm > 2.0e-7*cnorm) // To make sure gradient is meaningful
 	{
 		double x2 = minimize(x0, x1, [&](double const e)
 			                     {return Gfmelt(X,
 			                                    p,
 			                                    e);});
 
-		if (fabs(x2)*norm>1.0e-7*cnorm)
+		if (fabs(x2)*norm>3.0e-7*cnorm)
 		{
 			double sum = 0.0;
 			for (unsigned i=0; i<N; ++i)

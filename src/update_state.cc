@@ -532,7 +532,7 @@ void update_state(double const T,
 		}
 		cout << "Free energy of formation of sample = " << fixed << setprecision(3) << Gftot << " kJ" << endl;
 
-		for (unsigned i=0; true && i<30; ++i)
+		for (unsigned i=0; i<1; ++i) // No iteration for now -- will implement multiple melt later
 		{
 			Phase new_phase;
 			cout << "  Starting free energy for this melt step: " << Gftot << " kJ" << endl;
