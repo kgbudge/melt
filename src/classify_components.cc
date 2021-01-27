@@ -126,6 +126,7 @@ void classify_components(State const &state,
 					M += x;
 					break;
 
+				case P_AKERMANITE:
 				case P_BIXBYITE:
 				case P_CLINOCHLORE:
 				case P_DAPHNITE:

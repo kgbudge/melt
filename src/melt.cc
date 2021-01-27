@@ -106,7 +106,7 @@ double const Wfo_ha = 0*Wnorm;
 double const Wfo_en = 9000*Wnorm; // calibrated from Q-Fo eutectic at 1815K=1542C
 double const Wfo_li = 0*Wnorm;
 double const Wfo_mdi = 30000*Wnorm; // calibrated from eutectic at 1384C
-double const Wfo_an = 0*Wnorm;
+double const Wfo_an = -32500*Wnorm;     // calibrated from eutectic at 1317C (with spinel formation)
 double const Wfo_or = 0*Wnorm;
 double const Wfa_wo = -12917.*Wnorm;
 double const Wfa_sm = -90534.*Wnorm;
