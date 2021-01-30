@@ -141,6 +141,12 @@ D1 operator+(D1 const &a, D1 const &b)
 	return y;
 }
 
+D1 &D1::operator+=(double r)
+{
+	f += r;
+	return *this;
+}
+
 D1 &D1::operator+=(D1 const &r)
 {
 	unsigned const N = df.size();

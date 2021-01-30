@@ -22,7 +22,9 @@ public:
     unsigned size() const noexcept { return df.size(); }
     void swap(D1 &r);
 
-   explicit operator double() const { return f; }
+    void dydx(unsigned i, double x){ Require(i<df.size()); df[i] = x; }
+
+    explicit operator double() const { return f; }
 
     double y() const noexcept { return f; }
     double dydx(unsigned i) const { Require(i<df.size()); return df[i]; }
@@ -43,6 +45,7 @@ public:
 
     friend D1 operator+(D1 const &, D1 const &);
     friend D1 operator+(D1 const &, double);
+    D1 &operator+=(double);
     D1 &operator+=(D1 const &);
 
     friend D1 operator-(double, D1 const &);

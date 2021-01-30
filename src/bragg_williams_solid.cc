@@ -62,8 +62,8 @@ double Bragg_Williams_Solid::Gf(Phase const &phase, double const T, double const
 	
 	solvebr(a, b, [=](double Q)
 	      {
-			Q = min(0.9999999999, max(0.0000000001, Q));
-		     return dH+n*(R*T*log((n-n*Q)*(1-Q)/((1+n*Q)*(n+Q))))/(n+1)+(2*Q-1)*W;
+			Q = min(0.9999999999, max(0.0, Q));
+		     return dH+P*dV+n*(R*T*log(n*(1-Q)*(1-Q)/((1+n*Q)*(n+Q))))/(n+1.)+(2*Q-1)*W;
 	      });
 	
 	double Q = 0.5*(a+b);

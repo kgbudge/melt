@@ -35,7 +35,9 @@ enum Endmember
 		M_Na2SiO3,
 		M_KAlSi2O6,
 
-        M_CO2,  // 8
+		ME_END,
+
+        M_CO2 = ME_END,  // 8
         M_NaAlSiO4,
         M_NaAlSi3O8,
         M_MgO,
@@ -50,7 +52,7 @@ enum Endmember
         M_END
 };
 
-unsigned const endmember_element[M_END] =
+unsigned const endmember_element[ME_END] =
 {
 		E_H,
 		E_SI,
@@ -59,7 +61,7 @@ unsigned const endmember_element[M_END] =
 		E_FE,
 		E_CA,
 		E_NA,
-		E_K
+		E_K,
 };
 
 unsigned const endmember[M_END] =
@@ -109,6 +111,8 @@ double const mixN[M_END] =
         1, // M_CaAl2Si2O8,
 	    1, // M_KAlSi3O8,
 };
+
+extern char const *const endmember_element_name[ME_END];
 
 double melt(double T, 
           double P, 
