@@ -749,7 +749,12 @@ Real Melt_Model::Gfmelt(double XP[P_END]) const
 		if (XP[i]>0.0)
 		{
 			Phase const &ph = phase[p_[i]];  
-			Insist(false, "construction");
+			unsigned const N = ph.nz;
+			for (unsigned j=0; j<N; ++j)
+			{
+				unsigned z = ph.z[j];
+				xm[z] -= ph.n[j]*XP[i];
+			}
 		}
 	}
     Real Gfm = this->Gfm(xm);
@@ -774,7 +779,7 @@ double Melt_Model::rebase_(double const XP[P_END], double Gfm) const
 	for (unsigned i=0; i<NM; ++i)
 	{
 		double const xi = min(x_[i], max(0.0, XP[i]));
-		Gft += (x_[i]-xi)*Gfp_[i];
+		Gft += xi*Gfp_[i];
 	}
 
 	return Gft;
@@ -792,7 +797,7 @@ D1 Melt_Model::rebase_(double const XP[P_END], D1 Gfm) const
 	for (unsigned i=0; i<NM; ++i)
 	{
 		D1 const xi(min(x_[i], max(0.0, XP[i])), i, NM);
-		Gft += (x_[i]-xi)*Gfm_[i];
+		Gft += xi*Gfp_[i];
 
 		// Now for derivatives
 		Phase const &ph = phase[p_[i]];
@@ -800,7 +805,7 @@ D1 Melt_Model::rebase_(double const XP[P_END], D1 Gfm) const
 		double deriv = 0;
 		for (unsigned j=0; j<N; ++j)
 		{
-			double z = ph.z[j];
+			unsigned z = ph.z[j];
 		    deriv -= ph.n[j]*Gfm.dydx(z);
 		}
 		Gft.dydx(i, deriv + Gfp_[i]);
@@ -810,6 +815,20 @@ D1 Melt_Model::rebase_(double const XP[P_END], D1 Gfm) const
 	for (unsigned i=0; i<NM; ++i)
 	{
 		cout << "dGfs[" << i << "] = " << dydx(Gft, i) << endl;
+	}
+
+	// Now do it the hard way
+	double dGft = value(Gft);
+	double Xp[P_END];
+	copy(XP, XP+NM, Xp);
+	for (unsigned i=0; i<NM; ++i)
+	{
+		double old = Xp[i];
+		Xp[i] += 0.01;
+		double f2 = Gfmelt<double>(Xp);
+		cout << "dGfs[" << i << "] = " << dydx(Gft, i) << endl;
+		cout << "    [" <<  i << "] = " << (f2-dGft)*100. << endl;
+		Xp[i] = old;
 	}
 
 	// Now compute total free energy. 

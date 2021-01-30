@@ -198,6 +198,12 @@ D1 operator-(double const a, D1 const &b)
 }
 
 
+D1 &D1::operator-=(double r)
+{
+	f -= r;
+}
+
+
 D1 &D1::operator-=(D1 const &r)
 {
 	unsigned const N = df.size();

@@ -51,6 +51,7 @@ public:
     friend D1 operator-(double, D1 const &);
     friend D1 operator-(D1 const &, D1 const &);
     friend D1 operator-(D1 &&, D1 const &);
+    D1 &operator-=(double);
     D1 &operator-=(D1 const &);
 
 	friend D1 operator-(D1 const &);
