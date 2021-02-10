@@ -26,7 +26,7 @@
 #include "algorithm.hh"
 #include "constants.hh"
 #include "pfitzer_sterner.hh"
-#include "phase.hh"
+#include "Phase.hh"
 
 using namespace std;
 

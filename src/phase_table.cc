@@ -17,8 +17,7 @@
 
 #include "element.hh"
 #include "Model.hh"
-#include "phase.hh"
-#include "phase_enum.hh"
+#include "Phase.hh"
 
 Phase const phase[P_END] = {
   {P_H2,

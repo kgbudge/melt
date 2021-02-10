@@ -24,27 +24,9 @@
 #include <vector>
 
 #include "element.hh"
-#include "phase.hh"
+#include "Phase.hh"
 #include "State.hh"
 
 void IUGS_classify(State const &);
-
-bool 
-do_ladder_update(double const T, 
-            	 double const P, 
-                 std::vector<Phase> const &phase,
-                 std::vector<double> Gf,
-                 bool const oxygen_specified, 
-                 bool const oxygen_FMQ,
-                 double &pO2,
-                 State &);
-
-void update_state(double const T, 
-          		  double const P, 
-           		  std::vector<Phase> &phase,
-           		  bool const oxygen_specified, 
-                  bool const oxygen_FMQ,
-                  double &pO2,
-	              State &state);
 
 #endif // update_HH

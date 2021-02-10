@@ -20,7 +20,7 @@
 #include "algorithm.hh"
 #include "bm_melt.hh"
 #include "constants.hh"
-#include "phase.hh"
+#include "Phase.hh"
 
 static BM_Melt const myBM_Melt;
 Model const *const BM_MELT = &myBM_Melt;

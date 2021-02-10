@@ -24,7 +24,7 @@
 #include "phase_enum.hh"
 #include "State.hh"
 
-enum Endmember
+enum Melt_Endmember
 {
 		M_H2O,
 		M_SiO2,
@@ -52,19 +52,7 @@ enum Endmember
         M_END
 };
 
-unsigned const endmember_element[ME_END] =
-{
-		E_H,
-		E_SI,
-		E_AL,
-		E_MG,
-		E_FE,
-		E_CA,
-		E_NA,
-		E_K,
-};
-
-unsigned const endmember[M_END] =
+unsigned const melt_endmember[M_END] =
 {
 		P_WATER_VAPOR,
 		P_SiO2_LIQUID,
@@ -112,13 +100,46 @@ double const mixN[M_END] =
 	    1, // M_KAlSi3O8,
 };
 
-extern char const *const endmember_element_name[ME_END];
+//-----------------------------------------------------------------------------//
+class Melt_Model
+{
+	public:
+		explicit Melt_Model(State const &state) noexcept(false);
 
-double melt(double T, 
-          double P, 
-          std::vector<struct Phase> const &phase,
-	      std::vector<double> const &Gf,
-          State const &state, 
-          struct Phase &new_phase);
+		unsigned NP() const noexcept { return NP_; }
+		double Z(unsigned i) const { Require(i<E_END); return Z_[i]; }
+
+		double Gf(double const XP[P_END]) const;
+		 
+		double dGf(double XP[P_END], double Gf0, unsigned phase) const;
+
+		double Gfm(double const XM[E_END]) const;
+
+		double Gfmelt(double const X[P_END], double p[M_END], double e) const;
+		
+		Phase minimize_Gf(double XP[P_END]);
+
+	private:
+
+        void compute_current_melt_composition_(double const XP[], double xm[]) const;
+	    double minimize_trial_set_(double XP[P_END]);
+			 
+        // Copied from parent State 
+        double T_;
+	    double P_;
+	    std::vector<Phase> phase_; // Phases from which state is constructed
+	    std::vector<double> Gf_;   // Free energy of each phase
+
+        // Fixed attributes of melt
+	    std::vector<bool> is_fusible_;  // Is this phase fusible?
+		double Z_[E_END]; // amount of each fusible element
+		double Gfr_; // non-meltable phases total free energy
+		double Gfm_[M_END]; // Melt end member free energies
+
+        // Current minimization set. Must include all fusible solid phases in
+        // the trial state plus the trial set of crystallizing phases.
+		unsigned NP_; // number of active phases
+		unsigned ph_[P_END]; // indices of active phases
+};
 
 #endif // melt_hh

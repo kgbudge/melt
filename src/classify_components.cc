@@ -20,7 +20,7 @@
 #include <iostream>
 
 #include "classify.hh"
-#include "phase.hh"
+#include "Phase.hh"
 
 void sort_mafic(double x, std::string const &name,
                 double &x1, std::string &m1,
@@ -72,12 +72,16 @@ void classify_components(State const &state,
 	double cor = 0, di = 0.0, ho = 0.0, hy = 0.0, mc = 0.0;
 	double garnet = 0, spinel = 0;
 
+	double const *const state_V = state.V();
+	int const *const state_ph = state.ph();
+	auto const &state_phase = state.phase();
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		double const x = state.V[i];
-		if (x>0.0 && state.p[i]<P_END)
+		double const x = state_V[i];
+		int idx = state_phase[state_ph[i]].index;
+		if (x>0.0 && idx<P_END)
 		{
-			switch (state.p[i])
+			switch (idx)
 			{				
 				case P_ACMITE:
 					M += x;
@@ -104,6 +108,7 @@ void classify_components(State const &state,
 
 				case P_ANDALUSITE:
 				case P_KYANITE:
+				case P_SILLIMANITE:
 					M += x;
 					anda += x;
 					break;
@@ -243,7 +248,7 @@ void classify_components(State const &state,
 
 				default:
 					cout << "need classify case for component " 
-						<< phase[state.p[i]].name << endl;
+						<< state_phase[state_ph[i]].name << endl;
 					exit(1);
 			}
 		}

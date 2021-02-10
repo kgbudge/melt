@@ -25,7 +25,7 @@
 */
 
 #include "magma.hh"
-#include "phase.hh"
+#include "Phase.hh"
 
 //inline double square(double x){ return x*x; }
 

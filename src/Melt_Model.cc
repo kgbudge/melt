@@ -16,6 +16,7 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <numeric>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -31,59 +32,23 @@
 #include "constants.hh"
 #include "D1.hh"
 #include "element.hh"
-#include "melt.hh"
+#include "Melt_Model.hh"
 #include "Model.hh"
-#include "phase.hh"
+#include "Phase.hh"
 #include "State.hh"
 
 //-----------------------------------------------------------------------------//
 using namespace std;
 
 //-----------------------------------------------------------------------------//
-class Melt_Model
-{
-	public:
-		Melt_Model(double const T, 
-		           double const P, 
-		           vector<Phase> const &phase,
-		           vector<double> const &Gf,
-		           State const &state) noexcept(false);
-
-		unsigned nm() const noexcept { return nm_; }
-		double x(unsigned i) const { Require(i<nm_); return x_[i]; }
-
-		template<typename Real>
-		Real Gfmelt(double XP[P_END]) const;
-
-		template<typename Real>
-		Real Gfm(Real const XM[E_END]) const;
-
-		double Gfmelt(std::vector<double> const &X, double p[M_END], double e) const;
-		
-		Phase minimize_Gf(double XP[P_END]);
-
-	private:
-		template<typename Real>
-		Real rebase_(double const XP[P_END], Real Gfm) const;
-			 
-		double T_; // temperature of sample. Pressure already folded into free energies.
-		double x_[E_END]; // amount of each fusible element
-		double Gf0_; // non-meltable phases total free energy
-		unsigned nm_; // number of active phases
-		unsigned p_[P_END]; // indices of active phases
-		double Gfp_[P_END]; // molar free energies of active phases
-		double Gfm_[M_END]; // molar free energies of endmember melts
-};
-
-//-----------------------------------------------------------------------------//
 double const Wnorm = 1.0e-3;
-double const Ww_q = 30967.*Wnorm;
-double const Ww_cor = -16098.*Wnorm;
-double const Ww_fo = 28874.*Wnorm;
-double const Ww_fa = 35634.*Wnorm;
-double const Ww_wo = 20375.*Wnorm;
-double const Ww_sm = -96938.*Wnorm;
-double const Ww_kal = 10374.*Wnorm;
+double const Ww_q = 0.*Wnorm;
+double const Ww_cor = -0.*Wnorm;
+double const Ww_fo = 0.*Wnorm;
+double const Ww_fa = 0.*Wnorm;
+double const Ww_wo = 0.*Wnorm;
+double const Ww_sm = -0.*Wnorm;
+double const Ww_kal = 0.*Wnorm;
 double const Ww_co2 = 0*Wnorm;
 double const Ww_ne = 0*Wnorm;
 double const Ww_ab = 0*Wnorm;
@@ -100,7 +65,7 @@ double const Wq_fo = 0; // do not coexist
 double const Wq_fa = 2400.*Wnorm; // calibrated from Q-Fa eutectic near 1422K=1149C
 double const Wq_wo = 1850.*Wnorm;// calibrated from eutectic of 1699K=1426C
 double const Wq_sm = -3050*Wnorm;// calibrated from eutectic at 1062K=789C
-double const Wq_kal = -33922.*Wnorm;
+double const Wq_kal = -0.*Wnorm;
 double const Wq_co2 = 0*Wnorm;
 double const Wq_ne = 0*Wnorm;
 double const Wq_ab = 0*Wnorm;
@@ -128,10 +93,10 @@ double const Wcor_li = 0*Wnorm;
 double const Wcor_mdi = 0*Wnorm;
 double const Wcor_an = 0*Wnorm;
 double const Wcor_or = 0*Wnorm;
-double const Wfo_fa = -37257.*Wnorm;
-double const Wfo_wo = -31732.*Wnorm;
-double const Wfo_sm = -41877.*Wnorm;
-double const Wfo_kal = 22323.*Wnorm;
+double const Wfo_fa = -0.*Wnorm;
+double const Wfo_wo = -0.*Wnorm;
+double const Wfo_sm = -0.*Wnorm;
+double const Wfo_kal = 0.*Wnorm;
 double const Wfo_co2 = 0*Wnorm;
 double const Wfo_ne = 0*Wnorm;
 double const Wfo_ab = -6000*Wnorm; // calibrated from eutectic at 1376K=1103C
@@ -143,9 +108,9 @@ double const Wfo_li = 0*Wnorm;
 double const Wfo_mdi = 30000*Wnorm; // calibrated from eutectic at 1384C
 double const Wfo_an = -32500*Wnorm;     // calibrated from eutectic at 1317C (with spinel formation)
 double const Wfo_or = 0*Wnorm;
-double const Wfa_wo = -12917.*Wnorm;
-double const Wfa_sm = -90534.*Wnorm;
-double const Wfa_kal = 23649.*Wnorm;
+double const Wfa_wo = -0.*Wnorm;
+double const Wfa_sm = -0.*Wnorm;
+double const Wfa_kal = 0.*Wnorm;
 double const Wfa_co2 = 0*Wnorm;
 double const Wfa_ne = 0*Wnorm;
 double const Wfa_ab = 0*Wnorm;
@@ -157,8 +122,8 @@ double const Wfa_li = 0*Wnorm;
 double const Wfa_mdi = 0*Wnorm;
 double const Wfa_an = 0*Wnorm;
 double const Wfa_or = 0*Wnorm;
-double const Wwo_sm = -13247.*Wnorm;
-double const Wwo_kal = 17111.*Wnorm;
+double const Wwo_sm = -0.*Wnorm;
+double const Wwo_kal = 0.*Wnorm;
 double const Wwo_co2 = 0*Wnorm;
 double const Wwo_ne = 0*Wnorm;
 double const Wwo_ab = 0*Wnorm;
@@ -170,7 +135,7 @@ double const Wwo_li = 0*Wnorm;
 double const Wwo_mdi = 0*Wnorm;
 double const Wwo_an = 0*Wnorm;
 double const Wwo_or = 0*Wnorm;
-double const Wsm_kal = 6523.*Wnorm;
+double const Wsm_kal = 0.*Wnorm;
 double const Wsm_co2 = 0*Wnorm;
 double const Wsm_ne = 0*Wnorm;
 double const Wsm_ab = 0*Wnorm;
@@ -287,45 +252,41 @@ Real Nlog(Real const &x)
 //-----------------------------------------------------------------------------//
 /*! Create a Melt_Model reflecting possible melting of an existing State.
  *
- * \param T Temperature (K)
- * \param P Pressure (kbar)
- * \param phase Current phase library
- * \param Gf Gibbs free energy of each phase at T and P (kJ/mol)
  * \param state Current state of the mineral ensemble.
  */ 
- Melt_Model::Melt_Model(double const T, 
-                       double const P, 
-                       vector<Phase> const &phase,
-                       vector<double> const &Gf,
-                       State const &state)
+ Melt_Model::Melt_Model(State const &state)
+:
+ T_(state.T()), P_(state.P()), phase_(state.phase()), Gf_(state.Gf()), 
+ is_fusible_(state.Gf().size())
 {
-	// Start with the sample fully melted as our melt component. Determine
-	// which fusible elements are present and compute a basis for expressing
-	// the element composition of any fusible phase as primitive melt components.
-
-	T_ = T;  // Temperature at which we're doing all this. Pressure is folded
-	         // in to the free energies of phases and melt components already.
+	// Compute the fully melted composition (excluding phases for which we
+	// do not have a liquid counterpart). Determine free energy contribution
+	// of these nonfusible phases.
 	 
-	Gf0_ = 0.0;  // Gibbs free energy contribution of nonfusible phases 
-    fill(x_, x_+E_END, 0.0); // To accumulate melt composution
+	Gfr_ = 0.0;  // Gibbs free energy contribution of nonfusible phases 
+    fill(Z_, Z_+E_END, 0.0); // Prepare to accumulate sample composition.
+	                         //This will also be the starting melt. 
 	 
 	cout << "Sample phases:" << endl;
+	double const *const state_X = state.X();
+	int const *const state_ph = state.ph();
+	unsigned const NPL = phase_.size();
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		double const x = state.x[i];
+		double const x = state_X[i];
 		double xpr[E_END];  // to store composition of phase
 		fill(xpr, xpr+E_END, 0.0); 
 		if (x>0.0)  // Is this phase actually present?
 		{
-			unsigned p = state.p[i];
-			Phase const &ph = phase[p];	
+			unsigned p = state_ph[i];
+			Phase const &ph = phase_[p];	
 			cout << ph.name << endl;
 			unsigned const N = ph.nz; // Number of elements in the phase
 			double xO = 0.0;          // To accumulate oxygen balance of the phase
 			bool fusible = true;
 			for (unsigned j=0; j<N && fusible; ++j) 
 			{
-				double const xj = ph.n[j];  // Number of moles of element j in the phase.
+				double const xj = x*ph.n[j];  // Number of moles of element j in the phase.
 				switch(ph.z[j])             // Switch on the element atomic number
 				{
 					case E_H:
@@ -395,13 +356,13 @@ Real Nlog(Real const &x)
 			if (!fusible || fabs(xO-xpr[E_FE])>1e-9) // at present, cannot handle ferric or oxidized sulfur melts
 			{
 				cout << "  Not fusible" << endl;
-				Gf0_ += state.x[i]*Gf[p];
+				Gfr_ += x*Gf_[p];
 			}
 			else
 			{
 				for (unsigned m=0; m<E_END; ++m)
 				{
-					x_[m] += xpr[m];
+					Z_[m] += xpr[m];
 				}
 			}
 		}
@@ -409,99 +370,89 @@ Real Nlog(Real const &x)
 	cout << "Full melt elemental molar composition:" << endl << defaultfloat;
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		if (x_[i]>0)
-	  	  cout << element_name[i] << ": " << x_[i] << endl;
+		if (Z_[i]>0)
+	  	  cout << element_name[i] << ": " << Z_[i] << endl;
 	}
 
-	 // Now go over all phases that might interact with melt, and add them to the
-	 // phase list.
-	cout << "Active phases:" << endl;
-    nm_ = 0; // accumulate number of active phases
-	for (unsigned i=0; i<P_END; ++i)
-	{
-		Phase const &ph = phase[i];	
-		unsigned const N = ph.nz; // Number of elements in the phase
-		double xO = 0.0, xFe = 0.0;          // To accumulate oxygen balance of the phase
-		bool fusible = (N>0);
-		for (unsigned j=0; j<N && fusible; ++j) 
-		{
-			double const xj = ph.n[j];  // Number of moles of element j in the phase.
-			if (ph.z[j] != E_O && xj>0.0 && x_[ph.z[j]] == 0.)
-			{
-				fusible = false;
-				break;
-			}
-			switch(ph.z[j])             // Switch on the element atomic number
-			{
-				case E_H:
-					xO -= 0.5*xj;
-					break; 
+	// Find all potentiall fusible phases
+	 for (unsigned p=0; p<NPL; ++p)
+	 {
+		 Phase const &ph = phase_[p];	
+		 cout << ph.name << endl;
+		 unsigned const N = ph.nz; // Number of elements in the phase
+		 double xO = 0.0;          // To accumulate oxygen balance of the phase
+		 double xFe = 0.0;
+		 bool fusible = true;
+		 for (unsigned j=0; j<N && fusible; ++j) 
+		 {
+			 double const xj = ph.n[j];  // Number of moles of element j in the phase.
+			 switch(ph.z[j])             // Switch on the element atomic number
+			 {
+				 case E_H:
+					 xO -= 0.5*xj;
+					 break; 
 
-				case E_C:
-					xO -= 2*xj;
-					break;
+				 case E_C:
+					 xO -= 2*xj;
+					 break;
 
-				case E_O:
-					xO += xj;
-					break;
+				 case E_O:
+					 xO += xj;
+					 break;
 
-				case E_NA:
-					xO -= 0.5*xj;
-					break;
+				 case E_NA:
+					 xO -= 0.5*xj;
+					 break;
 
-				case E_MG:
-					xO -= xj;
-					break;
+				 case E_MG:
+					 xO -= xj;
+					 break;
 
-				case E_AL:
-					xO -= 1.5*xj;
-					break;
+				 case E_AL:
+					 xO -= 1.5*xj;
+					 break;
 
-				case E_SI:
-					xO -= 2*xj;
-					break;
+				 case E_SI:
+					 xO -= 2*xj;
+					 break;
 
-				case E_S:
-					break;
+				 case E_S:
+					 break;
 
-				case E_CL:
-					xO += 0.5*xj;
-					break;
+				 case E_CL:
+					 xO += 0.5*xj;
+					 break;
 
-				case E_K:
-					xO -= 0.5*xj;
-					break;
+				 case E_K:
+					 xO -= 0.5*xj;
+					 break;
 
-				case E_CA:
-					xO -= xj;
-					break;
+				 case E_CA:
+					 xO -= xj;
+					 break;
 
-				case E_FE:
-					xFe += xj;
-					break;
+				 case E_FE:
+					 xFe += xj;
+					 break;
 
-				default:
-					// non-fusible mineral
-					cout << "phase " << ph.name << " cannot melt." << endl;
-					fusible = false;
-					break;
-			}
-		}
-		if (fusible && fabs(xO-xFe)<=1e-9) // at present, cannot handle ferric or oxidized sulfur melts
-		{
-			cout << phase[i].name << endl;
-			p_[nm_] = i;
-			Gfp_[nm_] = Gf[i];
-			nm_++;
-		}
-	}
+				 default:
+					 // non-fusible mineral
+					 cout << "phase " << ph.name << " cannot melt." << endl;
+					 fusible = false;
+					 break;
+			 }
+			 is_fusible_[p] = fusible && fabs(xO-xFe)<1e-9;
+			 // at present, cannot handle ferric or oxidized sulfur melts
+		 }
+	 }
 
-	 // Melt phase molar free energies
+	 // Compute end-member melt phase free energies
 	 for (unsigned i=0; i<M_END; ++i)
 	 {
-		 Gfm_[i] = Gf[endmember[i]];
+		 Phase const &ph = ::phase[melt_endmember[i]];
+		 Gfm_[i] = ph.model->Gf(ph, T_, P_);
 	 }
-}
+ }
 
 //-----------------------------------------------------------------------------//
 /*! Calculate molar Gibbs free energy of melt.
@@ -509,15 +460,10 @@ Real Nlog(Real const &x)
  * \param x Mole fraction of each melt member. Energy returned will be for the
  * amount in x.
  */
-template<typename Real>
-Real Melt_Model::Gfm(Real const XM[E_END]) const
+double Melt_Model::Gfm(double const XM[E_END]) const
 {
-	unsigned const NM = nm_;
-
-	Real zero = to_Real<Real>(0.0, E_END);
-
-	Real x[M_END];
-	fill(x, x+M_END, zero);
+	double x[M_END];
+	fill(x, x+M_END, 0.0);
 
 	// Reorganize in analogy to CIPW norm into preferred melt phases.
 
@@ -537,13 +483,13 @@ Real Melt_Model::Gfm(Real const XM[E_END]) const
 
 	// 8: Orthoclase
 
-    Real Q = 0.5*XM[E_K];
+    double Q = 0.5*XM[E_K];
 	x[M_KAlSi3O8] = Q;
 	x[M_Al2O3] = 0.5*XM[E_AL] - Q;
 	x[M_SiO2] = XM[E_SI] - 6*Q;
 
 	// 9: Albite
-	Real Na2O = 0.5*XM[E_NA];
+	double Na2O = 0.5*XM[E_NA];
 	Q = 0.5*min(Na2O, x[M_Al2O3]);
 	x[M_NaAlSi3O8] = Q;
 	Na2O -= 0.5*Q;
@@ -563,7 +509,7 @@ Real Melt_Model::Gfm(Real const XM[E_END]) const
 	// 12: Sodium metasilicate
 
 	Q = Na2O;
-	Na2O = zero;
+	Na2O = 0.0;
 	x[M_Na2SiO3] = Q;
 	x[M_SiO2] -= Q;
 
@@ -572,7 +518,7 @@ Real Melt_Model::Gfm(Real const XM[E_END]) const
 	// 14-15: Magnesium diopside. I have no hedenbergite melt.
 
 	x[M_MgO] = XM[E_MG];
-	Q = min(x[M_MgO], XM[M_CaO]);
+	Q = min(x[M_MgO], x[M_CaO]);
 	x[M_CaMgSi2O6] = Q;
 	x[M_CaO] -= Q;
 	x[M_MgO] -= Q;
@@ -582,14 +528,14 @@ Real Melt_Model::Gfm(Real const XM[E_END]) const
 
 	Q = x[M_CaO];
 	x[M_CaSiO3] = Q;
-	x[M_CaO] = zero;
+	x[M_CaO] = 0.0;
 	x[M_SiO2] -= Q;
 
 	// 17: Magnesium pyroxene (enstatite). I have no ferrosilite melt.
 
 	Q = 0.5*x[M_MgO];
 	x[M_Mg2Si2O6] = Q;
-	x[M_MgO] = zero;
+	x[M_MgO] = 0.0;
 	x[M_SiO2] -= 2*Q;
 
 	Q = 0.5*XM[E_FE];
@@ -600,8 +546,8 @@ Real Melt_Model::Gfm(Real const XM[E_END]) const
 	{
 		// Silica undersaturated
 
-		Real D = -x[M_SiO2];
-		x[M_SiO2] = zero;
+		double D = -x[M_SiO2];
+		x[M_SiO2] = 0.0;
 
 		// Enstatite to olivine.
 		Q = min(D, x[M_Mg2Si2O6]);
@@ -661,7 +607,7 @@ Real Melt_Model::Gfm(Real const XM[E_END]) const
 							// That's all I have melts for. If quartz is still deficient, this is not a valid melt.
 							if (D<-1.0e-9)
 							{
-								return to_Real<Real>(1e10, NM); // huge Gf turns off this melt.
+								return 1e10; // huge Gf turns off this melt.
 							}
 						}
 					}
@@ -672,28 +618,23 @@ Real Melt_Model::Gfm(Real const XM[E_END]) const
 
 	x[M_H2O] = 0.5*XM[E_H];
 
-	cout << "Melt CIPW:" << endl;
-	for (unsigned m=0; m<M_END; ++m)
-	{
-		if (x[m]>0.0)
-		{
-			cout << phase[endmember[m]].name << ": " << (double)x[m] << endl;
-			for (unsigned i=0; i<E_END; ++i)
-			{
-				cout << "dx[" << i << "] = " << dydx(x[m], i) << endl;
-			}
-		}
-	}
+//	cout << "Melt CIPW:" << endl;
+//	for (unsigned m=0; m<M_END; ++m)
+//	{
+//		if (x[m]>0.0)
+//		{
+//			cout << phase[endmember[m]].name << ": " << x[m] << endl;
+//		}
+//	}
 
 	// Compute melt free energy.
 
-	Real Gfm = zero;
-	Real Ntot = zero;
+	double Gfm = 0.0;
+	double Ntot = 0.0;
 	for (unsigned i=0; i<M_END; ++i)
 	{
 		Ntot += mixN[i]*x[i];
 	}
-	double const T = T_;
 	for (unsigned i=0; i<M_END; ++i)
 	{
 		Gfm += Gfm_[i]*x[i];
@@ -702,247 +643,519 @@ Real Melt_Model::Gfm(Real const XM[E_END]) const
 			Gfm += 0.5*x[i]*x[j]*W[i][j]/Ntot;
 		}
 	}
-	
-	cout << "Gfm (before entropy): " << value(Gfm) << endl;
-	for (unsigned i=0; i<E_END; ++i)
-	{
-		cout << "dGfm[" << i << "] = " << dydx(Gfm, i) << endl;
-	}
 
 	// Entropy of mixing
-	Real nS = zero;
+	double nS = 0.0;
 	for (unsigned i=0; i<M_END; ++i)
 	{
 		if (x[i]>0.0)
 		{
-			Real const Nf = mixN[i]*x[i]/Ntot;
+			double const Nf = mixN[i]*x[i]/Ntot;
 			nS += Ntot*Nlog(Nf);
         }
 	}
 
-	Gfm += R*T*nS;
-	
-	cout << "Gfm (after entropy): " << value(Gfm) << endl;
-	for (unsigned i=0; i<E_END; ++i)
-	{
-		cout << "dGfm[" << i << "] = " << dydx(Gfm, i) << endl;
-	}
-
+	Gfm += R*T_*nS;
 
 	return Gfm;
 }
 
 //-----------------------------------------------------------------------------//
-template<typename Real>
-Real Melt_Model::Gfmelt(double XP[P_END]) const
+double Melt_Model::Gf(double const XP[P_END]) const
 {
-	unsigned const NM = nm_;
+	unsigned const NM = NP_;
 
-	Real xm[E_END];
+	double xm[E_END];
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		xm[i] = to_Real<Real>(x_[i], i, E_END);
+		xm[i] = Z_[i];
 	}
 	// Modify for amount of each fusible phase crystallized out
+	double Result = Gfr_;
 	for (unsigned i=0; i<NM; ++i)
 	{
-		if (XP[i]>0.0)
+		double const x = XP[i];
+		if (x>0.0)
 		{
-			Phase const &ph = phase[p_[i]];  
+			Phase const &ph = phase_[ph_[i]];  
 			unsigned const N = ph.nz;
 			for (unsigned j=0; j<N; ++j)
 			{
 				unsigned z = ph.z[j];
-				xm[z] -= ph.n[j]*XP[i];
+				xm[z] -= x*ph.n[j];
+				xm[z] = max(0.0, xm[z]);
 			}
+			Result += x*Gf_[ph_[i]];
 		}
 	}
-    Real Gfm = this->Gfm(xm);
+    Result += this->Gfm(xm);
 
-	// Gfm now contains the total free energy of the melt plus its derivatives with
-	// molar composition by cation.
-
-	// Next we compute the total free energy of the sample (melt plus phases) and
-	// the derivative of the free energy of the sample with each phase
-	// crystallizing out of it.
-
-	return rebase_<Real>(XP, Gfm);
-}
-
-template<>
-double Melt_Model::rebase_(double const XP[P_END], double Gfm) const
-{
-	unsigned const NM = nm_;
-
-	double Gft = Gf0_ + Gfm;  // Inactive phases contribution to free energy
-
-	for (unsigned i=0; i<NM; ++i)
-	{
-		double const xi = min(x_[i], max(0.0, XP[i]));
-		Gft += xi*Gfp_[i];
-	}
-
-	return Gft;
-}
-
-template<>
-D1 Melt_Model::rebase_(double const XP[P_END], D1 Gfm) const
-{
-	unsigned const NM = nm_;
-
-	D1 zero(0.0, NM);
-	D1 Gft(Gf0_, NM);  // Inactive phases contribution to free energy
-
-	Gft += value(Gfm); // will add derivatives later
-	for (unsigned i=0; i<NM; ++i)
-	{
-		D1 const xi(min(x_[i], max(0.0, XP[i])), i, NM);
-		Gft += xi*Gfp_[i];
-
-		// Now for derivatives
-		Phase const &ph = phase[p_[i]];
-		unsigned const N = ph.nz;
-		double deriv = 0;
-		for (unsigned j=0; j<N; ++j)
-		{
-			unsigned z = ph.z[j];
-		    deriv -= ph.n[j]*Gfm.dydx(z);
-		}
-		Gft.dydx(i, deriv + Gfp_[i]);
-	}
-
-	cout << "Gft: " << value(Gft) << endl;
-	for (unsigned i=0; i<NM; ++i)
-	{
-		cout << "dGfs[" << i << "] = " << dydx(Gft, i) << endl;
-	}
-
-	// Now do it the hard way
-	double dGft = value(Gft);
-	double Xp[P_END];
-	copy(XP, XP+NM, Xp);
-	for (unsigned i=0; i<NM; ++i)
-	{
-		double old = Xp[i];
-		Xp[i] += 0.01;
-		double f2 = Gfmelt<double>(Xp);
-		cout << "dGfs[" << i << "] = " << dydx(Gft, i) << endl;
-		cout << "    [" <<  i << "] = " << (f2-dGft)*100. << endl;
-		Xp[i] = old;
-	}
-
-	// Now compute total free energy. 
-	return Gft;
+	return Result;
 }
 
 //-----------------------------------------------------------------------------//
-/*! Find the degree of melting of each solid phase that minimized total Gibbs free energy.
+/*! Compute the derivative of total free energy with the amount of a solid phase
+ * extrated from the melt.
  * 
- * \param[in,out] X Contains initial guess of amount of melt of each phase. On return,
- * contains amount of melt of each phase that minimizes free energy.
+ * \param XP Number of moles of each solid phase. This is a compressed array of 
+ * length Melt::NP_ specifying the number of moles of each active phase Melt::p_.
+ * 
+ * \param Gf0 Total free energy for the specified melt state, previously computed.
+ * 
+ * \param p Solid phase for which the derivative of total free energy is desired.
+ * 
+ * \return The derivate
+ */
+double Melt_Model::dGf(double XP[P_END], double const Gf0, unsigned const p) const
+{
+	unsigned const NM = NP_;
+
+	// Compute current melt composition
+	double xm[E_END];
+	compute_current_melt_composition_(XP, xm);
+
+	// See how much of the phase of interest can be crystallized from melt
+	Phase const &ph = phase_[ph_[p]];  
+	unsigned const N = ph.nz;
+	double nmax = std::numeric_limits<double>::max();
+	for (unsigned j=0; j<N; ++j)
+	{
+		unsigned z = ph.z[j];
+		if (z != E_O)
+	  	  nmax = min(nmax, xm[z]/ph.n[j]);
+	}
+	if (nmax>1.0e-9) // We can crystallize a significant quantity.
+	{
+		double old = XP[p];
+		double h = min(nmax, 0.01);
+		XP[p] += h;
+		double Gf1 = Gf(XP);
+		XP[p] = old;
+		return (Gf1-Gf0)/h;
+	}
+	else if (XP[p]>1.0e-9) // We can melt a significant quantity.
+	{
+		double old = XP[p];
+		double h = min(old, 0.01);
+		XP[p] -= h;
+		double Gf1 = Gf(XP);
+		XP[p] = old;
+		return (Gf0-Gf1)/h;
+	}
+	else // This phase wants to melt but is already all melted, or it wants
+		// to crystallize but is already fully crystallized from melt. Change
+		// of the phase is turned off so search direction reflects the constraint.
+	{
+		return 0.0;
+	}
+}
+
+//-----------------------------------------------------------------------------//
+/*! Find the mixture of solid phases and a melt phase that minimized total Gibbs
+ * free energy.
+ * 
+ * \param[in,out] XP Contains initial guess of number of moles of each solid 
+ * phase. This is compressed to include only the Melt::NP_ active phases 
+ * specified by Melt::p_. On return, contains number of moles of each solid 
+ * phase that minimizes free energy.
+ *
+ * \return The melt phase that minimizes free energy.
  */
 Phase Melt_Model::minimize_Gf(double XP[P_END])
 {
-	  // Compute the initial gradient and Hessian matrix
+	unsigned const NPL = phase_.size();
 
-	unsigned const N = nm_;
-
-	double g[N], xi[N], h[N], p[N];
-
-		// Calculate initial Gf and gradient.
-
-	D1 Gf2 = Gfmelt<D1>(XP);
-
-#if 0
-    double Gf = Gf2.y();
-
-	cout << "Melt parameters:" << endl;
-	cout << "  Gf = " << Gf << endl;
-	for (unsigned i=0; i<N; ++i)
+	// Compute the total number of moles of atoms in the sample. This quantity will be
+	// used in various tests of convergence.
+	double cnorm = 0.0;
+	for (unsigned i=0; i<E_END; ++i)
 	{
-		cout << "  X[" << i << "] = " << X[i] << endl;
-		p[i] = xi[i] = h[i] = g[i] = -Gf2.dydx(i);
-		cout << "dDf[" << i << "] = " << -xi[i] << endl;
+		Check(Z_[i]>=0.0);
+		cnorm += Z_[i];
 	}
+	
+	double xm[E_END];
+	compute_current_melt_composition_(XP, xm);
 
 	DO:
-	double x0 = -numeric_limits<double>::max();
-	double x1 = numeric_limits<double>::max();
-	double norm = 0.0;
-	double cnorm = 0.0;
-	for (unsigned i=0; i<N; ++i)
+	// Set temporary minimization set to all active phases.
+	NP_ = NPL;
+	for (unsigned i=0; i<NPL; ++i)
 	{
-		// Prune value up against a compositional constraint
-		if (p[i]>0.0 && fabs(X[i]-x_[i])<1.0e-9)
-		{
-			X[i] = x_[i];
-			p[i] = 0.0;
-		}
-		if (p[i]<0.0 && fabs(X[i])<1.0e-9)
-		{
-			X[i] = 0.0;
-			p[i] = 0.0;
-		}
-		if (p[i]!=0.0)
-		{
-			double e = -X[i]/p[i];
-			if (p[i]<0) x1 = min(x1, e); else x0 = max(x0, e);
-			e = (x_[i]-X[i])/p[i];
-			if (p[i]>0) x1 = min(x1, e); else x0 = max(x0, e);
-		}
-		norm += p[i]*p[i];
-		cnorm += x_[i]*x_[i];
+		ph_[i] = i;
 	}
-	norm = sqrt(norm);
-	cnorm = sqrt(cnorm);
 
-	if (norm > 2.0e-7*cnorm) // To make sure gradient is meaningful
+	// Calculate free energy of initial guess of sample state, and its
+	// gradient.
+
+	double Gf = this->Gf(XP);
+	cout << "Gf = " << fixed << setprecision(3) << Gf << endl;
+
+	// Compute the gradient of the free energy with amount of each solid phase.
+	// The gradient is a poor initial search direction, because it precipitates 
+	// every solid phase that is supercooled, not just a set of phases that are 
+	// mutually stable at the specified P and T. We therefore compute the
+	// composition of the crystallizing material, and we will then perform
+	// a solid phase minimization on this composition to obtain a set of such
+	// mutually stable phases whose precipitation lowers the free energy of
+	// the sample. 
+	double xfreeze[E_END], p[NP_];
+	fill(xfreeze, xfreeze+E_END, 0.0);
+	cout << "Saturated extractable phases:" << endl;
+	for (unsigned i=0; i<NP_; ++i)
 	{
+		double Gfp = is_fusible_[i]? dGf(XP, Gf, i) : 0.0;
+		p[i] = -Gfp;
+		Phase const &ph = phase_[i];
+
+		// Accumulate conribution to freeze composition.
+		if (p[i]>0.0)  // include only crystallizing phases
+		{
+ 			unsigned n = ph.nz; 
+			for (unsigned j=0; j<n; ++j)
+			{
+				unsigned z = ph.z[j];
+				if (z != E_O && xm[z]<1.0e-9*cnorm)
+				{
+					cout << "  Phase "<< ph.name << " constrained from crystallizing" << endl;
+					p[i] = 0.0;
+					break;
+				}
+			}
+			if (p[i]>0.0)
+			{
+				cout << ph.name << " " << p[i] << endl;
+				for (unsigned j=0; j<n; ++j)
+				{
+					unsigned z = ph.z[j];
+					xfreeze[z] += p[i]*ph.n[j];
+				}
+			}
+		}
+	}
+
+	// Find the stable solid mineral assemblage for the crystallizing composition. 
+
+	State state("1", T_, P_, xfreeze);
+	auto status = state.do_ladder_update();
+
+	// Report the phases in the crystallizing composition.
+	cout << endl << "Constructing new search set. Crystallizing phases:" << endl;
+	double const *const state_X = state.X();
+	int const *const state_ph = state.ph();
+	auto const &state_phase = state.phase();
+	NP_ = 0;
+	bool crystallizing[NPL];
+	fill(crystallizing, crystallizing+NPL, false);
+	double X[NPL];
+	for (unsigned e=0; e<E_END; ++e)
+	{
+		int i = state_ph[e];
+		if (state_X[e]>1.0e-9)
+		{
+			cout << " " << state_phase[state_ph[e]].name << " = " << state_X[e] << endl;
+			ph_[NP_] = i;
+			crystallizing[i] = true;
+			X[NP_] = XP[i];
+			NP_++;
+		}
+	}
+
+	// Report the fusible phases already present as solids
+	cout << "Melting phases: " << endl;
+	for (unsigned i=0; i<NPL; ++i)
+	{
+		if (XP[i]>0.0 && !crystallizing[i])
+		{
+			ph_[NP_] = i;
+			X[NP_] = XP[i];
+			NP_++;
+			cout << phase_[ph_[i]].name << endl;
+		}
+	}
+
+	// Minimize on this melt set.
+
+	double revised_Gf = minimize_trial_set_(X);
+	compute_current_melt_composition_(X, xm);
+
+	for (unsigned p=0; p<NPL; p++)
+	{
+		if (is_fusible_[p])
+		{
+			XP[p] = 0.0;
+		}
+	}
+	for (unsigned p=0; p<NP_; ++p)
+	{
+		XP[ph_[p]] = X[p];
+	}
+	double mtot = 0.0;
+	for (unsigned i=0; i<E_END; ++i)
+	{
+		if (xm[i]<1.0e-9*cnorm)
+		{
+			xm[i] = 0.0;
+		}
+		mtot += xm[i];
+	}	
+	if (mtot>0.0 && Gf - revised_Gf  > 1.0e-9*cnorm)
+	{
+		goto DO;
+	}
+
+	// Done. Construct new parent phase for melt.
+
+	double V = 0.0;
+	for (unsigned i=0; i<M_END; ++i)
+	{
+		double xi = xm[i];
+		if (xi>0.0)
+		{
+			Phase const &ph = ::phase[melt_endmember[i]];
+			V += ph.V*xi;
+		}
+	}
+		
+	Phase Result;
+	Result.index = 0;
+	Result.name = "melt";
+	Result.nz = 0;
+	Result.V = V;
+	for (unsigned i=0; i<E_END; ++i)
+	{
+		if (xm[i]>1e-9)
+		{
+			Result.z[Result.nz] = i;
+			Result.n[Result.nz] = xm[i];
+			Result.nz++;
+		}
+	}
+	// If Result.nz is zero, this flags to client that there is no melt.
+
+	Result.S0 = 0.0;
+	Result.Hf0 = Gfm(xm);
+	Result.model = MELT;
+
+	return Result;
+}
+
+double Melt_Model::minimize_trial_set_(double p[P_END])
+{
+	unsigned const n = NP_;
+
+	double g[n], h[n], xi[n];
+
+	double xm[E_END];
+	compute_current_melt_composition_(p, xm);
+
+	double fp = Gf(p);
+	double cnorm = accumulate(Z_, Z_+E_END, 0.0);
+	double pnorm = 0.0;
+	for (unsigned i=0; i<n; ++i)
+	{
+		xi[i] = dGf(p, fp, i);
+		// Prune to enforce constraints
+		if (xi[i]>0.0)
+		{
+			if (p[i]<=0.0)
+			{
+				// Prune melt of solid phase not present
+				xi[i] = 0.0; 
+			}
+			else
+			{
+				cout << "Melting " << phase_[ph_[i]].name << endl;
+			}
+		}
+		else if (xi[i]<0.0)
+		{
+			// Check for crystallization of element fully extracted
+			Phase const &ph = phase_[ph_[i]];
+			unsigned const Z = ph.nz;
+			for (unsigned j=0; j<Z; ++j)
+			{
+				unsigned z = ph.z[j];
+				if (z != E_O && xm[z]<1.0e-9*cnorm)
+				{
+					xi[i] = 0.0;
+				}
+			}
+			if (xi[i] != 0.0)
+			{
+				cout << "Crystallizing " << ph.name << endl;
+			}
+		}
+		pnorm += xi[i]*xi[i];
+	}
+	pnorm = sqrt(pnorm);
+
+	for (int j=0; j<n; ++j)
+	{
+		g[j] = -xi[j];
+		xi[j] = h[j] = g[j];
+	}
+
+	for (;;)
+	{
+		if (pnorm < 2.0e-7*cnorm) // To make sure search direction is meaningful
+			break;
+
+		// Compute freeze composition on pruned search direction. Clip upper
+		// limit of search to not melt more of any phase than is actually present.
+		// Also compute current melt composition.
+		double xfreeze[E_END], xmelt[E_END];
+		fill(xfreeze, xfreeze+E_END, 0.0);
+		copy(Z_, Z_+E_END, xmelt);
+		double x0 = 0.0;
+		double x1 = numeric_limits<double>::max();
+		for (unsigned i=0; i<n; ++i)
+		{
+			if (xi[i]!=0.0)
+			{
+				Phase const &ph = phase_[ph_[i]];
+				unsigned Z = ph.nz;
+				for (unsigned j=0; j<Z; ++j)
+				{
+					unsigned z = ph.z[j];
+					xfreeze[z] += xi[i]*ph.n[j];
+				}
+			}
+			if (p[i]!=0.0)
+			{
+				Phase const &ph = phase_[ph_[i]];
+				unsigned Z = ph.nz;
+				for (unsigned j=0; j<Z; ++j)
+				{
+					unsigned z = ph.z[j];
+					xmelt[z] -= p[i]*ph.n[j];
+				}
+			}
+			if (xi[i]<0.0)
+			{
+				x1 = min(x1, -p[i]/xi[i]);
+			}
+		}
+		// Clip upper limit of search to not extract more freeze composition
+		// than the amount of melt can supply.
+		for (unsigned e=0; e<E_END; ++e)
+		{
+			if (e != E_O && xfreeze[e]>0.0)
+			{
+				x1 = min(x1, xmelt[e]/xfreeze[e]);
+			}
+		}
+
 		double x2 = minimize(x0, x1, [&](double const e)
-			                     {return Gfmelt(X,
-			                                    p,
-			                                    e);});
+		                     {return Gfmelt(p,
+		                                    xi,
+		                                    e);});
 
-		if (fabs(x2)*norm>3.0e-7*cnorm)
+		for (unsigned i=0; i<n; ++i)
 		{
-			double sum = 0.0;
-			for (unsigned i=0; i<N; ++i)
-			{
-				X[i] += x2*p[i];
-				X[i] = min(x_[i], max(0.0, X[i]));
-			}
-
-			Gf2 = Gfmelt<D1>(X);
-
-			cout << "Melt parameters:" << endl;
-			cout << "  Gf = " << Gf << endl;
-			double dgg = 0., gg = 0.;
-			for (unsigned i=0; i<N; ++i)
-			{
-				cout << "  X[" << i << "] = " << X[i] << endl;
-				xi[i] = Gf2.dydx(i);
-				cout << "dDf[" << i << "] = " << xi[i] << endl;
-				gg += g[i]*g[i];
-				dgg += (xi[i]+g[i])*xi[i];
-			}
-
-			if (gg == 0.0)
-				goto DONE;
-
-			double  gam = dgg/gg;
-			for (unsigned i=0; i<N; i++)
-			{
-				g[i] = -xi[i];
-				p[i] = xi[i] = h[i] = g[i] + gam*h[i];
-			}
-			
-			goto DO;
+			p[i] += x2*xi[i];
+			p[i] = max(0.0, p[i]);
 		}
-	}
 
+		fp = this->Gf(p);
+	    compute_current_melt_composition_(p, xm);
+
+		cout << endl;
+		cout << "Line search completed. New Gf = " << fp << endl;
+		cout << "Solid composition after line search:" << endl;
+		for (unsigned i=0; i<n; ++i)
+		{
+			cout << "  " << phase_[ph_[i]].name << " = " << p[i] << endl;
+		}
+		cout << "Melt composition after line search:" << endl;
+		for (unsigned i=0; i<E_END; ++i)
+		{
+			if (xm[i]>0.0)
+			{
+			cout << "  " << element_name[i] << " = " << xm[i] << endl;
+			}
+		}
+		cout << endl;
+
+		if (fabs(x2)*pnorm<3.0e-7*cnorm) 
+			goto DONE;
+
+		cout << "New pruned gradient calculation:" << endl;
+		double dgg = 0., gg = 0.;
+		for (unsigned i=0; i<n; ++i)
+		{
+			xi[i] = dGf(p, fp, i);
+
+			// Prune to enforce constraints
+			if (xi[i]>0.0)
+			{
+				if (p[i]<=0.0)
+				{
+					// Prune melt of solid phase not present
+					xi[i] = 0.0; 
+					cout << phase_[ph_[i]].name << " constrained from melting" << endl;
+				}
+				else
+				{
+					cout << "Melting " << phase_[ph_[i]].name << ", p = " << p[i] << endl;
+				}
+			}
+			else if (xi[i]<0.0)
+			{
+				// Check for crystallization of element fully extracted
+				Phase const &ph = phase_[ph_[i]];
+				unsigned const Z = ph.nz;
+				for (unsigned j=0; j<Z; ++j)
+				{
+					unsigned z = ph.z[j];
+					if (z != E_O && xm[ph.z[j]]<1.0e-9*cnorm)
+					{
+						xi[i] = 0.0;
+				     	cout << phase_[ph_[i]].name << " constrained from crystallizing" << endl;
+					}
+				}
+				if (xi[i] != 0.0)
+				{
+					cout << "Crystallizing " << ph.name << ", p = " << p[i]  << endl;
+				}
+			}
+			gg += g[i]*g[i];
+			dgg += (xi[i]+g[i])*xi[i];
+		}
+
+		if (gg == 0.0)
+			break;
+
+		double  gam = dgg/gg;
+		pnorm = 0.0;
+		cout << endl;
+		cout << "Conjugate gradient search direction:" << endl;
+		for (unsigned i=0; i<n; i++)
+		{
+			g[i] = -xi[i];
+			if (g[i] != 0.0)
+			{
+		   	   xi[i] = h[i] = g[i] + gam*h[i];
+			}
+			else
+			{
+		   	   xi[i] = h[i] = 0.0;
+			}
+
+			if (xi[i]!= 0.0)
+			{
+				cout << phase_[ph_[i]].name << " p = " << xi[i] << endl;
+				pnorm += xi[i]*xi[i];
+			}
+		}
+		pnorm = sqrt(pnorm);
+	}
+	
 	DONE:
+		return fp; 
+#if 0
 	{
-		unsigned const NM = nm_;
+		unsigned const NM = NP_;
 
 		std::vector<double> x(M_END, 0.0);
 
@@ -950,10 +1163,10 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 
 		for (unsigned i=0; i<NM; ++i)
 		{
-			double const xi = min(x_[i], max(0.0, X[i]));
+			double const xi = min(Z_[i], max(0.0, p[i]));
 			for (unsigned j=0; j<M_END; ++j)
 			{
-				x[j] += xi*basis_[i][j];
+//				x[j] += xi*basis_[i][j];
 			}
 		}
 
@@ -978,7 +1191,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			double xi = x[i];
 			if (xi>0.0)
 			{
-				Phase const &ph = phase[endmember[i]];
+				Phase const &ph = phase[melt_endmember[i]];
 				unsigned nz = ph.nz;
 				for (unsigned j=0; j<nz; ++j)
 				{
@@ -1015,28 +1228,21 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 }
 
 //-----------------------------------------------------------------------------//
-double Melt_Model::Gfmelt(std::vector<double> const &X, double p[M_END], double e) const
+double Melt_Model::Gfmelt(double const X[P_END], double p[M_END], double e) const
 {
-#if 0
-	unsigned const N = nm_;
-	std::vector<double> x(N);
+	unsigned const N = NP_;
+	double x[N];
 	for (unsigned i=0; i<N; ++i)
 	{
 		x[i] = X[i] + e*p[i];
 	}
-	return Gfmelt<double>(x);
-#endif
+	return Gf(x);
 }
 
 //-----------------------------------------------------------------------------//
-double melt(double const T, 
-            double const P, 
-            vector<Phase> const &phase,
-            vector<double> const &Gf,
-            State const &state, 
-            struct Phase &new_phase)
+double State::melt(struct Phase &new_phase) const
 {
-	Melt_Model model(T, P, phase, Gf, state);
+	Melt_Model model(*this);
 
     // Initial guess is that all fusible phases are fully melted. 
 	// We will then see what should crystallize out.
@@ -1046,9 +1252,32 @@ double melt(double const T,
 	
 	new_phase = model.minimize_Gf(XP);
 
-	double Gff = model.Gfmelt<double>(XP);
+    double Gff = model.Gf(XP);
 
 	return Gff; 
+}
+
+
+void Melt_Model::compute_current_melt_composition_(double const XP[], double xm[]) const
+{
+	for (unsigned i=0; i<E_END; ++i)
+	{
+		xm[i] = Z_[i];
+	}
+	for (unsigned i=0; i<NP_; ++i)
+	{
+		double const x = XP[i];
+		if (x>0.0)
+		{
+			Phase const &ph = phase_[ph_[i]];  
+			unsigned const N = ph.nz;
+			for (unsigned j=0; j<N; ++j)
+			{
+				unsigned z = ph.z[j];
+				xm[z] -= x*ph.n[j];
+			}
+		}
+	}
 }
 
 char const * const endmember_element_name[] =

@@ -28,26 +28,21 @@ bin_PROGRAMS = melt
 
 melt_SOURCES = \
 	main.cc \
-	phase.hh \
 	svdcmp.h \
 	phase_table.cc \
 	phase_enum.hh \
 	element.hh \
 	constants.hh \
-	melt.cc \
 	algorithm.hh \
 	solid.cc \
 	vapor.cc \
 	pfitzer_sterner.cc \
-	melt_model.cc \
 	magma.cc \
 	solid.hh \
 	vapor.hh \
 	pfitzer_sterner.hh \
 	bm_melt.cc \
-	melt_model.hh \
 	bm_melt.hh \
-	melt.hh \
 	landau_solid.hh \
 	landau_solid.cc \
 	bragg_williams_solid.cc \
@@ -82,7 +77,12 @@ melt_SOURCES = \
 	classify_components.cc \
 	State.cc \
 	D1.cc \
-	D1.hh
+	D1.hh \
+	Phase.hh \
+	Melt_Model.cc \
+	Melt_Model.hh \
+	Melt.hh \
+	Melt.cc
 
 melt_LDFLAGS = 
 

@@ -25,7 +25,7 @@
 
 #include "constants.hh"
 #include "Model.hh"
-#include "phase.hh"
+#include "Phase.hh"
 #include "solid.hh"
 
 inline double square(double x){ return x*x; }

@@ -25,7 +25,7 @@
 
 #include "algorithm.hh"
 #include "constants.hh"
-#include "phase.hh"
+#include "Phase.hh"
 #include "vapor.hh"
 
 inline double square(double x){ return x*x; }

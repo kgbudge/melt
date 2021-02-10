@@ -26,7 +26,7 @@
 
 #include "constants.hh"
 #include "bm_melt.hh"
-#include "phase.hh"
+#include "Phase.hh"
 
 //inline double square(double x){ return x*x; }
 

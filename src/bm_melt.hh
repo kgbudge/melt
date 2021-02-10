@@ -18,7 +18,7 @@
 #ifndef bm_melt_hh
 #define bm_melt_hh
 
-#include "melt_model.hh"
+#include "Melt.hh"
 
 class BM_Melt : public Melt
 {

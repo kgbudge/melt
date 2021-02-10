@@ -24,7 +24,7 @@
 #include "Model.hh"
 #include "State.hh"
 #include "gui.hh"
-#include "phase.hh"
+#include "Phase.hh"
 #include "update.hh"
 
 //-----------------------------------------------------------------------------//
@@ -73,59 +73,32 @@ void update()
 
 	if (total==0.0) return;
 
-	double Gf[P_END]; // Free energy of formation at specified T, P
-
-	// Determine how oxygen activity is set
-	bool oxygen_specified = !button_oxygen_by_composition->get_active();
-	bool oxygen_FMQ;
-	double pO2, GfO2;
-	if (oxygen_specified)
-	{
-		if (button_oxygen_specified->get_active())
-		{
-			string text = entry_pO2->get_text();
-			pO2 = atof(text.c_str());
-			oxygen_FMQ = false;
-		}
-		else
-		{
-			Check(button_oxygen_FMQ->get_active());
-			oxygen_FMQ = true;
-		}
-	}
-	
-	// Create a State with the initial composition. 
-	State state("1", nH2O, nCO2, nNa2O, nMgO, nAl2O3, nSiO2, nP2O5, nS, nCl,
-	            nK2O, nCaO, nTiO2, nCr2O3, nMnO, nFeO, nFe2O3, nZrO2);
-
-	// Table of current defined phases, initially taken as the phase library. 
-	// This may have solid solution and melt phases added to it in the course of
-	// the state update.
-	vector<Phase> phase(::phase, ::phase+P_END);
-
 	// Get the starting temperature and pressure
 	string text = entry_T->get_text();
 	double T = atof(text.c_str()) + 273.15;
 	text = entry_P->get_text();
 	double P = atof(text.c_str());
+	
+	// Create a State with the initial composition. 
+	State state("1", 
+	            T,
+	            P,
+	            nH2O, nCO2, nNa2O, nMgO, nAl2O3, nSiO2, nP2O5, nS, nCl,
+	            nK2O, nCaO, nTiO2, nCr2O3, nMnO, nFeO, nFe2O3, nZrO2);
 
 	// Calculate the equilibrium state at T and P.
-	update_state(T, 
-	             P, 
-	             phase,
-	             oxygen_specified, 
-	             oxygen_FMQ,
-	             pO2,
-	             state);
+	state.update();
 
 	int pm = -1;
 	double px = 0.0;
+	double const *const state_X = state.X();
+	int const *const state_ph = state.ph();
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		if (state.x[i]>px && state.p[i]>=P_END)
+		if (state_X[i]>px && state_ph[i]>=P_END)
 		{
-			pm = state.p[i];
-			px = state.x[i];
+			pm = state_ph[i];
+			px = state_X[i];
 		}
 	}
 	if (pm != -1)
@@ -225,44 +198,30 @@ void update()
 	Gtk::TreeModel::iterator iter;
 	Gtk::TreeModel::Row row;
 
-	entry_pO2->set_text(tostring(pO2));
+	// entry_pO2->set_text(tostring(pO2));
 
 	// Convert to volume fraction
 
+	double const *const state_V = state.V();
+	auto const &state_phase = state.phase();
+	double V[E_END];
 	double Vtot = 0.0;
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		if (state.x[i]>0.0)
-		{
-			unsigned const pi = state.p[i];
-			if (pi<P_END)
-			{
-				state.V[i] = state.x[i]*phase[pi].model->volume(phase[pi], T, P);
-			}
-			else
-			{
-				state.V[i] = state.x[i]*phase[pi].V;
-			}
-			Vtot += state.V[i];
-		}
-		else
-		{
-			state.V[i] = 0.0;
-		}
+		V[i] = state_V[i];
+		Vtot += V[i];
 	}
-	//	cout << Vtot/100 << endl;
 
 	double rnorm = 100.0/Vtot;
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		state.V[i] *= rnorm;
-		if (state.V[i]>0.0)
+		if (V[i]>0.0)
 		{
-			unsigned const pi = state.p[i];
+			unsigned const pi = state_ph[i];
 			iter = list_store_CIPW->append();
 			row = *iter;
-			row[m_Columns.m_col_text] = phase[pi].name;
-			row[m_Columns.m_col_number] = state.V[i];
+			row[m_Columns.m_col_text] = state_phase[pi].name;
+			row[m_Columns.m_col_number] = V[i]*rnorm;
 		}
 	}
 

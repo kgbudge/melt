@@ -20,7 +20,7 @@
 #include "algorithm.hh"
 #include "bm_solid.hh"
 #include "constants.hh"
-#include "phase.hh"
+#include "Phase.hh"
 
 static BM_Solid const myBM_Solid;
 Model const *const BM_SOLID = &myBM_Solid;

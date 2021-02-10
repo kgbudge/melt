@@ -1,6 +1,6 @@
 // landau_solid.cc
 //
-// Copyright (C) 20169- Kent G. Budge
+// Copyright (C) 2021 Kent G. Budge
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,18 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#include "landau_solid.hh"
+
 #include <cmath>
 #include <algorithm>
-/*#include <assert.h>
-#include <fstream>
-#include <vector>
-
-#include "ds++/Assert.hh"*/
 
 #include "constants.hh"
 #include "Model.hh"
-#include "phase.hh"
-#include "landau_solid.hh"
+#include "Phase.hh"
 
 inline double square(double x){ return x*x; }
 
