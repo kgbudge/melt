@@ -122,11 +122,10 @@ void State::update()
 
 		for (unsigned i=0; i<5; ++i) // No iteration for now -- will implement multiple melt later
 		{
-			Phase new_phase;
 			cout << "  Starting free energy for this melt step: " << Gftot << " kJ" << endl;
-			double Geu  = melt(new_phase);
+			Phase new_phase = melt();
 			
-			if (Geu < Gftot - 1e-9)
+			if (new_phase.nz>0)
 			{
 				Gf_.push_back(new_phase.Hf0);
 				phase_.push_back(new_phase);

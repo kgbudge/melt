@@ -234,6 +234,7 @@ void classify_components(State const &state,
 				case P_DIOPSIDE_LIQUID:
 				case P_O2:
 				case P_SiO2_LIQUID:
+				case P_H2:
 				case P_H2O_LIQUID:
 				case P_WATER_VAPOR:
 				case P_Na2SiO3:

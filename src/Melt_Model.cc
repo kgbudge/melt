@@ -802,6 +802,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 	double xfreeze[E_END], p[NP_];
 	fill(xfreeze, xfreeze+E_END, 0.0);
 	cout << "Saturated extractable phases:" << endl;
+	bool has_extractable_phase = false;
 	for (unsigned i=0; i<NP_; ++i)
 	{
 		double Gfp = is_fusible_[i]? dGf(XP, Gf, i) : 0.0;
@@ -814,7 +815,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
  			unsigned n = ph.nz; 
 			for (unsigned j=0; j<n; ++j)
 			{
-				unsigned z = ph.z[j];
+				unsigned z = ph.z[j]; 
 				if (z != E_O && xm[z]<1.0e-9*cnorm)
 				{
 					cout << "  Phase "<< ph.name << " constrained from crystallizing" << endl;
@@ -824,6 +825,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			}
 			if (p[i]>0.0)
 			{
+				has_extractable_phase = true;
 				cout << ph.name << " " << p[i] << endl;
 				for (unsigned j=0; j<n; ++j)
 				{
@@ -834,78 +836,81 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 		}
 	}
 
-	// Find the stable solid mineral assemblage for the crystallizing composition. 
-
-	State state("1", T_, P_, xfreeze);
-	auto status = state.do_ladder_update();
-
-	// Report the phases in the crystallizing composition.
-	cout << endl << "Constructing new search set. Crystallizing phases:" << endl;
-	double const *const state_X = state.X();
-	int const *const state_ph = state.ph();
-	auto const &state_phase = state.phase();
-	NP_ = 0;
-	bool crystallizing[NPL];
-	fill(crystallizing, crystallizing+NPL, false);
-	double X[NPL];
-	for (unsigned e=0; e<E_END; ++e)
+	if (has_extractable_phase)
 	{
-		int i = state_ph[e];
-		if (state_X[e]>1.0e-9)
+		// Find the stable solid mineral assemblage for the crystallizing composition. 
+
+		State state("1", T_, P_, xfreeze);
+		auto status = state.do_ladder_update();
+
+		// Report the phases in the crystallizing composition.
+		cout << endl << "Constructing new search set. Crystallizing phases:" << endl;
+		double const *const state_X = state.X();
+		int const *const state_ph = state.ph();
+		auto const &state_phase = state.phase();
+		NP_ = 0;
+		bool crystallizing[NPL];
+		fill(crystallizing, crystallizing+NPL, false);
+		double X[NPL];
+		for (unsigned e=0; e<E_END; ++e)
 		{
-			cout << " " << state_phase[state_ph[e]].name << " = " << state_X[e] << endl;
-			ph_[NP_] = i;
-			crystallizing[i] = true;
-			X[NP_] = XP[i];
-			NP_++;
+			int i = state_ph[e];
+			if (state_X[e]>1.0e-9)
+			{
+				cout << " " << state_phase[i].name << " = " << state_X[e] << endl;
+				ph_[NP_] = i;
+				crystallizing[i] = true;
+				X[NP_] = XP[i];
+				NP_++;
+			}
 		}
-	}
 
-	// Report the fusible phases already present as solids
-	cout << "Melting phases: " << endl;
-	for (unsigned i=0; i<NPL; ++i)
-	{
-		if (XP[i]>0.0 && !crystallizing[i])
+		// Report the fusible phases already present as solids
+		cout << "Melting phases: " << endl;
+		for (unsigned i=0; i<NPL; ++i)
 		{
-			ph_[NP_] = i;
-			X[NP_] = XP[i];
-			NP_++;
-			cout << phase_[ph_[i]].name << endl;
+			if (XP[i]>0.0 && !crystallizing[i])
+			{
+				ph_[NP_] = i;
+				X[NP_] = XP[i];
+				NP_++;
+				cout << phase_[ph_[i]].name << endl;
+			}
 		}
-	}
 
-	// Minimize on this melt set.
+		// Minimize on this melt set.
 
-	double revised_Gf = minimize_trial_set_(X);
-	compute_current_melt_composition_(X, xm);
+		double revised_Gf = minimize_trial_set_(X);
+		compute_current_melt_composition_(X, xm);
 
-	for (unsigned p=0; p<NPL; p++)
-	{
-		if (is_fusible_[p])
+		for (unsigned p=0; p<NPL; p++)
 		{
-			XP[p] = 0.0;
+			if (is_fusible_[p])
+			{
+				XP[p] = 0.0;
+			}
 		}
-	}
-	for (unsigned p=0; p<NP_; ++p)
-	{
-		XP[ph_[p]] = X[p];
-	}
-	double mtot = 0.0;
-	for (unsigned i=0; i<E_END; ++i)
-	{
-		if (xm[i]<1.0e-9*cnorm)
+		for (unsigned p=0; p<NP_; ++p)
 		{
-			xm[i] = 0.0;
+			XP[ph_[p]] = X[p];
 		}
-		mtot += xm[i];
-	}	
-	if (mtot>0.0 && Gf - revised_Gf  > 1.0e-9*cnorm)
-	{
-		goto DO;
+		double mtot = 0.0;
+		for (unsigned i=0; i<E_END; ++i)
+		{
+			if (xm[i]<1.0e-9*cnorm)
+			{
+				xm[i] = 0.0;
+			}
+			mtot += xm[i];
+		}	
+		if (mtot>0.0 && Gf - revised_Gf  > 1.0e-9*cnorm)
+		{
+			goto DO;
+		}
+
+		// Done. Construct new parent phase for melt.
 	}
-
-	// Done. Construct new parent phase for melt.
-
+		
 	double V = 0.0;
 	for (unsigned i=0; i<M_END; ++i)
 	{
@@ -1089,10 +1094,10 @@ double Melt_Model::minimize_trial_set_(double p[P_END])
 			// Prune to enforce constraints
 			if (xi[i]>0.0)
 			{
-				if (p[i]<=0.0)
+				if (p[i]<=1.0e-9*cnorm)
 				{
 					// Prune melt of solid phase not present
-					xi[i] = 0.0; 
+					p[0] = xi[i] = 0.0; 
 					cout << phase_[ph_[i]].name << " constrained from melting" << endl;
 				}
 				else
@@ -1240,7 +1245,7 @@ double Melt_Model::Gfmelt(double const X[P_END], double p[M_END], double e) cons
 }
 
 //-----------------------------------------------------------------------------//
-double State::melt(struct Phase &new_phase) const
+Phase State::melt() const
 {
 	Melt_Model model(*this);
 
@@ -1250,11 +1255,8 @@ double State::melt(struct Phase &new_phase) const
 	double XP[P_END];
 	fill(XP, XP+P_END, 0.0);
 	
-	new_phase = model.minimize_Gf(XP);
+	return model.minimize_Gf(XP);
 
-    double Gff = model.Gf(XP);
-
-	return Gff; 
 }
 
 

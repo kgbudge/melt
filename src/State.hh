@@ -67,7 +67,7 @@ class State
 
     void update();
 
-    double melt(struct Phase &new_phase) const;
+    Phase melt() const;
 
   private:
 
