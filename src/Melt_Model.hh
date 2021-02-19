@@ -20,6 +20,8 @@
 
 #include <vector>
 
+#include "ds++/Assert.hh"
+
 #include "element.hh"
 #include "phase_enum.hh"
 #include "State.hh"
@@ -106,23 +108,39 @@ class Melt_Model
 	public:
 		explicit Melt_Model(State const &state) noexcept(false);
 
+        double T() const { return T_; }
+        double P() const { return P_; }
+        std::vector<Phase> const &phase() const { return phase_; }
+        std::vector<double> const &Gf() const { return Gf_; }
 		unsigned NP() const noexcept { return NP_; }
 		double Z(unsigned i) const { Require(i<E_END); return Z_[i]; }
 
 		double Gf(double const XP[P_END]) const;
 		 
-		double dGf(double XP[P_END], double Gf0, unsigned phase) const;
+		double dGf(double const XP[P_END], 
+ 				   double const xm[E_END],
+                   double Gf, 
+                   unsigned phase) const;
 
 		double Gfm(double const XM[E_END]) const;
 
-		double Gfmelt(double const X[P_END], double p[M_END], double e) const;
+		double Gfmelt(double const X[P_END],
+	                  unsigned NMP,
+	                  unsigned const cphase[P_END], 
+                      double p[M_END],
+                      double e) const;
 		
 		Phase minimize_Gf(double XP[P_END]);
 
 	private:
 
         void compute_current_melt_composition_(double const XP[], double xm[]) const;
-	    double minimize_trial_set_(double XP[P_END]);
+        void compute_current_solid_composition_(double const XP[], double xs[]) const;
+		void compute_melt_endmember_composition_(double const xm[E_END], double xend[M_END]) const;
+
+	    double minimize_trial_set_(unsigned NC,
+							       unsigned const cphase[P_END],
+								   double XP[P_END]);
 			 
         // Copied from parent State 
         double T_;
@@ -133,6 +151,7 @@ class Melt_Model
         // Fixed attributes of melt
 	    std::vector<bool> is_fusible_;  // Is this phase fusible?
 		double Z_[E_END]; // amount of each fusible element
+		double cnorm_; // total moles of atoms; used for normalization of various tests
 		double Gfr_; // non-meltable phases total free energy
 		double Gfm_[M_END]; // Melt end member free energies
 

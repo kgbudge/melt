@@ -93,9 +93,10 @@ void update()
 	double px = 0.0;
 	double const *const state_X = state.X();
 	int const *const state_ph = state.ph();
+	auto const &state_phase = state.phase();
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		if (state_X[i]>px && state_ph[i]>=P_END)
+		if (state_X[i]>px && state_phase[state_ph[i]].index==0)
 		{
 			pm = state_ph[i];
 			px = state_X[i];
@@ -172,6 +173,12 @@ void update()
 		text_nFe2O3->set_text(tostring(0.0));
 		text_nMnO->set_text(tostring(0.0));
 		text_nP2O5->set_text(tostring(0.0));
+		
+		text_nS->set_text(tostring(0.0));
+		text_nCr2O3->set_text(tostring(0.0));
+		text_nZrO2->set_text(tostring(0.0));
+		text_nCO2->set_text(tostring(0.0));
+		text_nCl->set_text(tostring(0.0));
 	}
 	else
 	{
@@ -203,7 +210,6 @@ void update()
 	// Convert to volume fraction
 
 	double const *const state_V = state.V();
-	auto const &state_phase = state.phase();
 	double V[E_END];
 	double Vtot = 0.0;
 	for (unsigned i=0; i<E_END; ++i)

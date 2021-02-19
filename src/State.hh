@@ -49,6 +49,13 @@ class State
           double P,
           double const x[E_END]);
 
+   // Construct a state congruent with a Melt_Model and with the given starting phases
+	State(std::string const &name,
+		  class Melt_Model const &,
+          unsigned NP,
+		  unsigned const cphase[],
+	      double const xphase[]);
+
 // Accessors
 
 	constexpr double T() const { return T_; }
@@ -57,6 +64,7 @@ class State
 	constexpr std::vector<double> const &Gf() const { return Gf_; }
 	constexpr int const *ph() const { return ph_; }
 	constexpr double const *X() const { return X_; }
+    constexpr bool const *is_element_active() const { return is_element_active_; }
 	constexpr double const *V() const { return V_; }
 
 // Services

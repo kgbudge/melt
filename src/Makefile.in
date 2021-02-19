@@ -111,11 +111,18 @@ am_melt_OBJECTS = main.$(OBJEXT) phase_table.$(OBJEXT) solid.$(OBJEXT) \
 	on_save_as.$(OBJEXT) on_activate.$(OBJEXT) \
 	on_activate_P.$(OBJEXT) on_activate_depth.$(OBJEXT) \
 	on_normalize.$(OBJEXT) update.$(OBJEXT) Model.$(OBJEXT) \
-	do_save.$(OBJEXT) update_state.$(OBJEXT) \
-	on_by_toggle.$(OBJEXT) get_molar_composition.$(OBJEXT) \
-	get_composition.$(OBJEXT) iugs_classify.$(OBJEXT) \
-	classify_components.$(OBJEXT) State.$(OBJEXT) D1.$(OBJEXT) \
-	Melt_Model.$(OBJEXT) Melt.$(OBJEXT)
+	do_save.$(OBJEXT) on_by_toggle.$(OBJEXT) \
+	get_molar_composition.$(OBJEXT) get_composition.$(OBJEXT) \
+	iugs_classify.$(OBJEXT) classify_components.$(OBJEXT) \
+	State.$(OBJEXT) D1.$(OBJEXT) Melt_Model.$(OBJEXT) \
+	Melt.$(OBJEXT) Melt_Model__dGf.$(OBJEXT) State__melt.$(OBJEXT) \
+	Melt_Model__minimize_Gf.$(OBJEXT) State__update.$(OBJEXT) \
+	Melt_Model__minimize_trial_set_.$(OBJEXT) \
+	Melt_Model__compute_current_melt_composition_.$(OBJEXT) \
+	Melt_Model__Gfmelt.$(OBJEXT) \
+	Melt_Model__compute_melt_endmember_composition_.$(OBJEXT) \
+	Melt_Model__Gfm.$(OBJEXT) \
+	Melt_Model__compute_current_solid_composition_.$(OBJEXT)
 melt_OBJECTS = $(am_melt_OBJECTS)
 am__DEPENDENCIES_1 =
 melt_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -143,7 +150,16 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/D1.Po ./$(DEPDIR)/D2.Po \
 	./$(DEPDIR)/Melt.Po ./$(DEPDIR)/Melt_Model.Po \
+	./$(DEPDIR)/Melt_Model__Gfm.Po \
+	./$(DEPDIR)/Melt_Model__Gfmelt.Po \
+	./$(DEPDIR)/Melt_Model__compute_current_melt_composition_.Po \
+	./$(DEPDIR)/Melt_Model__compute_current_solid_composition_.Po \
+	./$(DEPDIR)/Melt_Model__compute_melt_endmember_composition_.Po \
+	./$(DEPDIR)/Melt_Model__dGf.Po \
+	./$(DEPDIR)/Melt_Model__minimize_Gf.Po \
+	./$(DEPDIR)/Melt_Model__minimize_trial_set_.Po \
 	./$(DEPDIR)/Model.Po ./$(DEPDIR)/State.Po \
+	./$(DEPDIR)/State__melt.Po ./$(DEPDIR)/State__update.Po \
 	./$(DEPDIR)/bm_melt.Po ./$(DEPDIR)/bm_solid.Po \
 	./$(DEPDIR)/bragg_williams_solid.Po \
 	./$(DEPDIR)/classify_components.Po ./$(DEPDIR)/do_save.Po \
@@ -158,7 +174,7 @@ am__depfiles_remade = ./$(DEPDIR)/D1.Po ./$(DEPDIR)/D2.Po \
 	./$(DEPDIR)/on_save.Po ./$(DEPDIR)/on_save_as.Po \
 	./$(DEPDIR)/pfitzer_sterner.Po ./$(DEPDIR)/phase_table.Po \
 	./$(DEPDIR)/solid.Po ./$(DEPDIR)/update.Po \
-	./$(DEPDIR)/update_state.Po ./$(DEPDIR)/vapor.Po
+	./$(DEPDIR)/vapor.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -469,7 +485,6 @@ melt_SOURCES = \
 	Model.hh \
 	gui.hh \
 	do_save.cc \
-	update_state.cc \
 	on_by_toggle.cc \
 	get_molar_composition.cc \
 	get_composition.cc \
@@ -483,7 +498,17 @@ melt_SOURCES = \
 	Melt_Model.cc \
 	Melt_Model.hh \
 	Melt.hh \
-	Melt.cc
+	Melt.cc \
+	Melt_Model__dGf.cc \
+	State__melt.cc \
+	Melt_Model__minimize_Gf.cc \
+	State__update.cc \
+	Melt_Model__minimize_trial_set_.cc \
+	Melt_Model__compute_current_melt_composition_.cc \
+	Melt_Model__Gfmelt.cc \
+	Melt_Model__compute_melt_endmember_composition_.cc \
+	Melt_Model__Gfm.cc \
+	Melt_Model__compute_current_solid_composition_.cc
 
 melt_LDFLAGS = 
 melt_LDADD = $(MELT_LIBS) \
@@ -590,8 +615,18 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/D2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__Gfm.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__Gfmelt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__compute_current_melt_composition_.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__compute_current_solid_composition_.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__compute_melt_endmember_composition_.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__dGf.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__minimize_Gf.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__minimize_trial_set_.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Model.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/State.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/State__melt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/State__update.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bm_melt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bm_solid.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bragg_williams_solid.Po@am__quote@ # am--include-marker
@@ -618,7 +653,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/phase_table.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solid.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/update.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/update_state.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vapor.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
@@ -806,8 +840,18 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/D2.Po
 	-rm -f ./$(DEPDIR)/Melt.Po
 	-rm -f ./$(DEPDIR)/Melt_Model.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__Gfm.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__Gfmelt.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__compute_current_melt_composition_.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__compute_current_solid_composition_.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__compute_melt_endmember_composition_.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__dGf.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__minimize_Gf.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__minimize_trial_set_.Po
 	-rm -f ./$(DEPDIR)/Model.Po
 	-rm -f ./$(DEPDIR)/State.Po
+	-rm -f ./$(DEPDIR)/State__melt.Po
+	-rm -f ./$(DEPDIR)/State__update.Po
 	-rm -f ./$(DEPDIR)/bm_melt.Po
 	-rm -f ./$(DEPDIR)/bm_solid.Po
 	-rm -f ./$(DEPDIR)/bragg_williams_solid.Po
@@ -834,7 +878,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/phase_table.Po
 	-rm -f ./$(DEPDIR)/solid.Po
 	-rm -f ./$(DEPDIR)/update.Po
-	-rm -f ./$(DEPDIR)/update_state.Po
 	-rm -f ./$(DEPDIR)/vapor.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -885,8 +928,18 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/D2.Po
 	-rm -f ./$(DEPDIR)/Melt.Po
 	-rm -f ./$(DEPDIR)/Melt_Model.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__Gfm.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__Gfmelt.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__compute_current_melt_composition_.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__compute_current_solid_composition_.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__compute_melt_endmember_composition_.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__dGf.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__minimize_Gf.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__minimize_trial_set_.Po
 	-rm -f ./$(DEPDIR)/Model.Po
 	-rm -f ./$(DEPDIR)/State.Po
+	-rm -f ./$(DEPDIR)/State__melt.Po
+	-rm -f ./$(DEPDIR)/State__update.Po
 	-rm -f ./$(DEPDIR)/bm_melt.Po
 	-rm -f ./$(DEPDIR)/bm_solid.Po
 	-rm -f ./$(DEPDIR)/bragg_williams_solid.Po
@@ -913,7 +966,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/phase_table.Po
 	-rm -f ./$(DEPDIR)/solid.Po
 	-rm -f ./$(DEPDIR)/update.Po
-	-rm -f ./$(DEPDIR)/update_state.Po
 	-rm -f ./$(DEPDIR)/vapor.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic

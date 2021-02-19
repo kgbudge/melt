@@ -31,6 +31,7 @@
 
 #include "Assert.hh"
 
+#include "Melt_Model.hh"
 #include "Model.hh"
 #include "Phase.hh"
 #include "phase_enum.hh"
@@ -550,4 +551,56 @@ void State::compute_gf_()
 	}
 	phase_.shrink_to_fit();
 	Gf_.shrink_to_fit();
+}
+
+//-----------------------------------------------------------------------------//
+   // Construct a state congruent with a Melt_Model and with the given starting phases
+State::State(std::string const &name,
+             class Melt_Model const &melt,
+             unsigned NP,
+             unsigned const cphase[],
+             double const xphase[])
+
+: name_(name), T_(melt.T()), P_(melt.P()), phase_(melt.phase()), Gf_(melt.Gf())
+{
+	using namespace std;
+
+	fill(X_, X_+E_END, 0.0);
+
+	ph_[E_H] = P_H2;
+	ph_[E_C] = P_GRAPHITE;
+	ph_[E_NA] = P_Na;
+	ph_[E_MG] = P_Mg;
+	ph_[E_AL] = P_Al;
+	ph_[E_SI] = P_Si;
+	ph_[E_P] = P_P4;
+	ph_[E_S] = P_S;
+	ph_[E_CL] = P_Cl2;
+	ph_[E_K] = P_K;
+	ph_[E_CA] = P_Ca;
+	ph_[E_TI] = P_Ti;
+	ph_[E_CR] = P_Cr;
+	ph_[E_MN] = P_Mn;
+	ph_[E_FE] = P_Fe;
+	ph_[E_ZR] = P_Zr;
+	ph_[E_O] = P_O2;
+
+	bool used_[P_END];
+	fill(used_, used_+P_END, false);
+	for (unsigned i=0; i<NP; ++i)
+	{
+		Phase const &phase = phase_[cphase[i]];
+		unsigned const N = phase.nz;
+		for (unsigned j=0; j<N; ++j)
+		{
+			unsigned z = phase.z[j];
+			if (!used_[z])
+			{
+				ph_[z] = cphase[i];
+				X_[z] = xphase[i];
+				used_[z] = true;
+				break;
+			}
+		}
+	}
 }

@@ -68,7 +68,6 @@ melt_SOURCES = \
 	Model.hh \
 	gui.hh \
 	do_save.cc \
-	update_state.cc \
 	on_by_toggle.cc \
 	get_molar_composition.cc \
 	get_composition.cc \
@@ -82,7 +81,17 @@ melt_SOURCES = \
 	Melt_Model.cc \
 	Melt_Model.hh \
 	Melt.hh \
-	Melt.cc
+	Melt.cc \
+	Melt_Model__dGf.cc \
+	State__melt.cc \
+	Melt_Model__minimize_Gf.cc \
+	State__update.cc \
+	Melt_Model__minimize_trial_set_.cc \
+	Melt_Model__compute_current_melt_composition_.cc \
+	Melt_Model__Gfmelt.cc \
+	Melt_Model__compute_melt_endmember_composition_.cc \
+	Melt_Model__Gfm.cc \
+	Melt_Model__compute_current_solid_composition_.cc
 
 melt_LDFLAGS = 
 
