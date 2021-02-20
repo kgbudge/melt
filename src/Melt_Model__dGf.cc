@@ -73,18 +73,13 @@ double Melt_Model::dGf(double const cXP[P_END],
 			hh = 0;
 			Gfp = Gf0;
 		}
-		if (XP[p]>1.0e-9) // We can melt a significant quantity.
+		// We can always melt -- for purposes of calculating derivative, we "borrow" solid phase.
 		{
 			double old = XP[p];
-			double h = min(old, 0.01);
-			XP[p] -= h;
+			XP[p] -= 0.01;
 			Gfm = Gf(XP);
 			XP[p] = old;
-			hh += h;
-		}
-		else
-		{
-			Gfm = Gf0;
+			hh += 0.01;
 		}
 		if (hh != 0.0)
 		{
@@ -92,9 +87,8 @@ double Melt_Model::dGf(double const cXP[P_END],
 		}
 		else // Constrained to  neither melt nor crystallize. Change
 			// of the phase is turned off so search direction reflects the constraint.
-			// Really should not happen for fusible phase?
+			// This can happen when an element is fully pulled into a different phase.
 		{
-			Insist(false, "should not arrive here?");
 			return 0.0;
 		}
 	}

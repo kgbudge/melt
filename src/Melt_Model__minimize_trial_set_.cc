@@ -40,7 +40,6 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 	unsigned const NPL = phase_.size();
 
 	double fp = Gf(p);
-	double cnorm = accumulate(Z_, Z_+E_END, 0.0);
 	double pnorm = 0.0;
 	for (unsigned i=0; i<n; ++i)
 	{
@@ -48,10 +47,11 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		// Prune to enforce constraints
 		if (xi[i]>0.0)
 		{
-			if (p[i]<=0.0)
+			if (p[cphase[i]]<=1.0e-9*cnorm_)
 			{
 				// Prune melt of solid phase not present
 				xi[i] = 0.0; 
+				p[cphase[i]] = 0.0;
 			}
 			else
 			{
@@ -66,7 +66,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 			for (unsigned j=0; j<Z; ++j)
 			{
 				unsigned z = ph.z[j];
-				if (xm[z]<1.0e-9*cnorm)
+				if (xm[z]<1.0e-9*cnorm_)
 				{
 					xi[i] = 0.0;
 				}
@@ -88,7 +88,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 
 	for (;;)
 	{
-		if (pnorm < 2.0e-7*cnorm) // To make sure search direction is meaningful
+		if (pnorm < 2.0e-7*cnorm_) // To make sure search direction is meaningful
 			return fp;
 
 		// Compute freeze composition on pruned search direction. Clip upper
@@ -148,7 +148,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		cout << "Solid composition after line search:" << endl;
 		for (unsigned i=0; i<NPL; ++i)
 		{
-			if (p[i]>1.0e-9*cnorm)
+			if (p[i]>1.0e-9*cnorm_)
 			{
 				cout << "  " << phase_[i].name << " = " << p[i] << endl;
 			}
@@ -163,7 +163,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		}
 		cout << endl;
 
-		if (fabs(x2)*pnorm<3.0e-7*cnorm) 
+		if (fabs(x2)*pnorm<3.0e-7*cnorm_) 
 			return fp;
 
 		cout << "New pruned gradient calculation:" << endl;
@@ -176,7 +176,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 			// Prune to enforce constraints
 			if (xi[i]>0.0)
 			{
-				if (p[j]<=1.0e-9*cnorm)
+				if (p[j]<=1.0e-9*cnorm_)
 				{
 					// Prune melt of solid phase not present
 					p[j] = xi[i] = 0.0; 
@@ -195,7 +195,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 				for (unsigned k=0; k<Z; ++k)
 				{
 					unsigned z = ph.z[k];
-					if (xm[z]<1.0e-9*cnorm)
+					if (xm[z]<1.0e-9*cnorm_)
 					{
 						xi[i] = 0.0;
 				     	cout << ph.name << " constrained from crystallizing" << endl;

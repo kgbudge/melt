@@ -20,6 +20,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <set>
 
 #include "Model.hh"
@@ -38,162 +39,177 @@
 Phase Melt_Model::minimize_Gf(double XP[P_END])
 {
 	using namespace std;
-	
-	unsigned const NPL = phase_.size();  // Number of solid phases in phase library.
-	
+
 	double xm[E_END];  // Current estimate of melt composition
-	compute_current_melt_composition_(XP, xm);
-	unsigned NMP = 0;
-	unsigned cphase[E_END];
 
-DO:
-	// Calculate free energy of current estimate of sample state, and its
-	// gradient with every solid phase in library.
+	unsigned const NPL = phase_.size();  // Number of solid phases in phase library.
 
-	double Gf = this->Gf(XP);
-	cout << "Gf = " << fixed << setprecision(3) << Gf << endl;
-	double g[P_END];
-	bool has_crystallizing = false, has_melting = false;
-	unsigned NS = 0; // count of number of solid phases
-	for (unsigned i=0; i<NPL; ++i)
+	// Restart loop. This discards the search space and begins building up a
+	// new search space for the minimum of free energy.
+	for (;;)
 	{
-		g[i] = dGf(XP, xm, Gf, i);
-		if (g[i]<-1.0e-6*cnorm_)
+		unsigned cphase[E_END];
+		unsigned NMP = 0;
+		compute_current_melt_composition_(XP, xm);
+		
+		// Main loop. Here we build up a search space for the minimum of free energy.
+		for (;;)
 		{
-			has_crystallizing = true;
-		}
-		else if (g[i]>1.0e-6*cnorm_ && XP[i]>1.0e-9*cnorm_)
-		{
-			has_melting = true;
-		}
-		if (XP[i]>1.0e-9*cnorm_)
-		{
-			NS++;
-		}
-		else
-		{
-			XP[i] = 0; // Prune trace phase
-		}
-	}
+			// Calculate free energy of current estimate of sample state, and its
+			// gradient with every solid phase in library.
 
-	// If nothing can change, we must be done.
-
-	if (has_crystallizing || has_melting)
-	{
-		if (has_melting)
-		{
-			// There are spontaneously melting phases. Do them first.
-			Insist(false, "construction");
-		}
-		else
-		{
-			// Update solid phases
-			double xs[E_END];
-			compute_current_solid_composition_(XP, xs);
-			set<unsigned> in_solid;
-			{
-				State solid_state("s", T_, P_, xs);
-				solid_state.do_ladder_update();
-				auto const &solid_state_ph = solid_state.ph();
-				auto const &solid_state_X = solid_state.X();
-				auto const &solid_state_phase = solid_state.phase();
-				for (unsigned i=0; i<E_END; ++i)
-				{
-					if (solid_state_X[i]>0.0)
-					{
-						in_solid.insert(solid_state_phase[solid_state_ph[i]].index);
-					}
-				}
-			}
-
-			// Prune anything from the old list that is exhausted.
-			cout << "Crystallization phases:" << endl;
-			unsigned n = 0;
-			set<unsigned> cset;
-			for (unsigned i=0; i<NMP; ++i)
-			{
-				Phase const &phase = phase_[cphase[i]];
-				unsigned const N = phase.nz;
-				bool keep = true;
-				for (unsigned j=0; j<N; ++j)
-				{
-					if (xm[phase.z[j]]<1.0e-9*cnorm_)
-					{
-						keep = false;
-						break;
-					}
-				}
-				if (keep)
-				{
-					cout << "  " << phase_[cphase[i]].name << " g = " << g[i] << endl;
-					cset.insert(cphase[i]);
-					cphase[n++] = cphase[i];	
-				}
-			}
-			NMP = n;
-
-			// We have possible crystallizing phases. For each such phase,
-			// see if the phase requires any element not in the mix. If so,
-			// we will try to construct an incongruent reaction to produce it
-			// and see if that is spontaneous.
-			
+			double Gf = this->Gf(XP);
+			cout << "Gf = " << fixed << setprecision(3) << Gf << endl;
+			double g[P_END];
+			bool has_crystallizing = false, has_melting = false;
+			unsigned NS = 0; // count of number of solid phases
 			for (unsigned i=0; i<NPL; ++i)
 			{
-				if (cset.count(i) == 0 && g[i]<0.0) 
+				g[i] = dGf(XP, xm, Gf, i);
+				if (g[i]<-1.0e-6*cnorm_)
 				{
-					Phase const &ph = phase_[i];
-					unsigned n = ph.nz; 
-					bool direct = true;
-					for (unsigned j=0; j<n; ++j)
-					{
-						unsigned z = ph.z[j]; 
-						if (xm[z]<1.0e-9*cnorm_)
-						{
-							direct = false;
-							break;
-						}
-					}
-					if (direct)
-					{
-						if (NS==0)
-						{
-							// Check for polymorph
-							unsigned const cp[1] = {i};
-							double const xp[1] = {1.0};
-							State state("p",  *this, 1, cp, xp);
-							state.do_ladder_update();
-							bool found = false;
-							auto const &state_ph = state.ph();
-							auto const &state_x = state.X();
-							for (unsigned j=0; j<E_END; j++)
-							{
-								if (state_ph[j]==i)
-								{
-									found = state_x[j]>0.0; 
-									break;
-								}
-							}
-						    if (found)
-							{
-								cout << "  " << phase_[i].name << " g = " << g[i] << endl;
-					            cphase[NMP++] = i;
-							}
-						}
-						else
-						{
-							Insist(false, "construction");
-						}
-					}
-					else
-					{
-						// Can only crystallize incongruously
-//						Insist(false, "construction");
-					}
+					has_crystallizing = true;
+				}
+				else if (g[i]>1.0e-6*cnorm_ && XP[i]>1.0e-9*cnorm_)
+				{
+					has_melting = true;
+				}
+				if (XP[i]>1.0e-9*cnorm_)
+				{
+					NS++;
+				}
+				else
+				{
+					XP[i] = 0; // Prune trace phase
 				}
 			}
 
-			if (NMP>0)
+			// If nothing can change, we must be done.
+
+			if (has_crystallizing || has_melting)
 			{
+				if (has_melting)
+				{
+					// There are spontaneously melting phases. Do them first.
+					NMP = 0;
+					cout << "Melting phases:" << endl;
+					for (unsigned i=0; i<NPL; ++i)
+					{
+						if (g[i]>1.0e-6*cnorm_ && XP[i]>1.0e-9*cnorm_) 
+						{
+							cphase[NMP++] = i;	
+							cout << "  " << phase_[i].name << " g = " << g[i] << endl;
+						}
+					}
+				}
+				else
+				{
+					// Update solid phases
+					double xs[E_END];
+					compute_current_solid_composition_(XP, xs);
+					set<unsigned> in_solid;
+					{
+						State solid_state("s", T_, P_, xs);
+						solid_state.do_ladder_update();
+						auto const &solid_state_ph = solid_state.ph();
+						auto const &solid_state_X = solid_state.X();
+						auto const &solid_state_phase = solid_state.phase();
+						for (unsigned i=0; i<E_END; ++i)
+						{
+							if (solid_state_X[i]>0.0)
+							{
+								in_solid.insert(solid_state_phase[solid_state_ph[i]].index);
+							}
+						}
+					}
+
+					// Prune anything from the old list that is exhausted.
+					cout << "Crystallization phases:" << endl;
+					unsigned n = 0;
+					set<unsigned> cset;
+					for (unsigned i=0; i<NMP; ++i)
+					{
+						Phase const &phase = phase_[cphase[i]];
+						unsigned const N = phase.nz;
+						bool keep = true;
+						for (unsigned j=0; j<N; ++j)
+						{
+							if (xm[phase.z[j]]<1.0e-9*cnorm_)
+							{
+								keep = false;
+								break;
+							}
+						}
+						if (keep)
+						{
+							cout << "  " << phase_[cphase[i]].name << " g = " << g[cphase[i]] << endl;
+							cset.insert(cphase[i]);
+							cphase[n++] = cphase[i];	
+						}
+					}
+					NMP = n;
+
+
+					// We have possible crystallizing phases. For each such phase,
+					// see if the phase requires any element not in the mix. If so,
+					// we will try to construct an incongruent reaction to produce it
+					// and see if that is spontaneous.
+
+					double merit = 0.0;
+					for (unsigned i=0; i<NPL; ++i)
+					{
+						if (cset.count(i) == 0 && g[i]<0.0) 
+						{
+							Phase const &ph = phase_[i];
+							unsigned N = ph.nz; 
+							double xsn[E_END];
+							copy(xs, xs+E_END, xsn);
+							double x1 = std::numeric_limits<double>::max();
+							for (unsigned j=0; j<N; ++j)
+							{
+								unsigned z = ph.z[j]; 
+								x1 = min(x1, xm[z]/ph.n[j]);
+								xsn[z] += ph.n[j]*0.001*cnorm_;
+							}
+							if (x1>1.0e-9*cnorm_)
+							{
+								State state("t",  T_, P_, xsn);
+								state.do_ladder_update();
+								bool found = false;
+								auto const &state_ph = state.ph();
+								auto const &state_phase = state.phase();
+								auto const &state_x = state.X();
+								for (unsigned j=0; j<E_END; j++)
+								{
+									if (state_phase[state_ph[j]].index==phase_[i].index)
+									{
+										found = state_x[j]>0.0; 
+										break;
+									}
+								}
+								if (found)
+								{
+									double mm = -g[i]*x1;
+									cout << "  " << phase_[i].name << " g = " << mm << endl;
+									if  (mm>merit)
+									{
+										merit =  mm;
+										cphase[NMP] = i;
+									}
+								}
+							}
+							else
+							{
+								// Can only crystallize incongruously
+								//						Insist(false, "construction");
+							}
+						}
+					}
+					NMP++;
+				}
+
+				// Add a single phase that is our best guess of the next melt element
+
 				// Minimize on this melt set.
 
 				double revised_Gf = minimize_trial_set_(NMP, cphase, XP);
@@ -208,11 +224,10 @@ DO:
 					}
 					mtot += xm[i];
 				}	
-				if (mtot>0.0 && Gf - revised_Gf  > 1.0e-9*cnorm_)
+				if (mtot<=0.0 || Gf - revised_Gf  < 1.0e-9*cnorm_)
 				{
-					goto DO;
+					break;
 				}
-				// Else done. Construct new parent phase for melt.
 			}
 		}
 	}

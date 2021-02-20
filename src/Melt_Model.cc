@@ -240,41 +240,6 @@
 	 }
  }
 
-//-----------------------------------------------------------------------------//
-double Melt_Model::Gf(double const XP[P_END]) const
-{
-	using namespace std;
-	
-	unsigned const NM = NP_;
-
-	double xm[E_END];
-	for (unsigned i=0; i<E_END; ++i)
-	{
-		xm[i] = Z_[i];
-	}
-	// Modify for amount of each fusible phase crystallized out
-	double Result = Gfr_;
-	for (unsigned i=0; i<NM; ++i)
-	{
-		double const x = XP[i];
-		if (x>0.0)
-		{
-			Phase const &phase = phase_[i];  
-			unsigned const N = phase.nz;
-			for (unsigned j=0; j<N; ++j)
-			{
-				unsigned z = phase.z[j];
-				xm[z] -= x*phase.n[j];
-				xm[z] = max(0.0, xm[z]);
-			}
-			Result += x*Gf_[i];
-		}
-	}
-    Result += this->Gfm(xm);
-
-	return Result;
-}
-
 char const * const endmember_element_name[] =
 {
 		"H",
