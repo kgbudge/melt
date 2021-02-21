@@ -45,7 +45,6 @@ double Melt_Model::dGf(double const cXP[P_END],
 	
 	if (is_fusible_[p])
 	{
-		unsigned const NM = NP_;
 		double *const XP = const_cast<double *>(cXP);
 		// We change the value only temporarily. Will be exactly restored on return.
 

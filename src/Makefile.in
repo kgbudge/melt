@@ -123,7 +123,9 @@ am_melt_OBJECTS = main.$(OBJEXT) phase_table.$(OBJEXT) solid.$(OBJEXT) \
 	Melt_Model__compute_melt_endmember_composition_.$(OBJEXT) \
 	Melt_Model__Gfm.$(OBJEXT) \
 	Melt_Model__compute_current_solid_composition_.$(OBJEXT) \
-	Melt_Model__Gf.$(OBJEXT)
+	Melt_Model__Gf.$(OBJEXT) \
+	Melt_Model__update_current_state.$(OBJEXT) \
+	Melt_Model__update_solid_state_.$(OBJEXT)
 melt_OBJECTS = $(am_melt_OBJECTS)
 am__DEPENDENCIES_1 =
 melt_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -159,6 +161,8 @@ am__depfiles_remade = ./$(DEPDIR)/D1.Po ./$(DEPDIR)/D2.Po \
 	./$(DEPDIR)/Melt_Model__dGf.Po \
 	./$(DEPDIR)/Melt_Model__minimize_Gf.Po \
 	./$(DEPDIR)/Melt_Model__minimize_trial_set_.Po \
+	./$(DEPDIR)/Melt_Model__update_current_state.Po \
+	./$(DEPDIR)/Melt_Model__update_solid_state_.Po \
 	./$(DEPDIR)/Model.Po ./$(DEPDIR)/State.Po \
 	./$(DEPDIR)/State__melt.Po ./$(DEPDIR)/State__update.Po \
 	./$(DEPDIR)/bm_melt.Po ./$(DEPDIR)/bm_solid.Po \
@@ -510,7 +514,9 @@ melt_SOURCES = \
 	Melt_Model__compute_melt_endmember_composition_.cc \
 	Melt_Model__Gfm.cc \
 	Melt_Model__compute_current_solid_composition_.cc \
-	Melt_Model__Gf.cc
+	Melt_Model__Gf.cc \
+	Melt_Model__update_current_state.cc \
+	Melt_Model__update_solid_state_.cc
 
 melt_LDFLAGS = 
 melt_LDADD = $(MELT_LIBS) \
@@ -626,6 +632,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__dGf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__minimize_Gf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__minimize_trial_set_.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__update_current_state.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Melt_Model__update_solid_state_.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Model.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/State.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/State__melt.Po@am__quote@ # am--include-marker
@@ -852,6 +860,8 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/Melt_Model__dGf.Po
 	-rm -f ./$(DEPDIR)/Melt_Model__minimize_Gf.Po
 	-rm -f ./$(DEPDIR)/Melt_Model__minimize_trial_set_.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__update_current_state.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__update_solid_state_.Po
 	-rm -f ./$(DEPDIR)/Model.Po
 	-rm -f ./$(DEPDIR)/State.Po
 	-rm -f ./$(DEPDIR)/State__melt.Po
@@ -941,6 +951,8 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/Melt_Model__dGf.Po
 	-rm -f ./$(DEPDIR)/Melt_Model__minimize_Gf.Po
 	-rm -f ./$(DEPDIR)/Melt_Model__minimize_trial_set_.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__update_current_state.Po
+	-rm -f ./$(DEPDIR)/Melt_Model__update_solid_state_.Po
 	-rm -f ./$(DEPDIR)/Model.Po
 	-rm -f ./$(DEPDIR)/State.Po
 	-rm -f ./$(DEPDIR)/State__melt.Po

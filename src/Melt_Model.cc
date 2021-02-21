@@ -35,6 +35,9 @@
  is_fusible_(state.Gf().size())
 {
 	 using namespace std;
+
+	 NP_ = phase_.size();
+	 Require(Gf_.size()==NP_);
 	 
 	// Compute the fully melted composition (excluding phases for which we
 	// do not have a liquid counterpart). Determine free energy contribution
@@ -237,6 +240,13 @@
 	 {
 		 Phase const &ph = ::phase[melt_endmember[i]];
 		 Gfm_[i] = ph.model->Gf(ph, T_, P_);
+	 }
+
+	 // Construct imap
+	 fill(imap_, imap_+P_END, P_END);
+	 for (unsigned i=0; i<NP_; ++i)
+	 {
+		 imap_[phase_[i].index] = i;
 	 }
  }
 

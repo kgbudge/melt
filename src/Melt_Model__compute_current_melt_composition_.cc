@@ -42,11 +42,11 @@
 #include "Melt_Model.hh"
 
 //-----------------------------------------------------------------------------//
-void Melt_Model::compute_current_melt_composition_(double const XP[], double xm[]) const
+void Melt_Model::compute_current_melt_composition_(double const XP[])
 {
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		xm[i] = Z_[i];
+		xm_[i] = Z_[i];
 	}
 	for (unsigned i=0; i<NP_; ++i)
 	{
@@ -58,7 +58,7 @@ void Melt_Model::compute_current_melt_composition_(double const XP[], double xm[
 			for (unsigned j=0; j<N; ++j)
 			{
 				unsigned z = phase.z[j];
-				xm[z] -= x*phase.n[j];
+				xm_[z] -= x*phase.n[j];
 			}
 		}
 	}

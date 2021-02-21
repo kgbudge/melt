@@ -112,7 +112,7 @@ class Melt_Model
         double P() const { return P_; }
         std::vector<Phase> const &phase() const { return phase_; }
         std::vector<double> const &Gf() const { return Gf_; }
-		unsigned NP() const noexcept { return NP_; }
+//		unsigned NP() const noexcept { return NP_; }
 		double Z(unsigned i) const { Require(i<E_END); return Z_[i]; }
 
 		double Gf(double const XP[P_END]) const;
@@ -134,19 +134,24 @@ class Melt_Model
 
 	private:
 
-        void compute_current_melt_composition_(double const XP[], double xm[]) const;
+        void compute_current_melt_composition_(double const XP[]);
         void compute_current_solid_composition_(double const XP[], double xs[]) const;
 		void compute_melt_endmember_composition_(double const xm[E_END], double xend[M_END]) const;
 
 	    double minimize_trial_set_(unsigned NC,
 							       unsigned const cphase[P_END],
 								   double XP[P_END]);
+
+        void update_current_state_(double XP[P_END]);
+        void update_solid_state_(double XP[P_END]);
 			 
         // Copied from parent State 
         double T_;
 	    double P_;
+		unsigned NP_;              // Number of phases from which state is constructed
 	    std::vector<Phase> phase_; // Phases from which state is constructed
 	    std::vector<double> Gf_;   // Free energy of each phase
+		unsigned imap_[P_END]; // Map of global phase index to phase_
 
         // Fixed attributes of melt
 	    std::vector<bool> is_fusible_;  // Is this phase fusible?
@@ -155,10 +160,7 @@ class Melt_Model
 		double Gfr_; // non-meltable phases total free energy
 		double Gfm_[M_END]; // Melt end member free energies
 
-        // Current minimization set. Must include all fusible solid phases in
-        // the trial state plus the trial set of crystallizing phases.
-		unsigned NP_; // number of active phases
-		unsigned ph_[P_END]; // indices of active phases
+		double xm_[E_END]; // Current melt composition
 };
 
 #endif // melt_hh

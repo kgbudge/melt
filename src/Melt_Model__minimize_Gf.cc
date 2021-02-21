@@ -40,17 +40,13 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 {
 	using namespace std;
 
-	double xm[E_END];  // Current estimate of melt composition
-
-	unsigned const NPL = phase_.size();  // Number of solid phases in phase library.
-
 	// Restart loop. This discards the search space and begins building up a
 	// new search space for the minimum of free energy.
 	for (;;)
 	{
 		unsigned cphase[E_END];
 		unsigned NMP = 0;
-		compute_current_melt_composition_(XP, xm);
+		update_current_state_(XP);
 		
 		// Main loop. Here we build up a search space for the minimum of free energy.
 		for (;;)
@@ -58,42 +54,59 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			// Calculate free energy of current estimate of sample state, and its
 			// gradient with every solid phase in library.
 
+			double Gfm = this->Gfm(xm_);
 			double Gf = this->Gf(XP);
 			cout << "Gf = " << fixed << setprecision(3) << Gf << endl;
 			double g[P_END];
-			bool has_crystallizing = false, has_melting = false;
+			bool has_congruent = false;
+			bool has_incongruent = false;
+			bool has_melting = false;
 			unsigned NS = 0; // count of number of solid phases
-			for (unsigned i=0; i<NPL; ++i)
+			for (unsigned i=0; i<NP_; ++i)
 			{
-				g[i] = dGf(XP, xm, Gf, i);
+				g[i] = dGf(XP, xm_, Gf, i);
 				if (g[i]<-1.0e-6*cnorm_)
 				{
-					has_crystallizing = true;
+					bool congr = true;
+					Phase const &phase = phase_[i];
+					unsigned const N = phase.nz;
+					for (unsigned j=0; j<N; ++j)
+					{
+						if (xm_[phase.z[j]]<1.0e-6*cnorm_)
+						{
+							congr = false;
+							break;
+						}						
+					}
+					if (congr)
+					{
+						has_congruent = true;
+					}
+					else
+					{
+						has_incongruent = true;
+					}
 				}
 				else if (g[i]>1.0e-6*cnorm_ && XP[i]>1.0e-9*cnorm_)
 				{
 					has_melting = true;
 				}
-				if (XP[i]>1.0e-9*cnorm_)
+				if (XP[i]>0.0)
 				{
 					NS++;
-				}
-				else
-				{
-					XP[i] = 0; // Prune trace phase
 				}
 			}
 
 			// If nothing can change, we must be done.
 
-			if (has_crystallizing || has_melting)
+			if (has_congruent || has_incongruent || has_melting)
 			{
 				if (has_melting)
 				{
 					// There are spontaneously melting phases. Do them first.
 					NMP = 0;
 					cout << "Melting phases:" << endl;
-					for (unsigned i=0; i<NPL; ++i)
+					for (unsigned i=0; i<NP_; ++i)
 					{
 						if (g[i]>1.0e-6*cnorm_ && XP[i]>1.0e-9*cnorm_) 
 						{
@@ -102,53 +115,18 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 						}
 					}
 				}
-				else
+				else if (has_congruent)
 				{
-					// Update solid phases
 					double xs[E_END];
 					compute_current_solid_composition_(XP, xs);
-					set<unsigned> in_solid;
-					{
-						State solid_state("s", T_, P_, xs);
-						solid_state.do_ladder_update();
-						auto const &solid_state_ph = solid_state.ph();
-						auto const &solid_state_X = solid_state.X();
-						auto const &solid_state_phase = solid_state.phase();
-						for (unsigned i=0; i<E_END; ++i)
-						{
-							if (solid_state_X[i]>0.0)
-							{
-								in_solid.insert(solid_state_phase[solid_state_ph[i]].index);
-							}
-						}
-					}
-
-					// Prune anything from the old list that is exhausted.
+					
 					cout << "Crystallization phases:" << endl;
-					unsigned n = 0;
 					set<unsigned> cset;
 					for (unsigned i=0; i<NMP; ++i)
 					{
-						Phase const &phase = phase_[cphase[i]];
-						unsigned const N = phase.nz;
-						bool keep = true;
-						for (unsigned j=0; j<N; ++j)
-						{
-							if (xm[phase.z[j]]<1.0e-9*cnorm_)
-							{
-								keep = false;
-								break;
-							}
-						}
-						if (keep)
-						{
-							cout << "  " << phase_[cphase[i]].name << " g = " << g[cphase[i]] << endl;
-							cset.insert(cphase[i]);
-							cphase[n++] = cphase[i];	
-						}
+						cout << "  " << phase_[cphase[i]].name << " g = " << g[cphase[i]] << endl;
+						cset.insert(cphase[i]);
 					}
-					NMP = n;
-
 
 					// We have possible crystallizing phases. For each such phase,
 					// see if the phase requires any element not in the mix. If so,
@@ -156,7 +134,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 					// and see if that is spontaneous.
 
 					double merit = 0.0;
-					for (unsigned i=0; i<NPL; ++i)
+					for (unsigned i=0; i<NP_; ++i)
 					{
 						if (cset.count(i) == 0 && g[i]<0.0) 
 						{
@@ -168,7 +146,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 							for (unsigned j=0; j<N; ++j)
 							{
 								unsigned z = ph.z[j]; 
-								x1 = min(x1, xm[z]/ph.n[j]);
+								x1 = min(x1, xm_[z]/ph.n[j]);
 								xsn[z] += ph.n[j]*0.001*cnorm_;
 							}
 							if (x1>1.0e-9*cnorm_)
@@ -207,22 +185,27 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 					}
 					NMP++;
 				}
+				else
+				{
+					Check(has_incongruent);
+					Insist(false, "construction");
+				}
 
 				// Add a single phase that is our best guess of the next melt element
 
 				// Minimize on this melt set.
 
 				double revised_Gf = minimize_trial_set_(NMP, cphase, XP);
-				compute_current_melt_composition_(XP, xm);
+				update_current_state_(XP);
 
 				double mtot = 0.0;
 				for (unsigned i=0; i<E_END; ++i)
 				{
-					if (xm[i]<1.0e-9*cnorm_)
+					if (xm_[i]<1.0e-9*cnorm_)
 					{
-						xm[i] = 0.0;
+						xm_[i] = 0.0;
 					}
-					mtot += xm[i];
+					mtot += xm_[i];
 				}	
 				if (mtot<=0.0 || Gf - revised_Gf  < 1.0e-9*cnorm_)
 				{
@@ -234,7 +217,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 		
 	double V = 0.0;
 	double xend[M_END];
-	compute_melt_endmember_composition_(xm, xend);
+	compute_melt_endmember_composition_(xm_, xend);
 	for (unsigned i=0; i<M_END; ++i)
 	{
 		double xi = xend[i];
@@ -252,17 +235,17 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 	Result.V = V;
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		if (xm[i]>1e-9)
+		if (xm_[i]>1e-9)
 		{
 			Result.z[Result.nz] = i;
-			Result.n[Result.nz] = xm[i];
+			Result.n[Result.nz] = xm_[i];
 			Result.nz++;
 		}
 	}
 	// If Result.nz is zero, this flags to client that there is no melt.
 
 	Result.S0 = 0.0;
-	Result.Hf0 = Gfm(xm);
+	Result.Hf0 = Gfm(xm_);
 	Result.model = MELT;
 
 	return Result;
