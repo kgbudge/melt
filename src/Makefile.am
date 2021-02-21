@@ -94,7 +94,9 @@ melt_SOURCES = \
 	Melt_Model__compute_current_solid_composition_.cc \
 	Melt_Model__Gf.cc \
 	Melt_Model__update_current_state.cc \
-	Melt_Model__update_solid_state_.cc
+	Melt_Model__update_solid_state_.cc \
+	Melt_Model__construct_reaction_.cc \
+	Melt_Model__dGfm.cc
 
 melt_LDFLAGS = 
 

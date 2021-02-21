@@ -121,6 +121,11 @@ class Melt_Model
  				   double const xm[E_END],
                    double Gf, 
                    unsigned phase) const;
+		 
+		double dGfm(double const XP[P_END], 
+ 				    double const xm[E_END],
+                    double Gf, 
+                    unsigned phase) const;
 
 		double Gfm(double const XM[E_END]) const;
 
@@ -134,9 +139,27 @@ class Melt_Model
 
 	private:
 
+		struct Reaction
+        {
+          unsigned i; // extracted phase
+          double dGf0; // initial rate of change of free energy of reaction
+          double dGfs; // rate of change of free energy of solid phase with reaction
+
+          unsigned nz;  // Number of phases in reaction
+          unsigned p[E_END]; // Phases in reaction
+          unsigned n[E_END]; // Phase amount in reaction (negative == reagent)
+        };
+
         void compute_current_melt_composition_(double const XP[]);
-        void compute_current_solid_composition_(double const XP[], double xs[]) const;
+        void compute_current_solid_composition_(double const XP[]);
 		void compute_melt_endmember_composition_(double const xm[E_END], double xend[M_END]) const;
+
+	    Reaction construct_reaction_(double const XP[],
+								     double const xm_[],
+								     double const xs_[], 
+									 double Gf, 
+                                     double Gfm, 
+									 unsigned i) const;
 
 	    double minimize_trial_set_(unsigned NC,
 							       unsigned const cphase[P_END],
@@ -161,6 +184,7 @@ class Melt_Model
 		double Gfm_[M_END]; // Melt end member free energies
 
 		double xm_[E_END]; // Current melt composition
+		double xs_[E_END]; // Current solid composition
 };
 
 #endif // melt_hh

@@ -19,12 +19,11 @@
 #include "Melt_Model.hh"
 
 //-----------------------------------------------------------------------------//
-void Melt_Model::compute_current_solid_composition_(double const XP[], double xs[]) const
+void Melt_Model::compute_current_solid_composition_(double const XP[])
 {
-	for (unsigned i=0; i<E_END; ++i)
-	{
-		xs[i] = 0.0;
-	}
+	using namespace std;
+	
+	fill(xs_, xs_+E_END, 0.0);
 	for (unsigned i=0; i<NP_; ++i)
 	{
 		double const x = XP[i];
@@ -35,7 +34,7 @@ void Melt_Model::compute_current_solid_composition_(double const XP[], double xs
 			for (unsigned j=0; j<N; ++j)
 			{
 				unsigned z = phase.z[j];
-				xs[z] += x*phase.n[j];
+				xs_[z] += x*phase.n[j];
 			}
 		}
 	}

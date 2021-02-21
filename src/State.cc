@@ -375,7 +375,7 @@ State::do_ladder_update()
 			// phase with a new lower energy phase -- though both show zero
 			// moles in the sample. This allows us to work our way down to
 			// a real reaction that minimizes energy.
-//			cout << "Performing reaction ";
+			cout << "Performing reaction ";
 			found = true;
 			bool first = true;
 			for (unsigned i=0; i<E_END; ++i)
@@ -384,32 +384,31 @@ State::do_ladder_update()
 				{
 					if (!first) 
 					{
-//						cout << " + ";
+						cout << " + ";
 					}
 					first = false;
 					if (fabs(left[i]-1.0)>1.0e-10)
 					{
-//						cout << setprecision(4) << left[i];
+						cout << setprecision(4) << left[i];
 					}
-//					cout << phase_[ph_[i]].name;
+					cout << phase_[ph_[i]].name;
 				}
 			}
-//			cout << " -> " << phase_[ip].name;
+			cout << " -> " << phase_[ip].name;
 			
 			for (unsigned i=0; i<E_END; ++i)
 			{
 				if (left[i]<-1.0e-10)
 				{
-//					cout << " + ";
+					cout << " + ";
 					first = false;
 					if (fabs(left[i]+1.0)>1.0e-10)
 					{
-//						cout << setprecision(4) << -left[i];
+						cout << setprecision(4) << -left[i];
 					}
-//					cout << phase_[ph_[i]].name;
+					cout << phase_[ph_[i]].name;
 				}
-			}
-//			cout << endl;
+			}			cout << endl;
 
 			// Now carry out the reaction, noting which reagents are exhausted.
 
@@ -422,7 +421,7 @@ State::do_ladder_update()
 				{
 					if (left[i]>1.0e-9)
 					{
-//						cout << "Reaction depletes " << phase_[ph_[i]].name << endl;
+						cout << "Reaction depletes " << phase_[ph_[i]].name << endl;
 						pd[n++] = i;
 					}
 					X_[i] = 0.0;
@@ -439,7 +438,7 @@ State::do_ladder_update()
 			{
 				// we've exhausted two or more phases simultaneously. Split the state.
 				vector<State> states(n, *this);
-				double Gfn = 0.0;
+				double Gfn = r*Gf_[ip];
 				for (unsigned i=0; i<E_END; ++i)
 				{
 					Gfn += X_[i]*Gf_[ph_[i]];

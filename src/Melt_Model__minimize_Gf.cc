@@ -56,53 +56,35 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 
 			double Gfm = this->Gfm(xm_);
 			double Gf = this->Gf(XP);
+			cout << "Gfm = " << fixed << setprecision(3) << Gfm << endl;
 			cout << "Gf = " << fixed << setprecision(3) << Gf << endl;
 			double g[P_END];
-			bool has_congruent = false;
-			bool has_incongruent = false;
-			bool has_melting = false;
-			unsigned NS = 0; // count of number of solid phases
 			for (unsigned i=0; i<NP_; ++i)
 			{
-				g[i] = dGf(XP, xm_, Gf, i);
-				if (g[i]<-1.0e-6*cnorm_)
+				if (is_fusible_[i])
 				{
-					bool congr = true;
-					Phase const &phase = phase_[i];
-					unsigned const N = phase.nz;
-					for (unsigned j=0; j<N; ++j)
+					Reaction r = construct_reaction_(XP, xm_, xs_, Gf, Gfm, i);
+					if (g[i]<-1.0e-6*cnorm_)
 					{
-						if (xm_[phase.z[j]]<1.0e-6*cnorm_)
+						bool congr = true;
+						Phase const &phase = phase_[i];
+						unsigned const N = phase.nz;
+						for (unsigned j=0; j<N; ++j)
 						{
-							congr = false;
-							break;
-						}						
+							if (xm_[phase.z[j]]<1.0e-6*cnorm_)
+							{
+								congr = false;
+								break;
+							}						
+						}
 					}
-					if (congr)
-					{
-						has_congruent = true;
-					}
-					else
-					{
-						has_incongruent = true;
-					}
-				}
-				else if (g[i]>1.0e-6*cnorm_ && XP[i]>1.0e-9*cnorm_)
-				{
-					has_melting = true;
-				}
-				if (XP[i]>0.0)
-				{
-					NS++;
 				}
 			}
 
 			// If nothing can change, we must be done.
 
-			if (has_congruent || has_incongruent || has_melting)
+			if (NMP == 0)
 			{
-				if (has_melting)
-				{
 					// There are spontaneously melting phases. Do them first.
 					NMP = 0;
 					cout << "Melting phases:" << endl;
@@ -114,11 +96,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 							cout << "  " << phase_[i].name << " g = " << g[i] << endl;
 						}
 					}
-				}
-				else if (has_congruent)
-				{
-					double xs[E_END];
-					compute_current_solid_composition_(XP, xs);
+					compute_current_solid_composition_(XP);
 					
 					cout << "Crystallization phases:" << endl;
 					set<unsigned> cset;
@@ -141,7 +119,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 							Phase const &ph = phase_[i];
 							unsigned N = ph.nz; 
 							double xsn[E_END];
-							copy(xs, xs+E_END, xsn);
+							copy(xs_, xs_+E_END, xsn);
 							double x1 = std::numeric_limits<double>::max();
 							for (unsigned j=0; j<N; ++j)
 							{
@@ -184,12 +162,6 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 						}
 					}
 					NMP++;
-				}
-				else
-				{
-					Check(has_incongruent);
-					Insist(false, "construction");
-				}
 
 				// Add a single phase that is our best guess of the next melt element
 
