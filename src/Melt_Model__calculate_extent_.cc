@@ -20,20 +20,15 @@
 
 #include <limits>
 
-/*
-#include "Model.hh"
-
-#include <cmath>
-#include <iomanip>
-#include <iostream>*/
-
 //-----------------------------------------------------------------------------//
 /*! Calculate how far a reaction can proceed.
  *
  * \param reaction Reaction whose extent should be calculated.
  * \param XP Current solid phase composition
  */ 
-double Melt_Model::calculate_extent_(Reaction const &reaction, double const XP[]) const
+double Melt_Model::calculate_extent_(Reaction const &reaction, 
+                                     double const XP[],
+                                     double const xm[]) const
 {
 	 using namespace std;
 
@@ -47,14 +42,14 @@ double Melt_Model::calculate_extent_(Reaction const &reaction, double const XP[]
 		{
 			if (reaction.n[i]<0.0)
 			{
-				Result = min(Result, -reaction.n[i]/XP[reaction.p[i]]);
+				Result = min(Result, -XP[reaction.p[i]]/reaction.n[i]);
 			}
 		}
 		Phase const &phase = phase_[reaction.i];
 		nz = phase.nz;
 		for (int i=0; i<nz; ++i)
 		{
-			Result = min(Result, xm_[phase.z[i]]/phase.n[i]);
+			Result = min(Result, xm[phase.z[i]]/phase.n[i]);
 		}
 	}
 	else

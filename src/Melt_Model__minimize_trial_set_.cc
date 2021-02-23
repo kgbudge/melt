@@ -33,18 +33,19 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 	using namespace std;
 
 	double g[n], h[n], xi[n];
+	double xm[E_END];
 
-	compute_current_melt_composition_(p);
+	compute_current_melt_composition_(p, xm);
 
 	double fp = Gf(p);
-	double fm = Gfm(xm_);
+	double fm = Gfm(xm);
 	double pnorm = 0.0;
 	cout << "Active reactions:" << endl;
 	for (unsigned i=0; i<n; ++i)
 	{
-		xi[i] = dGfm(p, xm_, fm, cphase[i].i) + cphase[i].dGfs;
+		xi[i] = dGfm(p, xm, fm, cphase[i].i) + cphase[i].dGfs;
 		// Prune to enforce constraints
-		double r = calculate_extent_(cphase[i], p);
+		double r = calculate_extent_(cphase[i], p, xm);
 		if (xi[i]>0.0)
 		{
 			if (r<=1.0e-9*cnorm_)
@@ -115,7 +116,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		{
 			if (xmelt[e]<0.0)
 			{
-				x1 = min(x1, -xm_[e]/xmelt[e]);
+				x1 = min(x1, -xm[e]/xmelt[e]);
 			}
 		}
 		for (unsigned e=0; e<NP_; ++e)
@@ -146,8 +147,8 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		}
 
 		fp = this->Gf(p);
-	    compute_current_melt_composition_(p);
-		fm = Gfm(xm_);
+	    compute_current_melt_composition_(p, xm);
+		fm = Gfm(xm);
 
 		cout << endl;
 		cout << "Line search completed. New Gf = " << fp << endl;
@@ -162,9 +163,9 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		cout << "Melt composition after line search:" << endl;
 		for (unsigned i=0; i<E_END; ++i)
 		{
-			if (xm_[i]>0.0)
+			if (xm[i]>0.0)
 			{
-				cout << "  " << element_name[i] << " = " << xm_[i] << endl;
+				cout << "  " << element_name[i] << " = " << xm[i] << endl;
 			}
 		}
 		cout << endl;
@@ -177,7 +178,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		for (unsigned i=0; i<n; ++i)
 		{
 			auto const r = cphase[i];
-			xi[i] = dGfm(p, xm_, fm, r.i) + r.dGfs;
+			xi[i] = dGfm(p, xm, fm, r.i) + r.dGfs;
 
 			// Prune to enforce constraints
 			if (xi[i]>0.0)
@@ -198,7 +199,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 			else if (xi[i]<0.0)
 			{
 				// Check for crystallization of element fully extracted
-				double ext = calculate_extent_(r, p);
+				double ext = calculate_extent_(r, p, xm);
 				if (ext<1.0e-9*cnorm_)
 				{
 					cout << phase_[r.i].name << " constrained from crystallizing" << endl;

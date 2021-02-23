@@ -20,23 +20,18 @@
 #ifndef State_HH
 #define State_HH
 
-#include <memory>
 #include <string>
-#include <vector>
 
-#include "Phase.hh"
-#include "element.hh"
+#include "State_Base.hh"
 
 // Describes a state of a sample of geological material. 
-class State
+class State : public State_Base
 {
   public:
     // Construct a starting state using the usual composition by oxide.
     // Each of these phases is in the standard phase table and the starting
     // state will have these as the active phases.
 	State(std::string const &name,     
-		  double T,
-		  double P,   
           double nH2O, double nCO2, double nNa2O, double nMgO, double nAl2O3,
           double nSiO2, double nP2O5, double nS, double nCl, double nK2O, 
           double nCaO, double nTiO2, double nCr2O3, double nMnO, double nFeO, 
@@ -45,23 +40,10 @@ class State
     // Construct a starting state from moles of each bare element.
     // This will be translated into starting oxide phases.
 	State(std::string const &name,
-          double T,
-          double P,
           double const x[E_END]);
-
-   // Construct a state congruent with a Melt_Model and with the given starting phases
-	State(std::string const &name,
-		  class Melt_Model const &,
-          unsigned NP,
-		  unsigned const cphase[],
-	      double const xphase[]);
 
 // Accessors
 
-	constexpr double T() const { return T_; }
-	constexpr double P() const { return P_; }
-	constexpr std::vector<Phase> const &phase() const { return phase_; }
-	constexpr std::vector<double> const &Gf() const { return Gf_; }
 	constexpr int const *ph() const { return ph_; }
 	constexpr double const *X() const { return X_; }
     constexpr bool const *is_element_active() const { return is_element_active_; }
@@ -77,20 +59,27 @@ class State
 
     Phase melt() const;
 
+// Static
+
+    static 
+    void initialize_globals(double T, double P,   
+          double nH2O, double nCO2, double nNa2O, double nMgO, double nAl2O3,
+          double nSiO2, double nP2O5, double nS, double nCl, double nK2O, 
+          double nCaO, double nTiO2, double nCr2O3, double nMnO, double nFeO, 
+          double nFe2O3,  double nZrO2);
+
+	static double T() { return T_; }
+	static double P() { return P_; }
+	static constexpr Phase const *phase() { return phase_; }
+	static constexpr double const *Gf() { return Gf_; }
+
   private:
 
-    void compute_gf_();
-
     std::string name_;         // Name of the state, usually something coded like "1.2.3"
-    double T_, P_;             // ambient conditions
-	std::vector<Phase> phase_; // Phases from which state is constructed
-	std::vector<double> Gf_;   // Free energy of each phase
 	int ph_[E_END];            // Phase index of each phase present in the sample.
 	double X_[E_END];          // Number of moles of each phase in the sample.
-    bool is_element_active_[E_END];  // Which chemical elements are present?
-	double element_activity_[E_END]; // Current element activities
-	double V_[E_END];          // Molar volume of each active phase
-
+	double V_[E_END];          // Molar volume of each phase present in the sample.
+    double element_activity_[E_END]; // Current element activities
 };
 
 #endif // State_HH

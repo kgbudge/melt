@@ -20,12 +20,13 @@
 
 #include "Melt_Model.hh"
 
+
 //-----------------------------------------------------------------------------//
 Phase State::melt() const
 {
 	using namespace std;
-	
-	Melt_Model model(*this);
+	/*
+	 Melt_Model model(*this);
 
     // Initial guess is that all fusible phases are fully melted. 
 	// We will then see what should crystallize out.
@@ -33,6 +34,6 @@ Phase State::melt() const
 	double XP[P_END];
 	fill(XP, XP+P_END, 0.0);
 	
-	return model.minimize_Gf(XP);
-
+	return model.minimize_Gf(XP);*/
 }
+

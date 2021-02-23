@@ -18,23 +18,18 @@
 
 #include "Melt_Model.hh"
 
-/*
-#include "Model.hh"
-
-#include <cmath>
-#include <iomanip>
-#include <iostream>*/
-
 //-----------------------------------------------------------------------------//
 /*! Update the current state from the specified solid phase composition.
  *
  * \param XP Current solid phase composition.
  */ 
-void Melt_Model::update_current_state_(double XP[P_END])
+void Melt_Model::update_current_state_(double XP[P_END],
+                                       double xm[E_END],
+                                       double xs[E_END]) const
 {
 	// Do a ladder update to minimize the solid phases
 	update_solid_state_(XP);
-	compute_current_melt_composition_(XP);
-	compute_current_solid_composition_(XP);
+	compute_current_melt_composition_(XP, xm);
+	compute_current_solid_composition_(XP, xs);
 };
 

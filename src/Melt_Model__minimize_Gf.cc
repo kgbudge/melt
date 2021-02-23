@@ -40,13 +40,16 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 {
 	using namespace std;
 
+	double xm[E_END]; // current melt composition
+	double xs[E_END]; // current solid phase composition
+
 	// Restart loop. This discards the search space and begins building up a
 	// new search space for the minimum of free energy.
 	for (;;)
 	{
 		Reaction cphase[E_END];
 		unsigned NMP = 0;
-		update_current_state_(XP);
+		update_current_state_(XP, xm, xs);
 		
 		// Main loop. Here we build up a search space for the minimum of free energy.
 		for (;;)
@@ -54,7 +57,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			// Calculate free energy of current estimate of sample state, and its
 			// gradient with every solid phase in library.
 
-			double Gfm = this->Gfm(xm_);
+			double Gfm = this->Gfm(xm);
 			double Gf = this->Gf(XP);
 			cout << "Gfm = " << fixed << setprecision(3) << Gfm << endl;
 			cout << "Gf = " << fixed << setprecision(3) << Gf << endl;
@@ -64,7 +67,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			{
 				if (is_fusible_[i])
 				{
-					Reaction r = construct_reaction_(XP, xm_, xs_, Gf, Gfm, i);
+					Reaction r = construct_reaction_(XP, xm, xs, Gf, Gfm, i);
 					if (r.extent*r.dGf0<best)
 					{
 						best = r.extent*r.dGf0;
@@ -75,7 +78,11 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 
 			// If nothing can change, we must be done.
 
-			if (best>1.0e-9*cnorm_ || NMP+1==E_END)
+			if (best>-1.0e-9*cnorm_)
+			{
+				goto DONE;
+			}
+			if (NMP+1==E_END)
 			{
 				break;
 			}
@@ -88,16 +95,16 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			// Minimize on this melt set.
 
 			double revised_Gf = minimize_trial_set_(NMP, cphase, XP);
-			update_current_state_(XP);
+			update_current_state_(XP, xm, xs);
 
 			double mtot = 0.0;
 			for (unsigned i=0; i<E_END; ++i)
 			{
-				if (xm_[i]<1.0e-9*cnorm_)
+				if (xm[i]<1.0e-9*cnorm_)
 				{
-					xm_[i] = 0.0;
+					xm[i] = 0.0;
 				}
-				mtot += xm_[i];
+				mtot += xm[i];
 			}	
 			if (mtot<=0.0 || Gf - revised_Gf  < 1.0e-9*cnorm_)
 			{
@@ -105,10 +112,11 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			}
 		}
 	}
-		
+
+DONE:
 	double V = 0.0;
 	double xend[M_END];
-	compute_melt_endmember_composition_(xm_, xend);
+	compute_melt_endmember_composition_(xm, xend);
 	for (unsigned i=0; i<M_END; ++i)
 	{
 		double xi = xend[i];
@@ -118,7 +126,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			V += xi*phase.model->volume(phase, T_, P_);
 		}
 	}
-		
+
 	Phase Result;
 	Result.index = 0;
 	Result.name = "melt";
@@ -126,17 +134,17 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 	Result.V = V;
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		if (xm_[i]>1e-9)
+		if (xm[i]>1e-9)
 		{
 			Result.z[Result.nz] = i;
-			Result.n[Result.nz] = xm_[i];
+			Result.n[Result.nz] = xm[i];
 			Result.nz++;
 		}
 	}
 	// If Result.nz is zero, this flags to client that there is no melt.
 
 	Result.S0 = 0.0;
-	Result.Hf0 = Gfm(xm_);
+	Result.Hf0 = Gfm(xm);
 	Result.model = MELT;
 
 	return Result;

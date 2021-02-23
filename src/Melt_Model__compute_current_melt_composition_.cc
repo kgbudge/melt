@@ -16,33 +16,10 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
-#include <numeric>
-#include <iomanip>
-#include <iostream>
-#include <limits>
-#include <vector>
-#include <fstream>
-
-#include "gsl/gsl_linalg.h"
-#include "gsl/gsl_sort_vector.h"
-
-#include "ds++/Assert.hh"
-
-#include "algorithm.hh"
-#include "constants.hh"
-#include "D1.hh"
-#include "element.hh"
-#include "Melt_Model.hh"
-#include "Model.hh"
-#include "Phase.hh"
-#include "State.hh"
- */
-
 #include "Melt_Model.hh"
 
 //-----------------------------------------------------------------------------//
-void Melt_Model::compute_current_melt_composition_(double const XP[])
+void Melt_Model::compute_current_melt_composition_(double const XP[], double xm_[]) const
 {
 	for (unsigned i=0; i<E_END; ++i)
 	{

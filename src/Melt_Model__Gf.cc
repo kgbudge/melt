@@ -31,7 +31,7 @@ double Melt_Model::Gf(double const XP[P_END]) const
 		xm[i] = Z_[i];
 	}
 	// Modify for amount of each fusible phase crystallized out
-	double Result = Gfr_;
+	double Result = 0.0;
 	for (unsigned i=0; i<NM; ++i)
 	{
 		double const x = XP[i];

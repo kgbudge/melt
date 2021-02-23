@@ -16,13 +16,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cmath>
-/*#include <algorithm>
-#include <assert.h>
-#include <fstream>
-#include <vector>
-
-#include "ds++/Assert.hh"
-*/
 
 #include "constants.hh"
 #include "bm_melt.hh"

@@ -18,14 +18,6 @@
 
 #include "Melt_Model.hh"
 
-/*
-#include <iomanip>
-#include <iostream>
-#include <limits>
-#include <set>
-
-#include "Model.hh"*/
-
 //-----------------------------------------------------------------------------//
 /*! Characterize the consequences of moving a specified solid phaes composition
  * from the melt to the solid phase.
@@ -33,8 +25,8 @@
  * \param XP Current solid phase composition
  */
  Melt_Model::Reaction Melt_Model::construct_reaction_(double const XP[],
-                                                      double const xm_[],
-                                                      double const xs_[], 
+                                                      double const xm[],
+                                                      double const xs[], 
                                                       double const Gf, 
                                                       double const Gfm, 
                                                       unsigned const i) const
@@ -45,20 +37,20 @@
 	 Result.i = i;
 
 	 // Compute rate of change of free energy of melt phase
-	 double const dGfm = this->dGfm(XP, xm_, Gfm, i);
+	 double const dGfm = this->dGfm(XP, xm, Gfm, i);
 
 	 // Compute rate of change of free energy of solid phase
 
 	 Phase const &ph = phase_[i];
 	 unsigned const N = ph.nz;
 	 double xsn[E_END];
-	 copy(xs_, xs_+E_END, xsn);
+	 copy(xs, xs+E_END, xsn);
 	 for (unsigned j=0; j<N; ++j)
 	 {
 		 unsigned z = ph.z[j]; 
 		 xsn[z] += ph.n[j]*0.001*cnorm_;
 	 }
-	 State state(ph.name,  T_, P_, xsn);
+	 State state(ph.name, xsn);
 	 state.do_ladder_update();
 	 auto const &state_ph = state.ph();
 	 auto const &state_phase = state.phase();
@@ -69,7 +61,7 @@
 	 {
 		 if (state_x[j]>0.0)
 		 {
-			 XPP[imap_[state_phase[state_ph[j]].index]] = state_x[j];
+			 XPP[state_ph[j]] = state_x[j];
 		 }
 	 }
 	 double dGfs = 0.0;
@@ -88,6 +80,6 @@
 	 Result.dGfs = dGfs;
 	 Result.dGf0 = dGfs + dGfm;
 
-	 Result.extent = calculate_extent_(Result, XP);
+	 Result.extent = calculate_extent_(Result, XP, xm);
 	 return Result;
 }

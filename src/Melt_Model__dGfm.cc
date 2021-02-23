@@ -59,7 +59,7 @@ double Melt_Model::dGfm(double const cXP[P_END],
 		{
 			double h = min(nmax, 0.01);
 			double xmp[E_END];
-			copy(xm_, xm_+E_END, xmp);		
+			copy(xm, xm+E_END, xmp);		
 			for (int j=0; j<N; ++j)
 			{
 				unsigned z = ph.z[j];
@@ -77,7 +77,7 @@ double Melt_Model::dGfm(double const cXP[P_END],
 		{
 			double h = min(nmax, 0.01);
 			double xmp[E_END];
-			copy(xm_, xm_+E_END, xmp);		
+			copy(xm, xm+E_END, xmp);		
 			for (int j=0; j<N; ++j)
 			{
 				unsigned z = ph.z[j];

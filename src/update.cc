@@ -21,6 +21,7 @@
 #include "kgb/Assert.h"
 #include "kgb/tostring.h"
 
+#include "Melt_Model.hh"
 #include "Model.hh"
 #include "State.hh"
 #include "gui.hh"
@@ -78,11 +79,27 @@ void update()
 	double T = atof(text.c_str()) + 273.15;
 	text = entry_P->get_text();
 	double P = atof(text.c_str());
+
+	// Initialize the State global data.
+	State::initialize_globals(T, P, 
+		          	          nH2O, nCO2, nNa2O, nMgO, nAl2O3, nSiO2, nP2O5, nS,
+	                          nCl, nK2O, nCaO, nTiO2, nCr2O3, nMnO, nFeO,
+	                          nFe2O3, nZrO2);
+
+	// Create a Melt_Model with the initial composition.
+	Melt_Model melt_model(nH2O, nCO2, nNa2O, nMgO, nAl2O3, nSiO2, nP2O5, nS, nCl,
+	                      nK2O, nCaO, nTiO2, nCr2O3, nMnO, nFeO, nFe2O3, nZrO2);
+
+    // Initial guess is that all fusible phases are fully melted. 
+	// We will then see what should crystallize out to get an optimum melt (possibly empty)
+
+	double XP[P_END];
+	fill(XP, XP+P_END, 0.0);
 	
+	Phase melt_phase = melt_model.minimize_Gf(XP);
+
 	// Create a State with the initial composition. 
 	State state("1", 
-	            T,
-	            P,
 	            nH2O, nCO2, nNa2O, nMgO, nAl2O3, nSiO2, nP2O5, nS, nCl,
 	            nK2O, nCaO, nTiO2, nCr2O3, nMnO, nFeO, nFe2O3, nZrO2);
 

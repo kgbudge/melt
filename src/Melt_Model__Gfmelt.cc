@@ -41,7 +41,8 @@ double Melt_Model::Gfmelt(double const X[P_END],
 	  	    Result += x[ph]*Gf_[ph];
 		}
 	}
-	compute_current_melt_composition_(x);
-	Result += Gfm(xm_);
+	double xm[E_END];
+	compute_current_melt_composition_(x, xm);
+	Result += Gfm(xm);
 	return Result;
 }

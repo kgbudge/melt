@@ -98,7 +98,12 @@ melt_SOURCES = \
 	Melt_Model__construct_reaction_.cc \
 	Melt_Model__dGfm.cc \
 	Melt_Model__calculate_extent_.cc \
-	Melt_Model__print.cc
+	Melt_Model__print.cc \
+	State__do_ladder_update.cc \
+	State__initialize_globals.cc \
+	State_Base.hh \
+	melt_model.hh \
+	State_Base.cc
 
 melt_LDFLAGS = 
 

@@ -24,12 +24,13 @@
  * 
  * \param[in]  XP Solid phase composition
   */
-void Melt_Model::update_solid_state_(double XP[P_END])
+void Melt_Model::update_solid_state_(double XP[P_END]) const
 {
 	using namespace std;
-	
-	compute_current_solid_composition_(XP);
-	State solid("s", T_, P_, xs_);
+
+	double xs[E_END];
+	compute_current_solid_composition_(XP, xs);
+	State solid("s", xs);
 	solid.do_ladder_update();
 	fill(XP, XP+NP_, 0.0);
 	auto const &solid_X = solid.X();
@@ -39,11 +40,7 @@ void Melt_Model::update_solid_state_(double XP[P_END])
 	{
 		if (solid_X[i]>1.0e-6*cnorm_)
 		{
-			unsigned gi = solid_phase[solid_ph[i]].index;
-			Check(gi<P_END);
-			gi = imap_[gi];
-			Check(gi<NP_);
-			XP[gi] = solid_X[i];
+			XP[solid_ph[i]] = solid_X[i];
 		}
 	}
 }

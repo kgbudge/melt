@@ -32,8 +32,6 @@ using namespace std;
 void State::update()
 {
 	using namespace std;
-	
-	unsigned const NPL = phase_.size();
 
 	// Calculate the free energy of the sample
 	double Gftot = 0.0;
@@ -65,8 +63,8 @@ void State::update()
 	cout << "  Starting free energy for this melt step: " << Gftot << " kJ" << endl;
 	Phase new_phase = melt();
 
-	Gf_.push_back(new_phase.Hf0);
-	phase_.push_back(new_phase);
+	Gf_[NP_-1] = new_phase.Hf0;
+	phase_[NP_-1] = new_phase;
 
 	do_ladder_update();
 

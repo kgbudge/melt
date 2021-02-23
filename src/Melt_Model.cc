@@ -29,125 +29,54 @@
  *
  * \param state Current state of the mineral ensemble.
  */ 
- Melt_Model::Melt_Model(State const &state)
-:
- T_(state.T()), P_(state.P()), phase_(state.phase()), Gf_(state.Gf()), 
- is_fusible_(state.Gf().size())
+Melt_Model::Melt_Model(double nH2O, double nCO2, double nNa2O, double nMgO, double nAl2O3,
+                       double nSiO2, double nP2O5, double nS, double nCl, double nK2O, 
+                       double nCaO, double nTiO2, double nCr2O3, double nMnO, double nFeO, 
+                       double nFe2O3,  double nZrO2)
 {
-	 using namespace std;
+	Require(nH2O>=0.0);
+	Require(nCO2>=0.0);  
+	Require(nNa2O>=0.0);
+	Require(nMgO>=0.0);
+	Require(nAl2O3>=0.0);
+	Require(nSiO2>=0.0);
+	Require(nP2O5>=0.0);  
+	Require(nS>=0.0); 
+	Require(nCl>=0.0); 
+	Require(nK2O>=0.0);
+	Require(nCaO>=0.0); 
+	Require(nTiO2>=0.0);
+	Require(nCr2O3>=0.0);  
+	Require(nMnO>=0.0); 
+	Require(nFeO>=0.0);
+	Require(nFe2O3>=0.0); 
+	Require(nZrO2>=0.0);
 
-	 NP_ = phase_.size();
-	 Require(Gf_.size()==NP_);
-	 
+	using namespace std;
+
 	// Compute the fully melted composition (excluding phases for which we
 	// do not have a liquid counterpart). Determine free energy contribution
 	// of these nonfusible phases.
-	 
-	Gfr_ = 0.0;  // Gibbs free energy contribution of nonfusible phases 
-    fill(Z_, Z_+E_END, 0.0); // Prepare to accumulate sample composition.
-	                         //This will also be the starting melt. 
-	 
-	cout << "Sample phases:" << endl;
-	double const *const state_X = state.X();
-	int const *const state_ph = state.ph();
-	unsigned const NPL = phase_.size();
-	for (unsigned i=0; i<E_END; ++i)
-	{
-		double const x = state_X[i];
-		double xpr[E_END];  // to store composition of phase
-		fill(xpr, xpr+E_END, 0.0); 
-		if (x>0.0)  // Is this phase actually present?
-		{
-			unsigned p = state_ph[i];
-			Phase const &ph = phase_[p];	
-			cout << ph.name << endl;
-			unsigned const N = ph.nz; // Number of elements in the phase
-			double xO = 0.0;          // To accumulate oxygen balance of the phase
-			bool fusible = true;
-			for (unsigned j=0; j<N && fusible; ++j) 
-			{
-				double const xj = x*ph.n[j];  // Number of moles of element j in the phase.
-				switch(ph.z[j])             // Switch on the element atomic number
-				{
-					case E_H:
-						xO -= 0.5*xj;
-						xpr[E_H] += xj;
-						break; 
 
-				    case E_C:
-						xO -= 2*xj;
-						xpr[E_C] += xj;
-						break;
-						
-					case E_O:
-						xpr[E_O] += xj;
-						xO += xj;
-						break;
+	Z_[E_H] = 2*nH2O;
+	Z_[E_C] = nCO2;
+	Z_[E_NA] = 2*nNa2O;
+	Z_[E_MG] = nMgO;
+	Z_[E_AL] = 2*nAl2O3;
+	Z_[E_SI] = nSiO2;
+	Z_[E_P] = 2*nP2O5;
+	Z_[E_S] = nS;
+	Z_[E_CL] = nCl;
+	Z_[E_K] = 2*nK2O;
+	Z_[E_CA] = nCaO;
+	Z_[E_TI] = nTiO2;
+	Z_[E_CR] = 2*nCr2O3;
+	Z_[E_MN] = nMnO;
+	Z_[E_FE] = nFeO + 2*nFe2O3;
+	Z_[E_ZR] = nZrO2;
+	Z_[E_O] = nH2O + 2*nCO2 + nNa2O + nMgO + 3*nAl2O3 + 2*nSiO2 + 5*nP2O5 +
+		2*nK2O + nCaO + 2*nTiO2 + 3*nCr2O3 + nMnO + nFeO + 3*nFe2O3 + 2*nZrO2;
 
-					case E_NA:
-						xO -= 0.5*xj;
-						xpr[E_NA] += xj;
-						break;
-
-					case E_MG:
-						xO -= xj;
-						xpr[E_MG] += xj;
-						break;
-
-					case E_AL:
-						xpr[E_AL] += xj;
-						xO -= 1.5*xj;
-						break;
-
-					case E_SI:
-						xpr[E_SI] += xj;
-						xO -= 2*xj;
-						break;
-
-					case E_S:
-						xpr[E_S] += xj;
-						break;
-
-					case E_CL:
-						xpr[E_CL] += xj;
-						xO += 0.5*xj;
-						break;
-
-					case E_K:
-						xpr[E_K] += xj;
-						xO -= 0.5*xj;
-						break;
-
-					case E_CA:
-						xO -= xj;
-						xpr[E_CA] += xj;
-						break;
-
-					case E_FE:
-						xpr[E_FE] += xj;
-						break;
-
-					default:
-						// non-fusible mineral
-						cout << "phase " << ph.name << " cannot melt." << endl;
-						fusible = false;
-						break;
-				}
-			}
-			if (!fusible || fabs(xO-xpr[E_FE])>1e-9) // at present, cannot handle ferric or oxidized sulfur melts
-			{
-				cout << "  Not fusible" << endl;
-				Gfr_ += x*Gf_[p];
-			}
-			else
-			{
-				for (unsigned m=0; m<E_END; ++m)
-				{
-					Z_[m] += xpr[m];
-				}
-			}
-		}
-	}
 	cout << "Full melt elemental molar composition:" << endl << defaultfloat;
 	cnorm_ = 0.0;
 	for (unsigned i=0; i<E_END; ++i)
@@ -156,109 +85,20 @@
 		cnorm_ += Z_[i];
 		if (Z_[i]>0)
 		{
-	  	  cout << element_name[i] << ": " << setprecision(3) << Z_[i] << endl;
+			cout << element_name[i] << ": " << setprecision(3) << Z_[i] << endl;
 		}
 	}
-
-	// Find all potentiall fusible phases
-	 bool const *const state_is_element_active = state.is_element_active();
-	 for (unsigned p=0; p<NPL; ++p)
-	 {
-		 Phase const &ph = phase_[p];	
-		 cout << ph.name << endl;
-		 unsigned const N = ph.nz; // Number of elements in the phase
-		 double xO = 0.0;          // To accumulate oxygen balance of the phase
-		 double xFe = 0.0;
-		 bool fusible = true;
-		 for (unsigned j=0; j<N && fusible; ++j) 
-		 {
-			 double const xj = ph.n[j];  // Number of moles of element j in the phase.
-			 unsigned const z = ph.z[j];
-			 fusible = fusible && (state_is_element_active[z]);
-			 switch(z)             // Switch on the element atomic number
-			 {
-				 case E_H:
-					 xO -= 0.5*xj;
-					 break; 
-
-				 case E_C:
-					 xO -= 2*xj;
-					 break;
-
-				 case E_O:
-					 xO += xj;
-					 break;
-
-				 case E_NA:
-					 xO -= 0.5*xj;
-					 break;
-
-				 case E_MG:
-					 xO -= xj;
-					 break;
-
-				 case E_AL:
-					 xO -= 1.5*xj;
-					 break;
-
-				 case E_SI:
-					 xO -= 2*xj;
-					 break;
-
-				 case E_S:
-					 break;
-
-				 case E_CL:
-					 xO += 0.5*xj;
-					 break;
-
-				 case E_K:
-					 xO -= 0.5*xj;
-					 break;
-
-				 case E_CA:
-					 xO -= xj;
-					 break;
-
-				 case E_FE:
-					 xFe += xj;
-					 break;
-
-				 default:
-					 // non-fusible mineral
-					 cout << "phase " << ph.name << " cannot melt." << endl;
-					 fusible = false;
-					 break;
-			 }
-			 is_fusible_[p] = fusible && fabs(xO-xFe)<1e-9;
-			 // at present, cannot handle ferric or oxidized sulfur melts
-		 }
-	 }
-
-	 // Compute end-member melt phase free energies
-	 for (unsigned i=0; i<M_END; ++i)
-	 {
-		 Phase const &ph = ::phase[melt_endmember[i]];
-		 Gfm_[i] = ph.model->Gf(ph, T_, P_);
-	 }
-
-	 // Construct imap
-	 fill(imap_, imap_+P_END, P_END);
-	 for (unsigned i=0; i<NP_; ++i)
-	 {
-		 imap_[phase_[i].index] = i;
-	 }
- }
+}
 
 char const * const endmember_element_name[] =
 {
-		"H",
-		"Si",
-		"Al",
-		"Mg",
-		"Fe(+2)",
-		"Ca",
-		"Na",
-		"K"
+	"H",
+	"Si",
+	"Al",
+	"Mg",
+	"Fe(+2)",
+	"Ca",
+	"Na",
+	"K"
 };
 
