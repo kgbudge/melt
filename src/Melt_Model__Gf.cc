@@ -1,5 +1,5 @@
 /*
- * Melt_Model__Gfmelt.cc
+ * Melt_Model__Gf.cc
  * Copyright (C) 2021 Kent G. Budge <kgb@kgbudge.com>
  * 
  * melt is free software: you can redistribute it and/or modify it
@@ -19,29 +19,37 @@
 #include "Melt_Model.hh"
 
 //-----------------------------------------------------------------------------//
-double Melt_Model::Gfmelt(double const X[P_END],
-                          unsigned const n,
-                          Reaction const cphase[P_END],
-                          double p[M_END],
-                          double e)
+double Melt_Model::Gf(double const XP[P_END]) const
 {
 	using namespace std;
 	
-	double x[NP_];
-	copy(X, X+NP_, x);
-	double Result = 0.0;
-	for (unsigned i=0; i<n; ++i)
+	unsigned const NM = NP_;
+
+	double xm[E_END];
+	for (unsigned i=0; i<E_END; ++i)
 	{
-		auto const &r = cphase[i];
-		unsigned const N = r.nz;
-		for (unsigned j=0; j<N; ++j)
-		{		
-			unsigned const ph = r.p[j];
-		    x[ph] += e*p[i]*r.n[j];
-	  	    Result += x[ph]*Gf_[ph];
+		xm[i] = Z_[i];
+	}
+	// Modify for amount of each fusible phase crystallized out
+	double Result = Gfr_;
+	for (unsigned i=0; i<NM; ++i)
+	{
+		double const x = XP[i];
+		Check(x>=0.0);
+		if (x>0.0)
+		{
+			Phase const &phase = phase_[i];  
+			unsigned const N = phase.nz;
+			for (unsigned j=0; j<N; ++j)
+			{
+				unsigned z = phase.z[j];
+				xm[z] -= x*phase.n[j];
+				xm[z] = max(0.0, xm[z]);
+			}
+			Result += x*Gf_[i];
 		}
 	}
-	compute_current_melt_composition_(x);
-	Result += Gfm(xm_);
+    Result += this->Gfm(xm);
+
 	return Result;
 }

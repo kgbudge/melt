@@ -1,5 +1,5 @@
 /*
- * Melt_Model__Gfmelt.cc
+ * Melt_Model__update_solid_state_.cc
  * Copyright (C) 2021 Kent G. Budge <kgb@kgbudge.com>
  * 
  * melt is free software: you can redistribute it and/or modify it
@@ -19,29 +19,31 @@
 #include "Melt_Model.hh"
 
 //-----------------------------------------------------------------------------//
-double Melt_Model::Gfmelt(double const X[P_END],
-                          unsigned const n,
-                          Reaction const cphase[P_END],
-                          double p[M_END],
-                          double e)
+/*! Do a ladder update on the solid phases. This converts them to the minimum
+ * free energy configuration ignoring melt.
+ * 
+ * \param[in]  XP Solid phase composition
+  */
+void Melt_Model::update_solid_state_(double XP[P_END])
 {
 	using namespace std;
 	
-	double x[NP_];
-	copy(X, X+NP_, x);
-	double Result = 0.0;
-	for (unsigned i=0; i<n; ++i)
+	compute_current_solid_composition_(XP);
+	State solid("s", T_, P_, xs_);
+	solid.do_ladder_update();
+	fill(XP, XP+NP_, 0.0);
+	auto const &solid_X = solid.X();
+	auto const &solid_phase = solid.phase();
+	auto const &solid_ph = solid.ph();
+	for (unsigned i=0; i<E_END; ++i)
 	{
-		auto const &r = cphase[i];
-		unsigned const N = r.nz;
-		for (unsigned j=0; j<N; ++j)
-		{		
-			unsigned const ph = r.p[j];
-		    x[ph] += e*p[i]*r.n[j];
-	  	    Result += x[ph]*Gf_[ph];
+		if (solid_X[i]>1.0e-6*cnorm_)
+		{
+			unsigned gi = solid_phase[solid_ph[i]].index;
+			Check(gi<P_END);
+			gi = imap_[gi];
+			Check(gi<NP_);
+			XP[gi] = solid_X[i];
 		}
 	}
-	compute_current_melt_composition_(x);
-	Result += Gfm(xm_);
-	return Result;
 }

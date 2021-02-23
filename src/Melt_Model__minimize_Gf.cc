@@ -44,7 +44,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 	// new search space for the minimum of free energy.
 	for (;;)
 	{
-		unsigned cphase[E_END];
+		Reaction cphase[E_END];
 		unsigned NMP = 0;
 		update_current_state_(XP);
 		
@@ -58,131 +58,50 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			double Gf = this->Gf(XP);
 			cout << "Gfm = " << fixed << setprecision(3) << Gfm << endl;
 			cout << "Gf = " << fixed << setprecision(3) << Gf << endl;
-			double g[P_END];
+			double best = numeric_limits<double>::max();
+			Reaction rbest;
 			for (unsigned i=0; i<NP_; ++i)
 			{
 				if (is_fusible_[i])
 				{
 					Reaction r = construct_reaction_(XP, xm_, xs_, Gf, Gfm, i);
-					if (g[i]<-1.0e-6*cnorm_)
+					if (r.extent*r.dGf0<best)
 					{
-						bool congr = true;
-						Phase const &phase = phase_[i];
-						unsigned const N = phase.nz;
-						for (unsigned j=0; j<N; ++j)
-						{
-							if (xm_[phase.z[j]]<1.0e-6*cnorm_)
-							{
-								congr = false;
-								break;
-							}						
-						}
+						best = r.extent*r.dGf0;
+						rbest = r;
 					}
 				}
 			}
 
 			// If nothing can change, we must be done.
 
-			if (NMP == 0)
+			if (best>1.0e-9*cnorm_ || NMP+1==E_END)
 			{
-					// There are spontaneously melting phases. Do them first.
-					NMP = 0;
-					cout << "Melting phases:" << endl;
-					for (unsigned i=0; i<NP_; ++i)
-					{
-						if (g[i]>1.0e-6*cnorm_ && XP[i]>1.0e-9*cnorm_) 
-						{
-							cphase[NMP++] = i;	
-							cout << "  " << phase_[i].name << " g = " << g[i] << endl;
-						}
-					}
-					compute_current_solid_composition_(XP);
-					
-					cout << "Crystallization phases:" << endl;
-					set<unsigned> cset;
-					for (unsigned i=0; i<NMP; ++i)
-					{
-						cout << "  " << phase_[cphase[i]].name << " g = " << g[cphase[i]] << endl;
-						cset.insert(cphase[i]);
-					}
+				break;
+			}
 
-					// We have possible crystallizing phases. For each such phase,
-					// see if the phase requires any element not in the mix. If so,
-					// we will try to construct an incongruent reaction to produce it
-					// and see if that is spontaneous.
+			// Add a single phase that is our best guess of the next melt element
 
-					double merit = 0.0;
-					for (unsigned i=0; i<NP_; ++i)
-					{
-						if (cset.count(i) == 0 && g[i]<0.0) 
-						{
-							Phase const &ph = phase_[i];
-							unsigned N = ph.nz; 
-							double xsn[E_END];
-							copy(xs_, xs_+E_END, xsn);
-							double x1 = std::numeric_limits<double>::max();
-							for (unsigned j=0; j<N; ++j)
-							{
-								unsigned z = ph.z[j]; 
-								x1 = min(x1, xm_[z]/ph.n[j]);
-								xsn[z] += ph.n[j]*0.001*cnorm_;
-							}
-							if (x1>1.0e-9*cnorm_)
-							{
-								State state("t",  T_, P_, xsn);
-								state.do_ladder_update();
-								bool found = false;
-								auto const &state_ph = state.ph();
-								auto const &state_phase = state.phase();
-								auto const &state_x = state.X();
-								for (unsigned j=0; j<E_END; j++)
-								{
-									if (state_phase[state_ph[j]].index==phase_[i].index)
-									{
-										found = state_x[j]>0.0; 
-										break;
-									}
-								}
-								if (found)
-								{
-									double mm = -g[i]*x1;
-									cout << "  " << phase_[i].name << " g = " << mm << endl;
-									if  (mm>merit)
-									{
-										merit =  mm;
-										cphase[NMP] = i;
-									}
-								}
-							}
-							else
-							{
-								// Can only crystallize incongruously
-								//						Insist(false, "construction");
-							}
-						}
-					}
-					NMP++;
+			cphase[NMP] = rbest;
+			NMP++;
 
-				// Add a single phase that is our best guess of the next melt element
+			// Minimize on this melt set.
 
-				// Minimize on this melt set.
+			double revised_Gf = minimize_trial_set_(NMP, cphase, XP);
+			update_current_state_(XP);
 
-				double revised_Gf = minimize_trial_set_(NMP, cphase, XP);
-				update_current_state_(XP);
-
-				double mtot = 0.0;
-				for (unsigned i=0; i<E_END; ++i)
+			double mtot = 0.0;
+			for (unsigned i=0; i<E_END; ++i)
+			{
+				if (xm_[i]<1.0e-9*cnorm_)
 				{
-					if (xm_[i]<1.0e-9*cnorm_)
-					{
-						xm_[i] = 0.0;
-					}
-					mtot += xm_[i];
-				}	
-				if (mtot<=0.0 || Gf - revised_Gf  < 1.0e-9*cnorm_)
-				{
-					break;
+					xm_[i] = 0.0;
 				}
+				mtot += xm_[i];
+			}	
+			if (mtot<=0.0 || Gf - revised_Gf  < 1.0e-9*cnorm_)
+			{
+				break;
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 /*
- * Melt_Model__Gfmelt.cc
+ * Melt_Model__update_current_state.cc
  * Copyright (C) 2021 Kent G. Budge <kgb@kgbudge.com>
  * 
  * melt is free software: you can redistribute it and/or modify it
@@ -18,30 +18,23 @@
 
 #include "Melt_Model.hh"
 
+/*
+#include "Model.hh"
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>*/
+
 //-----------------------------------------------------------------------------//
-double Melt_Model::Gfmelt(double const X[P_END],
-                          unsigned const n,
-                          Reaction const cphase[P_END],
-                          double p[M_END],
-                          double e)
+/*! Update the current state from the specified solid phase composition.
+ *
+ * \param XP Current solid phase composition.
+ */ 
+void Melt_Model::update_current_state_(double XP[P_END])
 {
-	using namespace std;
-	
-	double x[NP_];
-	copy(X, X+NP_, x);
-	double Result = 0.0;
-	for (unsigned i=0; i<n; ++i)
-	{
-		auto const &r = cphase[i];
-		unsigned const N = r.nz;
-		for (unsigned j=0; j<N; ++j)
-		{		
-			unsigned const ph = r.p[j];
-		    x[ph] += e*p[i]*r.n[j];
-	  	    Result += x[ph]*Gf_[ph];
-		}
-	}
-	compute_current_melt_composition_(x);
-	Result += Gfm(xm_);
-	return Result;
-}
+	// Do a ladder update to minimize the solid phases
+	update_solid_state_(XP);
+	compute_current_melt_composition_(XP);
+	compute_current_solid_composition_(XP);
+};
+

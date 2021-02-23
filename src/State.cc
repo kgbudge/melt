@@ -375,7 +375,7 @@ State::do_ladder_update()
 			// phase with a new lower energy phase -- though both show zero
 			// moles in the sample. This allows us to work our way down to
 			// a real reaction that minimizes energy.
-			cout << "Performing reaction ";
+			//cout << "Performing reaction ";
 			found = true;
 			bool first = true;
 			for (unsigned i=0; i<E_END; ++i)
@@ -384,31 +384,32 @@ State::do_ladder_update()
 				{
 					if (!first) 
 					{
-						cout << " + ";
+						//cout << " + ";
 					}
 					first = false;
 					if (fabs(left[i]-1.0)>1.0e-10)
 					{
-						cout << setprecision(4) << left[i];
+						//cout << setprecision(4) << left[i];
 					}
-					cout << phase_[ph_[i]].name;
+					//cout << phase_[ph_[i]].name;
 				}
 			}
-			cout << " -> " << phase_[ip].name;
+			//cout << " -> " << phase_[ip].name;
 			
 			for (unsigned i=0; i<E_END; ++i)
 			{
 				if (left[i]<-1.0e-10)
 				{
-					cout << " + ";
+					//cout << " + ";
 					first = false;
 					if (fabs(left[i]+1.0)>1.0e-10)
 					{
-						cout << setprecision(4) << -left[i];
+						//cout << setprecision(4) << -left[i];
 					}
-					cout << phase_[ph_[i]].name;
+					//cout << phase_[ph_[i]].name;
 				}
-			}			cout << endl;
+			}
+			//cout << endl;
 
 			// Now carry out the reaction, noting which reagents are exhausted.
 
@@ -421,14 +422,14 @@ State::do_ladder_update()
 				{
 					if (left[i]>1.0e-9)
 					{
-						cout << "Reaction depletes " << phase_[ph_[i]].name << endl;
+//						cout << "Reaction depletes " << phase_[ph_[i]].name << endl;
 						pd[n++] = i;
 					}
 					X_[i] = 0.0;
 				}
 			}
 			// n should not be zero
-			if (n==1)
+			if (true || n==1) // By allowing null reactions, we eliminate need for ladder update!
 			{
 				X_[pd[0]] = r;	
 				ph_[pd[0]] = ip;

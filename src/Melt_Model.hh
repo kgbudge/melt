@@ -106,6 +106,20 @@ double const mixN[M_END] =
 class Melt_Model
 {
 	public:
+
+		struct Reaction
+        {
+          unsigned i; // extracted phase
+          double dGf0; // initial rate of change of free energy of reaction
+          double dGfs; // rate of change of free energy of solid phase with reaction
+          double extent; // typically, the extent to which the reaction can proceed before hitting a constraint.
+
+          unsigned nz;  // Number of phases in reaction
+          unsigned p[E_END]; // Phases in reaction
+          double n[E_END]; // Phase amount in reaction (negative == reagent)
+        };
+
+
 		explicit Melt_Model(State const &state) noexcept(false);
 
         double T() const { return T_; }
@@ -131,25 +145,18 @@ class Melt_Model
 
 		double Gfmelt(double const X[P_END],
 	                  unsigned NMP,
-	                  unsigned const cphase[P_END], 
+	                  Reaction const cphase[P_END], 
                       double p[M_END],
-                      double e) const;
+                      double e);
 		
 		Phase minimize_Gf(double XP[P_END]);
 
+        void print(Reaction const &) const;
+        void print_reverse(Reaction const &) const;
+
 	private:
 
-		struct Reaction
-        {
-          unsigned i; // extracted phase
-          double dGf0; // initial rate of change of free energy of reaction
-          double dGfs; // rate of change of free energy of solid phase with reaction
-
-          unsigned nz;  // Number of phases in reaction
-          unsigned p[E_END]; // Phases in reaction
-          unsigned n[E_END]; // Phase amount in reaction (negative == reagent)
-        };
-
+        double calculate_extent_(Reaction const &, double const XP[]) const;
         void compute_current_melt_composition_(double const XP[]);
         void compute_current_solid_composition_(double const XP[]);
 		void compute_melt_endmember_composition_(double const xm[E_END], double xend[M_END]) const;
@@ -162,7 +169,7 @@ class Melt_Model
 									 unsigned i) const;
 
 	    double minimize_trial_set_(unsigned NC,
-							       unsigned const cphase[P_END],
+							       Reaction const cphase[P_END],
 								   double XP[P_END]);
 
         void update_current_state_(double XP[P_END]);

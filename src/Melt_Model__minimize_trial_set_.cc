@@ -27,7 +27,7 @@
 
 //-----------------------------------------------------------------------------//
 double Melt_Model::minimize_trial_set_(unsigned const n,
-                                       unsigned const cphase[P_END],
+                                       Reaction const cphase[P_END],
                                        double p[P_END])
 {
 	using namespace std;
@@ -37,40 +37,36 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 	compute_current_melt_composition_(p);
 
 	double fp = Gf(p);
+	double fm = Gfm(xm_);
 	double pnorm = 0.0;
+	cout << "Active reactions:" << endl;
 	for (unsigned i=0; i<n; ++i)
 	{
-		xi[i] = dGf(p, xm_, fp, cphase[i]);
+		xi[i] = dGfm(p, xm_, fm, cphase[i].i) + cphase[i].dGfs;
 		// Prune to enforce constraints
+		double r = calculate_extent_(cphase[i], p);
 		if (xi[i]>0.0)
 		{
-			if (p[cphase[i]]<=1.0e-9*cnorm_)
+			if (r<=1.0e-9*cnorm_)
 			{
 				// Prune melt of solid phase not present
 				xi[i] = 0.0; 
-				p[cphase[i]] = 0.0;
 			}
 			else
 			{
-				cout << "Melting " << phase_[cphase[i]].name << endl;
+				print_reverse(cphase[i]);
 			}
 		}
 		else if (xi[i]<0.0)
 		{
-			// Check for crystallization of element fully extracted
-			Phase const &ph = phase_[cphase[i]];
-			unsigned const Z = ph.nz;
-			for (unsigned j=0; j<Z; ++j)
+			if (r<=1.0e-9*cnorm_)
 			{
-				unsigned z = ph.z[j];
-				if (xm_[z]<1.0e-9*cnorm_)
-				{
-					xi[i] = 0.0;
-				}
+				// Prune crystallization of solid phase not present
+				xi[i] = 0.0; 
 			}
-			if (xi[i] != 0.0)
+			else
 			{
-				cout << "Crystallizing " << ph.name << endl;
+				print(cphase[i]);
 			}
 		}
 		pnorm += xi[i]*xi[i];
@@ -88,38 +84,45 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		if (pnorm < 2.0e-7*cnorm_) // To make sure search direction is meaningful
 			return fp;
 
-		// Compute freeze composition on pruned search direction. Clip upper
-		// limit of search to not melt more of any phase than is actually present.
-		// Also compute current melt composition.
-		double xfreeze[E_END];
-		fill(xfreeze, xfreeze+E_END, 0.0);
-		double x0 = 0.0;
-		double x1 = numeric_limits<double>::max();
+		// Determine change of solid and melt compositions per unit of search.
+		double xmelt[E_END];
+		fill(xmelt, xmelt+E_END, 0.0);
+		double xsolid[P_END];
+		fill(xsolid, xsolid+NP_, 0.0);
 		for (unsigned i=0; i<n; ++i)
 		{
-			unsigned const j = cphase[i];
 			if (xi[i]!=0.0)
 			{
-				Phase const &ph = phase_[j];
+				Reaction const &react = cphase[i];
+				Phase const &ph = phase_[react.i];
 				unsigned Z = ph.nz;
 				for (unsigned k=0; k<Z; ++k)
 				{
-					unsigned z = ph.z[k];
-					xfreeze[z] += xi[i]*ph.n[k];
+					xmelt[ph.z[k]] -= xi[i]*ph.n[k];
+				}
+				unsigned const N = react.nz;
+				for (unsigned j=0; j<N; ++j)
+				{
+					xsolid[react.p[j]] += xi[i]*react.n[j];
 				}
 			}
-			if (xi[i]<0.0)
-			{
-				x1 = min(x1, -p[j]/xi[i]);
-			}
 		}
-		// Clip upper limit of search to not extract more freeze composition
-		// than the amount of melt can supply.
+		// Clip upper limit of search to not extract more melt
+		// or any solid phase than the current composition permits.
+		double x0 = 0.0;
+		double x1 = numeric_limits<double>::max();
 		for (unsigned e=0; e<E_END; ++e)
 		{
-			if (xfreeze[e]>0.0)
+			if (xmelt[e]<0.0)
 			{
-				x1 = min(x1, xm_[e]/xfreeze[e]);
+				x1 = min(x1, -xm_[e]/xmelt[e]);
+			}
+		}
+		for (unsigned e=0; e<NP_; ++e)
+		{
+			if (xsolid[e]<0.0)
+			{
+				x1 = min(x1, -p[e]/xsolid[e]);
 			}
 		}
 
@@ -132,13 +135,19 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 
 		for (unsigned i=0; i<n; ++i)
 		{
-			unsigned const j = cphase[i];
-			p[j] += x2*xi[i];
-			p[j] = max(0.0, p[j]);
+			auto const &r = cphase[i];
+			unsigned const N = r.nz;
+			for (unsigned j=0; j<N; ++j)
+			{
+				unsigned const z = r.p[j];
+		  	    p[z] += x2*xi[i]*r.n[j];
+			    p[z] = max(0.0, p[z]);
+			}
 		}
 
 		fp = this->Gf(p);
 	    compute_current_melt_composition_(p);
+		fm = Gfm(xm_);
 
 		cout << endl;
 		cout << "Line search completed. New Gf = " << fp << endl;
@@ -167,12 +176,13 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		double dgg = 0., gg = 0.;
 		for (unsigned i=0; i<n; ++i)
 		{
-			unsigned const j = cphase[i];
-			xi[i] = dGf(p, xm_, fp, j);
+			auto const r = cphase[i];
+			xi[i] = dGfm(p, xm_, fm, r.i) + r.dGfs;
 
 			// Prune to enforce constraints
 			if (xi[i]>0.0)
 			{
+				/*
 				if (p[j]<=1.0e-9*cnorm_)
 				{
 					// Prune melt of solid phase not present
@@ -183,24 +193,20 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 				{
 					cout << "Melting " << phase_[j].name << ", p = " << p[j] << endl;
 				}
+			*/
 			}
 			else if (xi[i]<0.0)
 			{
 				// Check for crystallization of element fully extracted
-				Phase const &ph = phase_[j];
-				unsigned const Z = ph.nz;
-				for (unsigned k=0; k<Z; ++k)
+				double ext = calculate_extent_(r, p);
+				if (ext<1.0e-9*cnorm_)
 				{
-					unsigned z = ph.z[k];
-					if (xm_[z]<1.0e-9*cnorm_)
-					{
-						xi[i] = 0.0;
-				     	cout << ph.name << " constrained from crystallizing" << endl;
-					}
+					cout << phase_[r.i].name << " constrained from crystallizing" << endl;
+					xi[i] = 0.0;
 				}
-				if (xi[i] != 0.0)
+				else
 				{
-					cout << "Crystallizing " << ph.name << ", p = " << p[j]  << endl;
+					cout << "Crystallizing " << phase_[r.i].name << endl;
 				}
 			}
 			gg += g[i]*g[i];
@@ -228,7 +234,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 
 			if (xi[i]!= 0.0)
 			{
-				cout << phase_[cphase[i]].name << " p = " << xi[i] << endl;
+//				cout << phase_[cphase[i]].name << " p = " << xi[i] << endl;
 				pnorm += xi[i]*xi[i];
 			}
 		}
