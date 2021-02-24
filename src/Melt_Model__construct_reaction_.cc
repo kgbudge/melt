@@ -68,7 +68,7 @@
 	 Result.nz = 0;
 	 for (unsigned i=0; i<NP_; ++i)
 	 {
-		 if (XP[i] != XPP[i])
+		 if (fabs(XP[i] - XPP[i])>1.0e-12*cnorm_)
 		 {
 			 double dn = (XPP[i] - XP[i])*1000./cnorm_;
 			 dGfs += dn*Gf_[i];
@@ -80,6 +80,6 @@
 	 Result.dGfs = dGfs;
 	 Result.dGf0 = dGfs + dGfm;
 
-	 Result.extent = calculate_extent_(Result, XP, xm);
+	 Result.extent = calculate_extent_(Result, XP, xm, Result.dGf0);
 	 return Result;
 }

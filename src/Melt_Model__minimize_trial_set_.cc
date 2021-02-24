@@ -45,8 +45,8 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 	{
 		xi[i] = dGfm(p, xm, fm, cphase[i].i) + cphase[i].dGfs;
 		// Prune to enforce constraints
-		double r = calculate_extent_(cphase[i], p, xm);
-		if (xi[i]>0.0)
+		double r = calculate_extent_(cphase[i], p, xm, xi[i]);
+		if (xi[i]>1.0e-6*cnorm_)
 		{
 			if (r<=1.0e-9*cnorm_)
 			{
@@ -58,7 +58,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 				print_reverse(cphase[i]);
 			}
 		}
-		else if (xi[i]<0.0)
+		else if (xi[i]<-1.0e-6*cnorm_)
 		{
 			if (r<=1.0e-9*cnorm_)
 			{
@@ -179,27 +179,25 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 		{
 			auto const r = cphase[i];
 			xi[i] = dGfm(p, xm, fm, r.i) + r.dGfs;
+			double  ext = calculate_extent_(r, p, xm, xi[i]);
 
 			// Prune to enforce constraints
-			if (xi[i]>0.0)
+			if (xi[i]>1e-8*cnorm_)
 			{
-				/*
-				if (p[j]<=1.0e-9*cnorm_)
+				if (ext<1.0e-9*cnorm_)
 				{
 					// Prune melt of solid phase not present
-					p[j] = xi[i] = 0.0; 
-					cout << phase_[j].name << " constrained from melting" << endl;
+					xi[i] = 0.0; 
+					cout << phase_[r.i].name << " constrained from melting" << endl;
 				}
 				else
 				{
-					cout << "Melting " << phase_[j].name << ", p = " << p[j] << endl;
+					cout << "Melting " << phase_[r.i].name << endl;
 				}
-			*/
 			}
-			else if (xi[i]<0.0)
+			else if (xi[i]<-1.0e-9*cnorm_)
 			{
 				// Check for crystallization of element fully extracted
-				double ext = calculate_extent_(r, p, xm);
 				if (ext<1.0e-9*cnorm_)
 				{
 					cout << phase_[r.i].name << " constrained from crystallizing" << endl;
@@ -235,7 +233,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 
 			if (xi[i]!= 0.0)
 			{
-//				cout << phase_[cphase[i]].name << " p = " << xi[i] << endl;
+				cout << phase_[cphase[i].i].name << " p = " << xi[i] << endl;
 				pnorm += xi[i]*xi[i];
 			}
 		}

@@ -90,6 +90,31 @@ Melt_Model::Melt_Model(double nH2O, double nCO2, double nNa2O, double nMgO, doub
 	}
 }
 
+
+//-----------------------------------------------------------------------------//
+Melt_Model::Melt_Model(double const Z[E_END])
+{
+	using namespace std;
+
+	for (unsigned i=0; i<E_END; ++i)
+	{
+		Require(Z[i]>=0.0);
+		Z_[i] = Z[i];
+	}
+
+	cout << "Full melt elemental molar composition:" << endl << defaultfloat;
+	cnorm_ = 0.0;
+	for (unsigned i=0; i<E_END; ++i)
+	{
+		Check(Z_[i]>=0.0);
+		cnorm_ += Z_[i];
+		if (Z_[i]>0)
+		{
+			cout << element_name[i] << ": " << setprecision(3) << Z_[i] << endl;
+		}
+	}
+}
+
 char const * const endmember_element_name[] =
 {
 	"H",

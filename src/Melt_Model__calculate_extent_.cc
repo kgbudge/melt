@@ -28,15 +28,15 @@
  */ 
 double Melt_Model::calculate_extent_(Reaction const &reaction, 
                                      double const XP[],
-                                     double const xm[]) const
+                                     double const xm[],
+                                     double const dGf) const
 {
 	 using namespace std;
 
-	double Result = numeric_limits<double>::max();
-
-	if (reaction.dGf0<0)
+	if (dGf<0)
 	{
 		// reaction goes forwards
+	    double Result = numeric_limits<double>::max();
 		int nz = reaction.nz;
 		for (int i=0; i<nz; ++i)
 		{
@@ -51,10 +51,12 @@ double Melt_Model::calculate_extent_(Reaction const &reaction,
 		{
 			Result = min(Result, xm[phase.z[i]]/phase.n[i]);
 		}
+		return Result;
 	}
 	else
 	{
 		// reaction goes backwards
+	    double Result = numeric_limits<double>::max();
 		int nz = reaction.nz;
 		for (int i=0; i<nz; ++i)
 		{
@@ -63,7 +65,6 @@ double Melt_Model::calculate_extent_(Reaction const &reaction,
 				Result = min(Result, XP[reaction.p[i]]/reaction.n[i]);
 			}
 		}
+		return Result;
 	}
-
-	return Result;
 }

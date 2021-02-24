@@ -75,12 +75,7 @@ void State::update()
 	}
 	cout << "    Free energy of formation = " << fixed 
 		<< setprecision(3) << Gftot << " kJ" << endl;
-	
-	for (unsigned i=0; i<E_END; ++i)
-    {
-		Phase const &phase = phase_[ph_[i]];
-		V_[i] = X_[i]*phase.model->volume(phase, T_, P_);
-	}
+
 	return;
 }
 

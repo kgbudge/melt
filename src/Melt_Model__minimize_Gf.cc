@@ -49,6 +49,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 	{
 		Reaction cphase[E_END];
 		unsigned NMP = 0;
+		set<unsigned> cset;
 		update_current_state_(XP, xm, xs);
 		
 		// Main loop. Here we build up a search space for the minimum of free energy.
@@ -65,7 +66,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			Reaction rbest;
 			for (unsigned i=0; i<NP_; ++i)
 			{
-				if (is_fusible_[i])
+				if (cset.count(i) == 0 && is_fusible_[i])
 				{
 					Reaction r = construct_reaction_(XP, xm, xs, Gf, Gfm, i);
 					if (r.extent*r.dGf0<best)
@@ -78,11 +79,11 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 
 			// If nothing can change, we must be done.
 
-			if (best>-1.0e-9*cnorm_)
+			if (best>-1.0e-8*cnorm_ && NMP==0)
 			{
 				goto DONE;
 			}
-			if (NMP+1==E_END)
+			if (best>-1.0e-8*cnorm_ || NMP+1==E_END)
 			{
 				break;
 			}
@@ -90,6 +91,7 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			// Add a single phase that is our best guess of the next melt element
 
 			cphase[NMP] = rbest;
+			cset.insert(rbest.i);
 			NMP++;
 
 			// Minimize on this melt set.

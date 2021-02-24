@@ -86,17 +86,8 @@ void update()
 	                          nCl, nK2O, nCaO, nTiO2, nCr2O3, nMnO, nFeO,
 	                          nFe2O3, nZrO2);
 
-	// Create a Melt_Model with the initial composition.
-	Melt_Model melt_model(nH2O, nCO2, nNa2O, nMgO, nAl2O3, nSiO2, nP2O5, nS, nCl,
-	                      nK2O, nCaO, nTiO2, nCr2O3, nMnO, nFeO, nFe2O3, nZrO2);
-
     // Initial guess is that all fusible phases are fully melted. 
 	// We will then see what should crystallize out to get an optimum melt (possibly empty)
-
-	double XP[P_END];
-	fill(XP, XP+P_END, 0.0);
-	
-	Phase melt_phase = melt_model.minimize_Gf(XP);
 
 	// Create a State with the initial composition. 
 	State state("1", 
@@ -106,22 +97,20 @@ void update()
 	// Calculate the equilibrium state at T and P.
 	state.update();
 
-	int pm = -1;
 	double px = 0.0;
 	double const *const state_X = state.X();
 	int const *const state_ph = state.ph();
 	auto const &state_phase = state.phase();
 	for (unsigned i=0; i<E_END; ++i)
 	{
-		if (state_X[i]>px && state_phase[state_ph[i]].index==0)
+		if (state_X[i]>px && state_ph[i]+1==State::NP())
 		{
-			pm = state_ph[i];
 			px = state_X[i];
 		}
 	}
-	if (pm != -1)
+	if (px > 0.0)
 	{
-		Phase const &melt = phase[pm];
+		Phase const &melt = state_phase[State::NP()-1];
 
 		unsigned const N = melt.nz;
 		double mH2O = 0;

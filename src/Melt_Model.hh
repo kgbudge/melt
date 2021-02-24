@@ -44,6 +44,8 @@ class Melt_Model : public State_Base
                    double nCaO, double nTiO2, double nCr2O3, double nMnO, double nFeO, 
                    double nFe2O3,  double nZrO2);
 
+	    explicit Melt_Model(double const Z[E_END]);
+
 		double Z(unsigned i) const { Require(i<E_END); return Z_[i]; }
 
 		double Gf(double const XP[P_END]) const;
@@ -75,7 +77,7 @@ class Melt_Model : public State_Base
 
 // **** Implementation
 
-        double calculate_extent_(Reaction const &, double const XP[P_END], double const xm[E_END]) const;
+        double calculate_extent_(Reaction const &, double const XP[P_END], double const xm[E_END], double dir) const;
         void compute_current_melt_composition_(double const XP[P_END], double xm[E_END]) const;
         void compute_current_solid_composition_(double const XP[P_END], double xs[E_END]) const;
 		void compute_melt_endmember_composition_(double const xm[E_END], double xend[M_END]) const;

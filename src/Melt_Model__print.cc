@@ -56,5 +56,31 @@ void Melt_Model::print(Reaction const &r) const
 void Melt_Model::print_reverse(Reaction const &r) const
 {
 	using namespace std;
-	
+
+	cout << phase_[r.i].name << ": ";
+	cout << defaultfloat;
+	unsigned N = r.nz;
+	bool first = true;
+	for (unsigned i=0; i<N; ++i)
+	{
+		if (r.n[i]>0.0)
+		{
+			if (!first)
+			{
+				cout << " + ";
+			}
+			cout << " + " << r.n[i] << phase_[r.p[i]].name;
+			first = false;
+		}
+	}
+	cout << " -> melt + ";
+	for (unsigned i=0; i<N; ++i)
+	{
+		if (r.n[i]<0.0)
+		{
+			cout << " + ";
+			cout << -r.n[i] << phase_[r.p[i]].name;
+		}
+	}
+	cout << endl;
 }
