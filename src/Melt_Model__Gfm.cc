@@ -27,8 +27,8 @@ using namespace std;
 
 //-----------------------------------------------------------------------------//
 double const Wnorm = 1.0e-3;
-double const Ww_q = 0.*Wnorm;
-double const Ww_cor = -0.*Wnorm;
+double const Ww_q = 0.*Wnorm;  // Melting point 1713C. Ours: 1719C
+double const Ww_cor = -0.*Wnorm;  // Melting point 2044C.  Ours: 2042C
 double const Ww_fo = 0.*Wnorm;
 double const Ww_fa = 0.*Wnorm;
 double const Ww_wo = 0.*Wnorm;
@@ -45,7 +45,7 @@ double const Ww_li = 0*Wnorm;
 double const Ww_mdi = 0*Wnorm;
 double const Ww_an = 0*Wnorm;
 double const Ww_or = 0*Wnorm;
-double const Wq_cor = -1230*Wnorm; // calibrated from SiO2-Al2O3 eutectic at 1868K=1595C  Al 0.9m vs. 0.4m
+double const Wq_cor = -2520*Wnorm; // calibrated from SiO2-Al2O3 eutectic at 1868K=1595C  Al 0.9m vs. 0.4m
 double const Wq_fo = 0; // do not coexist
 double const Wq_fa = 2400.*Wnorm; // calibrated from Q-Fa eutectic near 1422K=1149C
 double const Wq_wo = 1850.*Wnorm;// calibrated from eutectic of 1699K=1426C

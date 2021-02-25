@@ -110,7 +110,14 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			}	
 			if (mtot<=0.0 || Gf - revised_Gf  < 1.0e-9*cnorm_)
 			{
-				break;
+				if (NMP<2)
+				{
+					goto DONE;
+				}
+				else
+				{
+				    break;
+				}
 			}
 		}
 	}
@@ -119,6 +126,7 @@ DONE:
 	double V = 0.0;
 	double xend[M_END];
 	compute_melt_endmember_composition_(xm, xend);
+	double mtot = 0.0;
 	for (unsigned i=0; i<M_END; ++i)
 	{
 		double xi = xend[i];
@@ -127,6 +135,7 @@ DONE:
 			Phase const &phase = ::phase[melt_endmember[i]];
 			V += xi*phase.model->volume(phase, T_, P_);
 		}
+		mtot += xi;
 	}
 
 	Phase Result;
@@ -142,6 +151,10 @@ DONE:
 			Result.n[Result.nz] = xm[i];
 			Result.nz++;
 		}
+	}
+	if (mtot<1.0e-9*cnorm_)
+    {
+		Result.nz = 0; // for really fully crystallized case
 	}
 	// If Result.nz is zero, this flags to client that there is no melt.
 

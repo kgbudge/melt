@@ -127,6 +127,9 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 			}
 		}
 
+		if (fabs(x1)*pnorm<3.0e-7*cnorm_) 
+			return fp;
+
 		double x2 = minimize(x0, x1, [&](double const e)
 		                     {return Gfmelt(p,
 		                                    n,

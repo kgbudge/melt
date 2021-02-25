@@ -55,7 +55,7 @@ double Melt_Model::dGfm(double const cXP[P_END],
 			nmax = min(nmax, xm[z]/ph.n[j]);
 		}
 		double Gfp, Gfm, hh;
-		if (nmax>1.0e-9) // We can crystallize a significant quantity.
+		if (nmax>1.0e-9*cnorm_) // We can crystallize a significant quantity.
 		{
 			double h = min(nmax, 0.01);
 			double xmp[E_END];
@@ -75,7 +75,7 @@ double Melt_Model::dGfm(double const cXP[P_END],
 		}
 		// We can always melt -- for purposes of calculating derivative, we "borrow" solid phase.
 		{
-			double h = min(nmax, 0.01);
+			double h = 0.01;
 			double xmp[E_END];
 			copy(xm, xm+E_END, xmp);		
 			for (int j=0; j<N; ++j)
