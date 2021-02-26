@@ -50,10 +50,10 @@ double const Wq_fo = 0; // do not coexist
 double const Wq_fa = 2880.*Wnorm; // calibrated from Q-Fa eutectic near 1422K=1149C
 double const Wq_wo = 1850.*Wnorm;// calibrated from eutectic of 1699K=1426C
 double const Wq_sm = -3050*Wnorm;// calibrated from eutectic at 1062K=789C
-double const Wq_kal = -0.*Wnorm;
-double const Wq_co2 = 0*Wnorm;
-double const Wq_ne = 0*Wnorm;
-double const Wq_ab = 0*Wnorm;
+double const Wq_kal = -0.*Wnorm; // do not coexist
+double const Wq_co2 = 0*Wnorm; 
+double const Wq_ne = 0*Wnorm; // in practice, do not coexist
+double const Wq_ab = 1000*Wnorm;  // eutectic at 1062 C
 double const Wq_pc = 0*Wnorm;
 double const Wq_s = 0*Wnorm;
 double const Wq_ha = 0*Wnorm;
