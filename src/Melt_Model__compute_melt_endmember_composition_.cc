@@ -163,17 +163,27 @@ void Melt_Model::compute_melt_endmember_composition_(double const XM[E_END],
 
 						if (D>0.0)
 						{
-							// Olivine to periclase
+							// Forsterite to wustite
 
-							Q = min(D, x[M_Mg2SiO4]);
-							x[M_MgO] += 2*Q;
-							x[M_Mg2SiO4] -= Q;
+							Q = min(D, x[M_Fe2SiO4]);
+							x[M_FeO] += 2*Q;
+							x[M_Fe2SiO4] -= Q;
 							D -= Q;
 
-							// That's all I have melts for. If quartz is still deficient, this is not a valid melt.
-							if (D<-1.0e-9)
+							if (D>0.0)
 							{
-								Insist(false, "bad branch");
+								// Olivine to periclase
+
+								Q = min(D, x[M_Mg2SiO4]);
+								x[M_MgO] += 2*Q;
+								x[M_Mg2SiO4] -= Q;
+								D -= Q;
+
+								// That's all I have melts for. If quartz is still deficient, this is not a valid melt.
+								if (D<-1.0e-9)
+								{
+									Insist(false, "bad branch");
+								}
 							}
 						}
 					}
