@@ -29,14 +29,15 @@ using namespace std;
 double const Wnorm = 1.0e-3;
 double const Ww_q = 0.*Wnorm;  // Melting point 1713C. Ours: 1719C
 double const Ww_cor = -0.*Wnorm;  // Melting point 2044C.  Ours: 2042C
-double const Ww_fo = 0.*Wnorm;
-double const Ww_fa = 0.*Wnorm;
-double const Ww_wo = 0.*Wnorm;
-double const Ww_sm = -0.*Wnorm;
-double const Ww_kal = 0.*Wnorm;
+double const Ww_fo = 0.*Wnorm;  // Melting point 1890C. Ours: 1823C
+double const Ww_fa = 0.*Wnorm; // Incongruently melts to liquid and solid iron at 1217 C. 
+                               // Ours: 1195C to liquid and wustite.
+double const Ww_wo = 0.*Wnorm; // Wikipedia: melts at 1540C Ours: 1558C
+double const Ww_sm = -0.*Wnorm;  // Wikipedia: 1088C Ours: 1087C
+double const Ww_kal = 0.*Wnorm;  // 1686C Ours: 1848C
 double const Ww_co2 = 0*Wnorm;
-double const Ww_ne = 0*Wnorm;
-double const Ww_ab = 0*Wnorm;
+double const Ww_ne = 0*Wnorm; // 1526C Ours: 1527C
+double const Ww_ab = 0*Wnorm; // 1115C Ours: 1116C incongruent
 double const Ww_pc = 0*Wnorm;
 double const Ww_s = 0*Wnorm;
 double const Ww_ha = 0*Wnorm;
@@ -49,11 +50,14 @@ double const Wq_cor = -2520*Wnorm; // calibrated from SiO2-Al2O3 eutectic at 186
 double const Wq_fo = 0; // do not coexist
 double const Wq_fa = 2880.*Wnorm; // calibrated from Q-Fa eutectic near 1422K=1149C
 double const Wq_wo = 1850.*Wnorm;// calibrated from eutectic of 1699K=1426C
-double const Wq_sm = -3050*Wnorm;// calibrated from eutectic at 1062K=789C
+double const Wq_sm = -3050*Wnorm;// calibrated from eutectic at 1062K=789C 
 double const Wq_kal = -0.*Wnorm; // do not coexist
 double const Wq_co2 = 0*Wnorm; 
-double const Wq_ne = 0*Wnorm; // in practice, do not coexist
-double const Wq_ab = 1000*Wnorm;  // eutectic at 1062 C
+double const Wq_ne = 0*Wnorm; // do not coexist
+
+double const Wq_ab = -6660*Wnorm;  // eutectic at 1062 C
+double const Wsm_ab = -1000*Wnorm;
+
 double const Wq_pc = 0*Wnorm;
 double const Wq_s = 0*Wnorm;
 double const Wq_ha = 0*Wnorm;
@@ -123,7 +127,7 @@ double const Wwo_or = 0*Wnorm;
 double const Wsm_kal = 0.*Wnorm;
 double const Wsm_co2 = 0*Wnorm;
 double const Wsm_ne = 0*Wnorm;
-double const Wsm_ab = 0*Wnorm;
+
 double const Wsm_pc = 0*Wnorm;
 double const Wsm_s = 0*Wnorm;
 double const Wsm_ha = 0*Wnorm;

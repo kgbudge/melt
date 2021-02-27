@@ -15,20 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-//#include <cmath>
-//#include <algorithm>
-//#include <assert.h>
-//#include <fstream>
-//#include <vector>
-
 #include "ds++/Assert.hh"
 
 #include "Model.hh"
 #include "Phase.hh"
-
-//inline double square(double x){ return x*x; }
-
-double Model::P(Phase const &g, double const T, double const Gf) const
-{
-	  Insist(false, "not implemented");
-}

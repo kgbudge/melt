@@ -209,6 +209,12 @@ void classify_components(State const &state,
 					break;	
 
 				case P_KALSILITE:
+				case P_Na2O: // Not sure how else to classify
+				case P_K2O:
+				case P_Na2SiO3: // more or less
+					F += x;
+					break;
+
 				case P_LEUCITE:
 					lc += x;
 					F += x;
@@ -224,6 +230,8 @@ void classify_components(State const &state,
 					mc += x;
 					break;
 
+				case P_CARNEGIEITE:
+				case P_CARNEGIEITE_HI:
 				case P_NEPHELINE:
 					ne += x;
 					F += x;
@@ -233,13 +241,19 @@ void classify_components(State const &state,
 				case P_ANORTHITE_LIQUID:
 				case P_CORUNDUM_LIQUID:
 				case P_DIOPSIDE_LIQUID:
+				case P_ENSTATITE_LIQUID:
+				case P_FAYALITE_LIQUID:
 				case P_O2:
 				case P_SiO2_LIQUID:
 				case P_H2:
 				case P_H2O_LIQUID:
 				case P_WATER_VAPOR:
-				case P_Na2SiO3:
+				case P_Na2SiO3_LIQUID:
 				case P_WOLLASTONITE_LIQUID:	
+				case P_Na2O_LIQUID:
+				case P_K2O_LIQUID:
+				case P_LEUCITE_LIQUID:
+				case P_NEPHELINE_LIQUID:
 					break;
 
 				case P_CRISTOBALITE:

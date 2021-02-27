@@ -55,10 +55,10 @@ void Melt_Model::compute_melt_endmember_composition_(double const XM[E_END],
 	x[M_SiO2] = XM[E_SI] - 6*Q;
 
 	// 9: Albite
-	double Na2O = 0.5*XM[E_NA];
-	Q = 0.5*min(Na2O, x[M_Al2O3]);
+	x[M_Na2O] = 0.5*XM[E_NA];
+	Q = 2*min(x[M_Na2O], x[M_Al2O3]);
 	x[M_NaAlSi3O8] = Q;
-	Na2O -= 0.5*Q;
+	x[M_Na2O] -= 0.5*Q;
 	x[M_Al2O3] -= 0.5*Q;
 	x[M_SiO2] -= 3*Q;
 
@@ -74,8 +74,8 @@ void Melt_Model::compute_melt_endmember_composition_(double const XM[E_END],
 
 	// 12: Sodium metasilicate
 
-	Q = Na2O;
-	Na2O = 0.0;
+	Q = min(x[M_Na2O], x[M_SiO2]);
+	x[M_Na2O] -= Q;
 	x[M_Na2SiO3] = Q;
 	x[M_SiO2] -= Q;
 
@@ -94,7 +94,7 @@ void Melt_Model::compute_melt_endmember_composition_(double const XM[E_END],
 
 	Q = x[M_CaO];
 	x[M_CaSiO3] = Q;
-	x[M_CaO] = 0.0;
+	x[M_CaO] = 0;
 	x[M_SiO2] -= Q;
 
 	// 17: Magnesium pyroxene (enstatite). I have no ferrosilite melt.
@@ -179,10 +179,20 @@ void Melt_Model::compute_melt_endmember_composition_(double const XM[E_END],
 								x[M_Mg2SiO4] -= Q;
 								D -= Q;
 
-								// That's all I have melts for. If quartz is still deficient, this is not a valid melt.
-								if (D<-1.0e-9)
+								if (D>0.0)
 								{
-									Insist(false, "bad branch");
+									// Sodium metasilicate to sodium oxide
+
+									Q = min(D, x[M_Na2SiO3]);
+									x[M_Na2O] += Q;
+									x[M_Na2SiO3] -= Q;
+									D -= Q;
+
+									// That's all I have melts for. If quartz is still deficient, this is not a valid melt.
+									if (D<-1.0e-9)
+									{
+										Insist(false, "bad branch");
+									}
 								}
 							}
 						}

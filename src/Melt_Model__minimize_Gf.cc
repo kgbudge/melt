@@ -42,6 +42,13 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 
 	double xm[E_END]; // current melt composition
 	double xs[E_END]; // current solid phase composition
+	
+	update_current_state_(XP, xm, xs);
+	double Gf = this->Gf(XP);
+	double Gfm = this->Gfm(xm);
+	
+	cout << "Gfm = " << fixed << setprecision(3) << Gfm << endl;
+	cout << "Gf = " << fixed << Gf << endl;
 
 	// Restart loop. This discards the search space and begins building up a
 	// new search space for the minimum of free energy.
@@ -50,7 +57,6 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 		Reaction cphase[E_END];
 		unsigned NMP = 0;
 		set<unsigned> cset;
-		update_current_state_(XP, xm, xs);
 		
 		// Main loop. Here we build up a search space for the minimum of free energy.
 		for (;;)
@@ -58,10 +64,6 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 			// Calculate free energy of current estimate of sample state, and its
 			// gradient with every solid phase in library.
 
-			double Gfm = this->Gfm(xm);
-			double Gf = this->Gf(XP);
-			cout << "Gfm = " << fixed << setprecision(3) << Gfm << endl;
-			cout << "Gf = " << fixed << setprecision(3) << Gf << endl;
 			double best = numeric_limits<double>::max();
 			Reaction rbest;
 			for (unsigned i=0; i<NP_; ++i)
@@ -96,8 +98,11 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 
 			// Minimize on this melt set.
 
-			double revised_Gf = minimize_trial_set_(NMP, cphase, XP);
-			update_current_state_(XP, xm, xs);
+			double trial_XP[P_END];
+			copy(XP, XP+NP_, trial_XP);
+			minimize_trial_set_(NMP, cphase, trial_XP);
+			update_current_state_(trial_XP, xm, xs);
+			double trial_Gf = this->Gf(trial_XP);
 
 			double mtot = 0.0;
 			for (unsigned i=0; i<E_END; ++i)
@@ -108,7 +113,18 @@ Phase Melt_Model::minimize_Gf(double XP[P_END])
 				}
 				mtot += xm[i];
 			}	
-			if (mtot<=0.0 || Gf - revised_Gf  < 1.0e-9*cnorm_)
+			if (Gf - trial_Gf  > 1.0e-9*cnorm_)
+			{
+				// we improved
+				copy(trial_XP, trial_XP+NP_, XP);
+				Gf = trial_Gf;
+			    Gfm = this->Gfm(XP);
+				if (mtot <= 0.0)
+				{
+					goto DONE;
+				}
+			}
+			else
 			{
 				if (NMP<2)
 				{
@@ -159,7 +175,7 @@ DONE:
 	// If Result.nz is zero, this flags to client that there is no melt.
 
 	Result.S0 = 0.0;
-	Result.Hf0 = Gfm(xm);
+	Result.Hf0 = this->Gfm(xm);
 	Result.model = MELT;
 
 	return Result;

@@ -43,6 +43,8 @@ enum Melt_Endmember
         M_CaAl2Si2O8, // 17
 	    M_KAlSi3O8,
         M_FeO,
+		M_Na2O,
+        M_K2O,
 
         M_END
 };
@@ -70,6 +72,8 @@ unsigned const melt_endmember[M_END] =
         P_ANORTHITE_LIQUID,
 	    P_K_FELDSPAR_LIQUID,
         P_WUSTITE_LIQUID,
+        P_Na2O_LIQUID,
+        P_K2O_LIQUID,
 };
 
 double const mixN[M_END] = 
@@ -95,6 +99,8 @@ double const mixN[M_END] =
         1, // M_CaAl2Si2O8,
 	    1, // M_KAlSi3O8,
         1, // M_FeO
+        1, // M_Na2O
+        1, // M_K2O
 };
 
 #endif // melt_model_hh

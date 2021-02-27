@@ -172,6 +172,16 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 			}
 		}
 		cout << endl;
+		double xend[M_END];
+		compute_melt_endmember_composition_(xm, xend);
+		for (unsigned i=0; i<M_END; ++i)
+		{
+			if (xend[i]>0.0)
+			{
+				cout << "  " << ::phase[melt_endmember[i]].name << " = " << xend[i] << endl;
+			}
+		}
+
 
 		if (fabs(x2)*pnorm<3.0e-7*cnorm_) 
 			return fp;
@@ -236,7 +246,7 @@ double Melt_Model::minimize_trial_set_(unsigned const n,
 
 			if (xi[i]!= 0.0)
 			{
-				cout << phase_[cphase[i].i].name << " p = " << xi[i] << endl;
+				cout << phase_[cphase[i].i].name << " xi = " << xi[i] << endl;
 				pnorm += xi[i]*xi[i];
 			}
 		}

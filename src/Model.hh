@@ -30,7 +30,6 @@ class Model
   public:
     virtual double Gf(Phase const &phase, double T, double P) const = 0;
     virtual double volume(Phase const &phase, double T, double P) const = 0;
-    virtual double P(Phase const &phase, double T, double Gf) const;
 };
 
 extern Model const *const SOLID;
